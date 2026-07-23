@@ -40,58 +40,144 @@
 
 <main id="resource" hidden>
 
-  <section class="hero">
+  <!-- 1. HERO -->
+  <section class="hero" id="hero">
     <div class="hero-blob hero-blob--gold" aria-hidden="true"></div>
     <div class="hero-blob hero-blob--cyan" aria-hidden="true"></div>
     <div class="hero-inner">
       <div class="hero-eyebrow">
         <img class="hero-eyebrow-mark" src="./assets/img/unincca-emblem.png" alt="" aria-hidden="true">
-        <span class="hero-eyebrow-text">Universidad INCCA de Colombia</span>
+        <div class="hero-eyebrow-text">Universidad INCCA de Colombia · INCCA Virtual</div>
       </div>
+
+      <div class="hero-badges">
+        <span class="hero-badge"><i class="fa-solid fa-brain" aria-hidden="true"></i> Teórico · Práctico</span>
+        <span class="hero-badge"><i class="fa-solid fa-award" aria-hidden="true"></i> 2 Créditos</span>
+        <span class="hero-badge hero-badge--solid"><i class="fa-solid fa-laptop" aria-hidden="true"></i> 100% Virtual</span>
+        <span class="hero-badge"><i class="fa-regular fa-calendar" aria-hidden="true"></i> Fechas flexibles</span>
+        <span class="hero-badge"><i class="fa-regular fa-clock" aria-hidden="true"></i> 96h de trabajo directo</span>
+      </div>
+
       <h1 class="hero-title" id="courseName">—</h1>
+      <p class="hero-desc">Un recorrido crítico e interdisciplinar por las raíces, dinámicas y posibilidades de transformación del conflicto colombiano.</p>
+
       <div class="hero-cta">
-        <a href="#actividades" class="btn btn-gold"><i class="fa-solid fa-arrow-down" aria-hidden="true"></i> Ver actividades</a>
+        <a href="#actividades" class="btn btn-gold"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i> Ir a las actividades</a>
+        <button class="link-underline" id="heroLearnCue">¿Qué aprenderás? <i class="fa-solid fa-arrow-right-long" aria-hidden="true"></i></button>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-cell"><span class="stat-num">4</span><span class="stat-label">Unidades</span></div>
+        <div class="stat-cell"><span class="stat-num">96h</span><span class="stat-label">Trabajo directo</span></div>
+        <div class="stat-cell"><span class="stat-num">4</span><span class="stat-label">Tutorías en vivo</span></div>
+        <div class="stat-cell"><span class="stat-num" id="statActividades">0</span><span class="stat-label">Actividades</span></div>
       </div>
     </div>
   </section>
 
+  <!-- 2. BIENVENIDA -->
+  <section class="section" id="bienvenida">
+    <div class="container">
+      <div class="tag"><i class="fa-solid fa-hand-holding-heart" aria-hidden="true"></i> Bienvenida</div>
+      <h2 class="heading">¡Bienvenidos al curso!</h2>
+      <div class="welcome-grid reveal-stagger" style="margin-top:20px">
+        <div class="welcome-text">
+          <p>Nos alegra contar con su participación en este espacio académico donde exploraremos, de manera crítica e interdisciplinar, las raíces, dinámicas y posibilidades de transformación del conflicto colombiano.</p>
+          <p>A lo largo de cuatro unidades abordaremos las causas estructurales del conflicto, el papel de las comunidades y la memoria, las persistencias del conflicto en la actualidad, y las alternativas de transformación desde la justicia social, el arte y la acción colectiva.</p>
+          <p>Les invitamos a asumir este recorrido con apertura, compromiso y mirada crítica: aquí el conocimiento se construye desde el diálogo, la experiencia y la reflexión compartida.</p>
+        </div>
+        <div class="quote-card">
+          <blockquote>Lucho por una educación que nos enseñe a pensar y no por una educación que nos enseñe a obedecer.</blockquote>
+          <div class="quote-bar"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. APRENDERÁS -->
+  <section class="section" id="aprenderas" style="background:#F7F8FA">
+    <div class="container">
+      <div class="section-head text-center">
+        <div class="tag" style="justify-content:center"><i class="fa-solid fa-route" aria-hidden="true"></i> Ruta de aprendizaje</div>
+        <h2 class="heading">¿Qué aprenderás?</h2>
+        <p class="sub" style="margin:0 auto">Toca cada tarjeta para ver el detalle.</p>
+      </div>
+      <div class="learn-grid reveal-stagger" id="learnGrid"></div>
+    </div>
+  </section>
+
+  <!-- 4. DOCENTE -->
   <section class="section" id="docente">
     <div class="container">
       <div class="tag"><i class="fa-solid fa-chalkboard-user" aria-hidden="true"></i> Docente</div>
-      <div class="teacher-grid">
+      <div class="teacher-grid reveal-stagger" style="margin-top:20px">
         <div class="teacher-avatar-frame">
           <img class="teacher-avatar" id="teacherAvatar" src="" alt="">
         </div>
         <div>
-          <h2 class="teacher-name" id="teacherName">Docente del curso</h2>
-          <div class="teacher-role">Docente a cargo de este recurso</div>
+          <h3 class="teacher-name" id="teacherName">Docente del curso</h3>
+          <div class="teacher-role">Maestro en Música · Magíster en Transformación de Conflictos y Construcción de Paz</div>
+          <div class="teacher-bio" style="margin-top:14px">
+            <p>Maestro en Música con énfasis en Composición y Arreglos, y Magíster en Transformación de Conflictos y Construcción de Paz, graduado con honores de la Universidad INCCA de Colombia. Cuenta con experiencia docente en iniciación musical, formación de ensambles universitarios y procesos educativos desde la extensión artística y cultural.</p>
+            <p>Ha sido representante estudiantil y miembro del claustro de gobierno universitario. Actualmente trabaja en la Secretaría Distrital de Integración Social, Subdirección para la Vejez, y continúa vinculado a la docencia universitaria.</p>
+          </div>
+          <div class="teacher-tags">
+            <span class="teacher-tag"><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i> Honores INCCA</span>
+            <span class="teacher-tag"><i class="fa-solid fa-music" aria-hidden="true"></i> Composición y arreglos</span>
+            <span class="teacher-tag"><i class="fa-solid fa-landmark" aria-hidden="true"></i> Gobierno universitario</span>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <section class="section video-section" id="video">
-    <div class="container text-center">
-      <div class="tag" style="justify-content:center"><i class="fa-solid fa-circle-play" aria-hidden="true"></i> Video de presentación</div>
-      <div class="video-frame" style="margin-top:18px">
-        <div class="ratio">
-          <iframe id="videoFrame" src="" title="Video de presentación del curso" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+  <!-- 5. TUTORÍAS -->
+  <section class="section on-dark" id="tutorias" style="background:var(--oxford-blue)">
+    <div class="container">
+      <div class="section-head text-center">
+        <div class="tag" style="justify-content:center"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> Tutorías</div>
+        <h2 class="heading">Encuentros sincrónicos</h2>
+      </div>
+      <div class="tutoria-list reveal-stagger" id="tutoriaList"></div>
+    </div>
+  </section>
+
+  <!-- 6. VIDEO / DEA -->
+  <section class="section on-dark" id="video" style="background:var(--gradient-institutional)">
+    <div class="container">
+      <div class="dea-grid reveal-stagger">
+        <div class="dea-text">
+          <div class="tag"><i class="fa-solid fa-compass" aria-hidden="true"></i> Video de presentación</div>
+          <h2 class="heading">La ruta hacia un aprendizaje significativo</h2>
+          <p>Mucho más que un elemento integrador del plan de estudios: es el mapa que guía cada paso del viaje de aprendizaje, con herramientas y estrategias para hacer de cada unidad una oportunidad de crecimiento.</p>
+          <p>Docentes y estudiantes construyen juntos experiencias dinámicas, donde el conocimiento se convierte en acción y cada desafío es una puerta al descubrimiento.</p>
+        </div>
+        <div class="dea-video-frame">
+          <div class="ratio">
+            <iframe id="videoFrame" src="" title="Video de presentación del curso" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
+  <!-- 7. ACTIVIDADES -->
   <section class="section" id="actividades">
     <div class="container">
-      <div class="tag"><i class="fa-solid fa-list-check" aria-hidden="true"></i> Actividades</div>
-      <h2 class="heading">Actividades del recurso</h2>
-      <div class="activity-grid" id="activityGrid" style="margin-top:22px"></div>
+      <div class="section-head text-center">
+        <div class="tag" style="justify-content:center"><i class="fa-solid fa-list-check" aria-hidden="true"></i> Actividades</div>
+        <h2 class="heading">Actividades del recurso</h2>
+        <p class="sub" style="margin:0 auto" id="activitiesSub">Haz clic para abrir cada una.</p>
+      </div>
+      <div class="activity-grid reveal-stagger" id="activityGrid"></div>
     </div>
   </section>
 
 </main>
 
 <footer class="site-footer">Universidad INCCA de Colombia · Visor de recurso educativo</footer>
+
+<div class="toast" id="toast"></div>
 
 <script src="./assets/js/main.js"></script>
 </body>
