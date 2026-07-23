@@ -23,20 +23,13 @@
 
 <div class="viewer" id="viewer">
 
-  <!-- Estado: cargando -->
-  <div class="state state--loading" id="stateLoading">
-    <div class="spinner" aria-hidden="true"></div>
-    <p>Cargando recurso…</p>
-  </div>
-
-  <!-- Estado: error -->
-  <div class="state state--error" id="stateError" hidden>
-    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
-    <p id="stateErrorMsg">No se pudo cargar el recurso.</p>
-  </div>
-
   <!-- Contenido real, oculto hasta que renderizarInterfaz() lo llene -->
   <main class="resource" id="resource" hidden>
+
+    <div class="demo-banner" id="demoBanner" hidden>
+      <i class="fa-solid fa-flask" aria-hidden="true"></i>
+      Estás viendo datos de ejemplo — pásale los parámetros por la URL (curso, profesor, video, actividad_1_nombre…) para ver contenido real.
+    </div>
 
     <header class="resource-header">
       <div class="resource-brand">
