@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Actividad 3 · Comercio electrónico: marco legal y fiscal — U.INCCA</title>
+<meta name="description" content="Actividad gamificada: lecturas breves sobre el marco legal y fiscal del comercio electrónico.">
+<meta name="robots" content="noindex, follow">
+<meta name="theme-color" content="#040C38">
+
+<link rel="icon" href="../assets/img/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="../assets/img/apple-touch-icon.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+
+<link rel="stylesheet" href="../assets/css/styles.css">
+<link rel="stylesheet" href="../assets/css/actividad.css">
+</head>
+<body>
+
+<header class="act-topbar">
+  <div class="act-brand">
+    <img src="../assets/img/unincca-emblem.png" alt="Universidad INCCA de Colombia">
+    <span>U.INCCA · Maestría en Transformación de Conflictos</span>
+  </div>
+  <a class="act-back" href="../index.html"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Volver al curso</a>
+</header>
+
+<section class="act-hero">
+  <div class="act-hero-inner">
+    <div class="act-tag" id="actTag"></div>
+    <h1 class="act-title" id="actTitle"></h1>
+    <p class="act-subtitle" id="actSubtitle"></p>
+  </div>
+</section>
+
+<div class="act-progress-card">
+  <div class="act-progress-icon"><i class="fa-solid fa-trophy" aria-hidden="true"></i></div>
+  <div class="act-progress-main">
+    <div class="act-progress-label" id="actProgressLabel">0 / 0 pts (0%)</div>
+    <div class="act-progress-track"><div class="act-progress-fill" id="actProgressFill"></div></div>
+  </div>
+  <button class="act-reset" id="actResetBtn"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Reiniciar progreso</button>
+</div>
+
+<main class="act-body" id="stationsRoot"></main>
+
+<div class="celebration-overlay" id="celebrationOverlay">
+  <div class="celebration-card">
+    <div class="celebration-badge"><i class="fa-solid fa-trophy" aria-hidden="true"></i></div>
+    <h2 class="celebration-title">¡Actividad completada!</h2>
+    <p class="celebration-text">Superaste todas las estaciones de esta actividad. Sigue así.</p>
+    <button class="btn btn-primary" id="celebrationClose">Continuar</button>
+  </div>
+</div>
+
+<script src="../assets/js/actividad.js"></script>
+<script>
+renderActividad({
+  slug: "actividad-3",
+  icon: "fa-scale-balanced",
+  tag: "Actividad 3 de 10 · Semana 2 · Microcápsulas",
+  title: "Comercio electrónico: marco legal y fiscal",
+  subtitle: "Lecturas breves sobre el marco legal, la seguridad y los aspectos fiscales del comercio electrónico.",
+  stations: [
+    {
+      id: "l1", type: "lectura", points: 15,
+      title: "Lección 5: Fundamentos legales del comercio electrónico",
+      body: "Legislación aplicable, contratos electrónicos y consumidor digital: las bases normativas que regulan las transacciones en línea."
+    },
+    {
+      id: "l2", type: "lectura", points: 15,
+      title: "Lección 6: Seguridad y confianza en las transacciones electrónicas",
+      body: "Firma digital, certificados y mecanismos de autenticación que garantizan transacciones seguras y confiables."
+    },
+    {
+      id: "l3", type: "lectura", points: 15,
+      title: "Lección 7: Aspectos fiscales del comercio electrónico",
+      body: "Tributación, IVA en servicios digitales y retenciones aplicables a las operaciones de comercio electrónico."
+    },
+    {
+      id: "l4", type: "lectura", points: 15,
+      title: "Lección 8: Protección al consumidor en línea",
+      body: "Derechos, obligaciones y mecanismos de reclamación disponibles para los consumidores digitales."
+    },
+    {
+      id: "quiz1", type: "quiz", pointsPerQuestion: 20,
+      title: "Reto final: marco legal y fiscal",
+      questions: [
+        {
+          q: "¿Qué garantiza la firma digital en el comercio electrónico?",
+          options: ["Seguridad y autenticación en las transacciones", "Exención total de impuestos", "Eliminación de contratos", "Anonimato absoluto"],
+          correct: 0
+        },
+        {
+          q: "La protección al consumidor en línea incluye…",
+          options: ["Derechos, obligaciones y mecanismos de reclamación", "Solo la tributación del IVA", "Únicamente la firma digital", "La gobernanza de ICANN"],
+          correct: 0
+        }
+      ]
+    }
+  ]
+});
+</script>
+</body>
+</html>

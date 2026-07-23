@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Actividad 5 · Zero &amp; First Conditional: tipos y práctica — U.INCCA</title>
+<meta name="description" content="Actividad gamificada: video-clases sobre tipos de condicionales, más una galería de videos complementarios.">
+<meta name="robots" content="noindex, follow">
+<meta name="theme-color" content="#040C38">
+
+<link rel="icon" href="../assets/img/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="../assets/img/apple-touch-icon.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+
+<link rel="stylesheet" href="../assets/css/styles.css">
+<link rel="stylesheet" href="../assets/css/actividad.css">
+</head>
+<body>
+
+<header class="act-topbar">
+  <div class="act-brand">
+    <img src="../assets/img/unincca-emblem.png" alt="Universidad INCCA de Colombia">
+    <span>U.INCCA · Maestría en Transformación de Conflictos</span>
+  </div>
+  <a class="act-back" href="../index.html"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Volver al curso</a>
+</header>
+
+<section class="act-hero">
+  <div class="act-hero-inner">
+    <div class="act-tag" id="actTag"></div>
+    <h1 class="act-title" id="actTitle"></h1>
+    <p class="act-subtitle" id="actSubtitle"></p>
+  </div>
+</section>
+
+<div class="act-progress-card">
+  <div class="act-progress-icon"><i class="fa-solid fa-trophy" aria-hidden="true"></i></div>
+  <div class="act-progress-main">
+    <div class="act-progress-label" id="actProgressLabel">0 / 0 pts (0%)</div>
+    <div class="act-progress-track"><div class="act-progress-fill" id="actProgressFill"></div></div>
+  </div>
+  <button class="act-reset" id="actResetBtn"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Reiniciar progreso</button>
+</div>
+
+<main class="act-body" id="stationsRoot"></main>
+
+<div class="celebration-overlay" id="celebrationOverlay">
+  <div class="celebration-card">
+    <div class="celebration-badge"><i class="fa-solid fa-trophy" aria-hidden="true"></i></div>
+    <h2 class="celebration-title">¡Actividad completada!</h2>
+    <p class="celebration-text">Superaste todas las estaciones de esta actividad. Sigue así.</p>
+    <button class="btn btn-primary" id="celebrationClose">Continuar</button>
+  </div>
+</div>
+
+<script src="../assets/js/actividad.js"></script>
+<script>
+renderActividad({
+  slug: "actividad-5",
+  icon: "fa-language",
+  tag: "Actividad 5 de 10 · Class videos + complementarios",
+  title: "Zero & First Conditional: tipos y práctica",
+  subtitle: "Video-clases sobre los tipos de oraciones condicionales, más una galería de videos complementarios en YouTube.",
+  stations: [
+    {
+      id: "v1", type: "video", points: 20,
+      title: "Types of conditional sentences",
+      fileId: "1x-EorqhliNb4WVgYznYjsTk7sIN2jzHr"
+    },
+    {
+      id: "v2", type: "video", points: 20,
+      title: "The zero conditional",
+      fileId: "1wy8owuWNPhasOtKjwmgI2Id6BIefXcoY"
+    },
+    {
+      id: "v3", type: "video", points: 20,
+      title: "The first conditional",
+      fileId: "1wvv6tTaeB5xgVoTbkDvUHjZVxKzkMyAf"
+    },
+    {
+      id: "gallery1", type: "video-gallery", points: 20,
+      title: "Videos complementarios en YouTube",
+      items: [
+        { provider: "youtube", videoId: "r7UW7EJuR3o", label: "Zero conditional" },
+        { provider: "youtube", videoId: "_FA7EsqwF_A", label: "Conditional type 0" },
+        { provider: "youtube", videoId: "s59ygVYxpag", label: "First conditional" },
+        { provider: "youtube", videoId: "D2Oy-epFENo", label: "Conditional type 1" }
+      ]
+    },
+    {
+      id: "quiz1", type: "quiz", pointsPerQuestion: 10,
+      title: "Reto final: zero & first conditional",
+      questions: [
+        {
+          q: "¿Cuántos videos complementarios de YouTube incluye esta actividad?",
+          options: ["4", "2", "6", "1"],
+          correct: 0
+        },
+        {
+          q: "El 'first conditional' se usa para…",
+          options: ["Situaciones futuras reales o probables", "Hechos científicos generales", "Situaciones hipotéticas imposibles", "El pasado remoto"],
+          correct: 0
+        }
+      ]
+    }
+  ]
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Actividad 1 · Sociedad de la información: fundamentos — U.INCCA</title>
+<meta name="description" content="Actividad gamificada: microcápsulas de aprendizaje sobre la sociedad de la información.">
+<meta name="robots" content="noindex, follow">
+<meta name="theme-color" content="#040C38">
+
+<link rel="icon" href="../assets/img/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="../assets/img/apple-touch-icon.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+
+<link rel="stylesheet" href="../assets/css/styles.css">
+<link rel="stylesheet" href="../assets/css/actividad.css">
+</head>
+<body>
+
+<header class="act-topbar">
+  <div class="act-brand">
+    <img src="../assets/img/unincca-emblem.png" alt="Universidad INCCA de Colombia">
+    <span>U.INCCA · Maestría en Transformación de Conflictos</span>
+  </div>
+  <a class="act-back" href="../index.html"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Volver al curso</a>
+</header>
+
+<section class="act-hero">
+  <div class="act-hero-inner">
+    <div class="act-tag" id="actTag"></div>
+    <h1 class="act-title" id="actTitle"></h1>
+    <p class="act-subtitle" id="actSubtitle"></p>
+  </div>
+</section>
+
+<div class="act-progress-card">
+  <div class="act-progress-icon"><i class="fa-solid fa-trophy" aria-hidden="true"></i></div>
+  <div class="act-progress-main">
+    <div class="act-progress-label" id="actProgressLabel">0 / 0 pts (0%)</div>
+    <div class="act-progress-track"><div class="act-progress-fill" id="actProgressFill"></div></div>
+  </div>
+  <button class="act-reset" id="actResetBtn"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Reiniciar progreso</button>
+</div>
+
+<main class="act-body" id="stationsRoot"></main>
+
+<div class="celebration-overlay" id="celebrationOverlay">
+  <div class="celebration-card">
+    <div class="celebration-badge"><i class="fa-solid fa-trophy" aria-hidden="true"></i></div>
+    <h2 class="celebration-title">¡Actividad completada!</h2>
+    <p class="celebration-text">Superaste todas las estaciones de esta actividad. Sigue así.</p>
+    <button class="btn btn-primary" id="celebrationClose">Continuar</button>
+  </div>
+</div>
+
+<script src="../assets/js/actividad.js"></script>
+<script>
+renderActividad({
+  slug: "actividad-1",
+  icon: "fa-tower-broadcast",
+  tag: "Actividad 1 de 10 · Semana 1 · Microcápsulas",
+  title: "Sociedad de la información: fundamentos",
+  subtitle: "Video-lecciones introductorias sobre el origen y la evolución de la sociedad de la información.",
+  stations: [
+    {
+      id: "v1", type: "video", points: 25,
+      title: "Semana 1: Introducción a la sociedad de la información",
+      fileId: "1sN-Ysh_cxg8QWjvQKT8zEo4th595dIGI"
+    },
+    {
+      id: "v2", type: "video", points: 25,
+      title: "Lección 1: Conceptualización de la sociedad de la información — evolución histórica y su impacto en el derecho y la economía",
+      fileId: "1sJckXJVrQu_LjYHMxw_jrJMjmnPM-BQg"
+    },
+    {
+      id: "quiz1", type: "quiz", pointsPerQuestion: 25,
+      title: "Reto final: ¿qué tanto recuerdas?",
+      questions: [
+        {
+          q: "¿Cuál es el tema central de la Semana 1?",
+          options: ["Introducción a la sociedad de la información", "Comercio electrónico", "Justicia transicional", "Cartografía social"],
+          correct: 0
+        },
+        {
+          q: "La Lección 1 se enfoca en…",
+          options: ["Conceptualización de la sociedad de la información y su impacto en el derecho y la economía", "Aspectos fiscales del comercio electrónico", "Protección al consumidor en línea", "Gobernanza de internet"],
+          correct: 0
+        }
+      ]
+    }
+  ]
+});
+</script>
+</body>
+</html>

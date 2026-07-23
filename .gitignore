@@ -1,0 +1,11 @@
+# Contenido de trabajo interno — no se publica
+recursos x/
+.thumbnail
+
+# Prototipo generado por herramienta de diseño interna (no funciona fuera de esa herramienta)
+Incca Maestria Hero.dc.html
+support.js
+
+# Sistema
+.DS_Store
+Thumbs.db

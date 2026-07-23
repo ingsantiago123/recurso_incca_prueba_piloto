@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Actividad 2 · Infraestructura, gobernanza y derechos digitales — U.INCCA</title>
+<meta name="description" content="Actividad gamificada: video-lecciones e infografía sobre infraestructura, gobernanza de internet y derechos digitales.">
+<meta name="robots" content="noindex, follow">
+<meta name="theme-color" content="#040C38">
+
+<link rel="icon" href="../assets/img/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="../assets/img/apple-touch-icon.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+
+<link rel="stylesheet" href="../assets/css/styles.css">
+<link rel="stylesheet" href="../assets/css/actividad.css">
+</head>
+<body>
+
+<header class="act-topbar">
+  <div class="act-brand">
+    <img src="../assets/img/unincca-emblem.png" alt="Universidad INCCA de Colombia">
+    <span>U.INCCA · Maestría en Transformación de Conflictos</span>
+  </div>
+  <a class="act-back" href="../index.html"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Volver al curso</a>
+</header>
+
+<section class="act-hero">
+  <div class="act-hero-inner">
+    <div class="act-tag" id="actTag"></div>
+    <h1 class="act-title" id="actTitle"></h1>
+    <p class="act-subtitle" id="actSubtitle"></p>
+  </div>
+</section>
+
+<div class="act-progress-card">
+  <div class="act-progress-icon"><i class="fa-solid fa-trophy" aria-hidden="true"></i></div>
+  <div class="act-progress-main">
+    <div class="act-progress-label" id="actProgressLabel">0 / 0 pts (0%)</div>
+    <div class="act-progress-track"><div class="act-progress-fill" id="actProgressFill"></div></div>
+  </div>
+  <button class="act-reset" id="actResetBtn"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Reiniciar progreso</button>
+</div>
+
+<main class="act-body" id="stationsRoot"></main>
+
+<div class="celebration-overlay" id="celebrationOverlay">
+  <div class="celebration-card">
+    <div class="celebration-badge"><i class="fa-solid fa-trophy" aria-hidden="true"></i></div>
+    <h2 class="celebration-title">¡Actividad completada!</h2>
+    <p class="celebration-text">Superaste todas las estaciones de esta actividad. Sigue así.</p>
+    <button class="btn btn-primary" id="celebrationClose">Continuar</button>
+  </div>
+</div>
+
+<script src="../assets/js/actividad.js"></script>
+<script>
+renderActividad({
+  slug: "actividad-2",
+  icon: "fa-globe",
+  tag: "Actividad 2 de 10 · Semana 1 · Microcápsulas",
+  title: "Infraestructura, gobernanza y derechos digitales",
+  subtitle: "Video-lecciones e infografía de síntesis sobre acceso a la información, gobernanza de internet y derechos digitales.",
+  stations: [
+    {
+      id: "v1", type: "video", points: 15,
+      title: "Lección 2: Infraestructura tecnológica y acceso a la información",
+      fileId: "1sGDYBrFRECEC9OTuay2UaibXATnSXajJ"
+    },
+    {
+      id: "v2", type: "video", points: 15,
+      title: "Lección 3: Gobernanza de internet — principales actores, ICANN y políticas de regulación",
+      fileId: "1sEV-B1TOCDDCnMMQxKnikI9V6Ui6_SKY"
+    },
+    {
+      id: "v3", type: "video", points: 15,
+      title: "Lección 4: Derechos digitales y libertades en internet",
+      fileId: "1s6EKKVxF_77sKylYjTxwLu64c_eP3cct"
+    },
+    {
+      id: "r1", type: "recurso", points: 15,
+      title: "Infografía: la sociedad de la información — pilares, gobernanza y derechos",
+      fileId: "1u2a1GGn8QAhcKDMEYkc0YDdGwm28jofB"
+    },
+    {
+      id: "quiz1", type: "quiz", pointsPerQuestion: 20,
+      title: "Reto final: infraestructura y gobernanza",
+      questions: [
+        {
+          q: "¿Qué organismo se menciona como actor clave en la gobernanza de internet?",
+          options: ["ICANN", "OMC", "ONU", "BID"],
+          correct: 0
+        },
+        {
+          q: "La infografía de esta actividad sintetiza…",
+          options: ["Pilares, gobernanza y derechos de la sociedad de la información", "Tributación del comercio electrónico", "Cartografía social del territorio", "Justicia transicional"],
+          correct: 0
+        }
+      ]
+    }
+  ]
+});
+</script>
+</body>
+</html>
