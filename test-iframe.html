@@ -18,7 +18,7 @@
   Prueba: este archivo arma un JSON de ejemplo, lo inyecta en <code>iframe.contentWindow.name</code> ANTES de fijar el <code>src</code>, y el visor lo lee con <code>window.name</code> — así el plugin de Moodle debe embeberlo, sin límite de longitud de URL.
 </div>
 
-<iframe id="visor" title="Visor de recurso U.INCCA"></iframe>
+<iframe id="incca-hero-section" title="Visor de recurso U.INCCA"></iframe>
 
 <script>
   // Este objeto es exactamente lo que tu plugin de Moodle debe generar
@@ -68,7 +68,7 @@
     ]
   };
 
-  var iframe = document.getElementById("visor");
+  var iframe = document.getElementById("incca-hero-section");
   // OJO: hay que fijar contentWindow.name (el window.name real de adentro del
   // iframe), no iframe.name (que solo es el atributo HTML del elemento).
   iframe.contentWindow.name = JSON.stringify(datosDelRecurso);
