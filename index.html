@@ -108,7 +108,7 @@
           <div class="stat-row">
             <div class="stat-cell"><span class="stat-num" data-counter="4">0</span><span class="stat-label">Unidades</span></div>
             <div class="stat-cell"><span class="stat-num" data-counter="96" data-counter-suffix="h">0</span><span class="stat-label">Trabajo directo</span></div>
-            <div class="stat-cell"><span class="stat-num" data-counter="4">0</span><span class="stat-label">Tutorías en vivo</span></div>
+            <div class="stat-cell"><span class="stat-num" id="statTutorias" data-counter="0">0</span><span class="stat-label">Tutorías en vivo</span></div>
             <div class="stat-cell"><span class="stat-num" id="statActividades" data-counter="0">0</span><span class="stat-label">Actividades</span></div>
           </div>
         </div>
@@ -120,16 +120,12 @@
       <div class="slide-body">
         <div class="slide-head">
           <div class="tag"><i class="fa-solid fa-hand-holding-heart" aria-hidden="true"></i> Bienvenida</div>
-          <h2 class="heading">¡Bienvenidos al curso!</h2>
+          <h2 class="heading" id="bienvenidaTitulo">¡Bienvenidos al curso!</h2>
         </div>
         <div class="welcome-grid stagger">
-          <div class="welcome-text">
-            <p>Nos alegra contar con su participación en este espacio académico donde exploraremos, de manera crítica e interdisciplinar, las raíces, dinámicas y posibilidades de transformación del conflicto colombiano.</p>
-            <p>A lo largo de cuatro unidades abordaremos las causas estructurales del conflicto, el papel de las comunidades y la memoria, las persistencias del conflicto en la actualidad, y las alternativas de transformación desde la justicia social, el arte y la acción colectiva.</p>
-            <p>Les invitamos a asumir este recorrido con apertura, compromiso y mirada crítica: aquí el conocimiento se construye desde el diálogo, la experiencia y la reflexión compartida.</p>
-          </div>
+          <div class="welcome-text" id="bienvenidaParrafos"></div>
           <div class="quote-card">
-            <blockquote>Lucho por una educación que nos enseñe a pensar y no por una educación que nos enseñe a obedecer.</blockquote>
+            <blockquote id="bienvenidaFrase"></blockquote>
             <div class="quote-bar"></div>
           </div>
         </div>
@@ -160,16 +156,9 @@
           </div>
           <div>
             <h3 class="teacher-name" id="teacherName">Docente del curso</h3>
-            <div class="teacher-role">Maestro en Música · Magíster en Transformación de Conflictos y Construcción de Paz</div>
-            <div class="teacher-bio">
-              <p>Maestro en Música con énfasis en Composición y Arreglos, y Magíster en Transformación de Conflictos y Construcción de Paz, graduado con honores de la Universidad INCCA de Colombia. Cuenta con experiencia docente en iniciación musical, formación de ensambles universitarios y procesos educativos desde la extensión artística y cultural.</p>
-              <p>Ha sido representante estudiantil y miembro del claustro de gobierno universitario. Actualmente trabaja en la Secretaría Distrital de Integración Social, Subdirección para la Vejez, y continúa vinculado a la docencia universitaria.</p>
-            </div>
-            <div class="teacher-tags">
-              <span class="teacher-tag"><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i> Honores INCCA</span>
-              <span class="teacher-tag"><i class="fa-solid fa-music" aria-hidden="true"></i> Composición y arreglos</span>
-              <span class="teacher-tag"><i class="fa-solid fa-landmark" aria-hidden="true"></i> Gobierno universitario</span>
-            </div>
+            <div class="teacher-role" id="teacherRole"></div>
+            <div class="teacher-bio" id="teacherBio"></div>
+            <div class="teacher-tags" id="teacherTags"></div>
           </div>
         </div>
       </div>

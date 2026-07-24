@@ -1,18 +1,53 @@
 /*!
- * U.INCCA · Maestría en Transformación de Conflictos y Construcción de Paz
- * Mazo de diapositivas interactivo — vanilla JS, sin frameworks.
+ * U.INCCA · Mazo de diapositivas interactivo — vanilla JS, sin frameworks.
  * Única dependencia externa: Font Awesome (iconos), vía CDN en index.html.
- */
+ * ---------------------------------------------------------------------
+ * TODO el contenido (curso, docente, bienvenida, aprenderás, tutorías,
+ * video, actividades) llega como UN SOLO objeto JSON leído desde
+ * `window.name` — no desde la URL. Esto evita el límite de longitud de
+ * URL (error 414) cuando hay muchas actividades.
+ *
+ * El sistema padre (Moodle) debe, ANTES de fijar el src del iframe:
+ *
+ *   const iframe = document.getElementById("visor");
+ *   // OJO: es contentWindow.name (el window.name real de adentro del
+ *   // iframe) — NO iframe.name, que solo es el atributo HTML del tag.
+ *   iframe.contentWindow.name = JSON.stringify(datosDelRecurso);
+ *   iframe.src = "https://TU-USUARIO.github.io/TU-REPO/";
+ *
+ * Ver test-iframe.html en la raíz del repo para un ejemplo completo y
+ * funcional de este patrón (parent que arma el JSON y lo inyecta).
+ *
+ * Estructura esperada del JSON (todos los campos son opcionales excepto
+ * "curso"; lo que falte se completa con el recurso de ejemplo):
+ *
+ * {
+ *   "curso": "Nombre del curso",
+ *   "profesor": {
+ *     "nombre": "...", "foto": "url (opcional)",
+ *     "rol": "... (opcional)",
+ *     "bio": ["párrafo 1", "párrafo 2"],
+ *     "etiquetas": [{ "icono": "fa-graduation-cap", "texto": "..." }]
+ *   },
+ *   "video": "url de YouTube/Vimeo/Drive",
+ *   "bienvenida": {
+ *     "titulo": "...", "parrafos": ["...", "..."], "frase_destacada": "..."
+ *   },
+ *   "aprenderas": [{ "icono": "fa-xxx", "titulo": "...", "detalle": "..." }],
+ *   "tutorias": [{ "titulo": "...", "fecha_label": "...", "inicio": "ISO",
+ *                  "fin": "ISO", "url_grabacion": "..." }],
+ *   "actividades": [{ "nombre": "...", "url": "..." }]
+ * }
+ * ------------------------------------------------------------------- */
 (function () {
   "use strict";
 
-  /* ---------------------------------------------------------------------
-   * 1. Datos dinámicos — curso, docente, video y actividades vienen de la
-   *    URL (ver leerDatosDesdeURL más abajo). Bienvenida/Aprenderás/
-   *    Tutorías son contenido fijo, igual que en el diseño original.
-   * ------------------------------------------------------------------- */
-  const BASE_URL = "https://moodlepruebas.unincca.edu.co/course/view.php?id=1857&section=3";
+  const $ = (sel, ctx) => (ctx || document).querySelector(sel);
+  const $$ = (sel, ctx) => Array.from((ctx || document).querySelectorAll(sel));
 
+  /* ---------------------------------------------------------------------
+   * 1. Estructura de diapositivas (fija — no es "contenido", es diseño)
+   * ------------------------------------------------------------------- */
   const SLIDES = [
     { id: "hero", label: "Inicio", icon: "fa-house" },
     { id: "bienvenida", label: "Bienvenida", icon: "fa-hand-holding-heart" },
@@ -23,68 +58,83 @@
     { id: "actividades", label: "Actividades", icon: "fa-list-check" }
   ];
 
-  const LEARN = [
-    { icon: "fa-people-group", title: "Memoria y resistencias comunitarias", detail: "Reconocerás y valorarás las experiencias y resistencias de las comunidades afectadas por el conflicto, comprendiendo el papel de la memoria colectiva, las narrativas locales y las prácticas culturales como herramientas de reconstrucción social." },
-    { icon: "fa-scale-balanced", title: "Causas estructurales del conflicto", detail: "Analizarás críticamente las causas estructurales, sociales y políticas del conflicto armado en Colombia, aplicando teorías críticas e interdisciplinarias e identificando dinámicas de poder y desigualdad." },
-    { icon: "fa-seedling", title: "Propuestas de transformación social", detail: "Diseñarás propuestas de intervención social y cultural que articulen memoria, justicia social y prácticas artísticas para la transformación de conflictos." },
-    { icon: "fa-dove", title: "Dinámicas contemporáneas y paz", detail: "Evaluarás las dinámicas contemporáneas del conflicto, considerando factores económicos, políticos y sociales, procesos de paz y los desafíos actuales para la justicia social." }
-  ];
-
-  const TUTORIAS = [
-    { title: "Primer encuentro: instalación de la unidad", dateLabel: "14 de septiembre · 8:00 am – 9:00 pm", start: "2026-09-14T08:00:00", end: "2026-09-14T21:00:00", recordingUrl: `${BASE_URL}&act=t1` },
-    { title: "Segundo encuentro: causas estructurales", dateLabel: "21 de septiembre · 8:00 am – 9:00 pm", start: "2026-09-21T08:00:00", end: "2026-09-21T21:00:00", recordingUrl: `${BASE_URL}&act=t2` },
-    { title: "Tercer encuentro: memoria y territorio", dateLabel: "28 de septiembre · 8:00 am – 9:00 pm", start: "2026-09-28T08:00:00", end: "2026-09-28T21:00:00", recordingUrl: `${BASE_URL}&act=t3` },
-    { title: "Cuarto encuentro: cierre y evaluación", dateLabel: "5 de octubre · 8:00 am – 9:00 pm", start: "2026-10-05T08:00:00", end: "2026-10-05T21:00:00", recordingUrl: `${BASE_URL}&act=t4` }
-  ];
-
-  // Recurso de ejemplo — se usa SOLO si la URL no trae "curso"
+  /* ---------------------------------------------------------------------
+   * 2. Recurso de ejemplo — se usa cuando window.name viene vacío/roto
+   *    (por ejemplo, al abrir index.html directo en el navegador, fuera
+   *    del iframe). Reutiliza el contenido original del curso piloto.
+   * ------------------------------------------------------------------- */
   const EJEMPLO_DEMO = {
-    course_name: "Ingeniería de Sistemas (ejemplo)",
-    profesor_nombre: "Pepito Pérez",
-    profesor_img_url: "https://ui-avatars.com/api/?name=Pepito+Perez&background=0B349D&color=fff&size=300&bold=true",
-    video_url: "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
-    actividades_json: [
-      { titulo: "Foro de bienvenida", link: "#" },
-      { titulo: "Lectura introductoria", link: "#" },
-      { titulo: "Quiz de repaso", link: "#" }
+    curso: "Conflicto Social y Político en Colombia",
+    profesor: {
+      nombre: "Sergio Andrés Baquero Muñoz",
+      foto: "",
+      rol: "Maestro en Música · Magíster en Transformación de Conflictos y Construcción de Paz",
+      bio: [
+        "Maestro en Música con énfasis en Composición y Arreglos, y Magíster en Transformación de Conflictos y Construcción de Paz, graduado con honores de la Universidad INCCA de Colombia. Cuenta con experiencia docente en iniciación musical, formación de ensambles universitarios y procesos educativos desde la extensión artística y cultural.",
+        "Ha sido representante estudiantil y miembro del claustro de gobierno universitario. Actualmente trabaja en la Secretaría Distrital de Integración Social, Subdirección para la Vejez, y continúa vinculado a la docencia universitaria."
+      ],
+      etiquetas: [
+        { icono: "fa-graduation-cap", texto: "Honores INCCA" },
+        { icono: "fa-music", texto: "Composición y arreglos" },
+        { icono: "fa-landmark", texto: "Gobierno universitario" }
+      ]
+    },
+    video: "https://drive.google.com/file/d/1j9Nz5yjaUFQqirqmNAefUzu726Z0YxDV/preview",
+    bienvenida: {
+      titulo: "¡Bienvenidos al curso!",
+      parrafos: [
+        "Nos alegra contar con su participación en este espacio académico donde exploraremos, de manera crítica e interdisciplinar, las raíces, dinámicas y posibilidades de transformación del conflicto colombiano.",
+        "A lo largo de cuatro unidades abordaremos las causas estructurales del conflicto, el papel de las comunidades y la memoria, las persistencias del conflicto en la actualidad, y las alternativas de transformación desde la justicia social, el arte y la acción colectiva.",
+        "Les invitamos a asumir este recorrido con apertura, compromiso y mirada crítica: aquí el conocimiento se construye desde el diálogo, la experiencia y la reflexión compartida."
+      ],
+      frase_destacada: "Lucho por una educación que nos enseñe a pensar y no por una educación que nos enseñe a obedecer."
+    },
+    aprenderas: [
+      { icono: "fa-people-group", titulo: "Memoria y resistencias comunitarias", detalle: "Reconocerás y valorarás las experiencias y resistencias de las comunidades afectadas por el conflicto, comprendiendo el papel de la memoria colectiva, las narrativas locales y las prácticas culturales como herramientas de reconstrucción social." },
+      { icono: "fa-scale-balanced", titulo: "Causas estructurales del conflicto", detalle: "Analizarás críticamente las causas estructurales, sociales y políticas del conflicto armado en Colombia, aplicando teorías críticas e interdisciplinarias e identificando dinámicas de poder y desigualdad." },
+      { icono: "fa-seedling", titulo: "Propuestas de transformación social", detalle: "Diseñarás propuestas de intervención social y cultural que articulen memoria, justicia social y prácticas artísticas para la transformación de conflictos." },
+      { icono: "fa-dove", titulo: "Dinámicas contemporáneas y paz", detalle: "Evaluarás las dinámicas contemporáneas del conflicto, considerando factores económicos, políticos y sociales, procesos de paz y los desafíos actuales para la justicia social." }
+    ],
+    tutorias: [
+      { titulo: "Primer encuentro: instalación de la unidad", fecha_label: "14 de septiembre · 8:00 am – 9:00 pm", inicio: "2026-09-14T08:00:00", fin: "2026-09-14T21:00:00", url_grabacion: "https://moodlepruebas.unincca.edu.co/course/view.php?id=1857&section=3&act=t1" },
+      { titulo: "Segundo encuentro: causas estructurales", fecha_label: "21 de septiembre · 8:00 am – 9:00 pm", inicio: "2026-09-21T08:00:00", fin: "2026-09-21T21:00:00", url_grabacion: "https://moodlepruebas.unincca.edu.co/course/view.php?id=1857&section=3&act=t2" },
+      { titulo: "Tercer encuentro: memoria y territorio", fecha_label: "28 de septiembre · 8:00 am – 9:00 pm", inicio: "2026-09-28T08:00:00", fin: "2026-09-28T21:00:00", url_grabacion: "https://moodlepruebas.unincca.edu.co/course/view.php?id=1857&section=3&act=t3" },
+      { titulo: "Cuarto encuentro: cierre y evaluación", fecha_label: "5 de octubre · 8:00 am – 9:00 pm", inicio: "2026-10-05T08:00:00", fin: "2026-10-05T21:00:00", url_grabacion: "https://moodlepruebas.unincca.edu.co/course/view.php?id=1857&section=3&act=t4" }
+    ],
+    actividades: [
+      { nombre: "Foro: presentación y expectativas del curso", url: "https://moodlepruebas.unincca.edu.co/course/view.php?id=1857&section=3&act=1" },
+      { nombre: "Lectura: causas estructurales del conflicto armado", url: "https://moodlepruebas.unincca.edu.co/course/view.php?id=1857&section=3&act=2" },
+      { nombre: "Documental: testimonios de memoria", url: "https://moodlepruebas.unincca.edu.co/course/view.php?id=1857&section=3&act=3" },
+      { nombre: "Cuestionario: autoevaluación Unidad 1", url: "https://moodlepruebas.unincca.edu.co/course/view.php?id=1857&section=3&act=4" }
     ]
   };
 
-  /**
-   * El plugin de Moodle arma una URL así:
-   *   ?curso=Ingenieria+de+Sistemas
-   *   &profesor=Pepito+Perez
-   *   &profesor_img=https%3A%2F%2Fejemplo.com%2Ffoto.jpg   (opcional)
-   *   &video=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DXXXXXXXXXXX
-   *   &cantidad_actividades=3
-   *   &actividad_1_nombre=Foro+de+bienvenida&actividad_1_url=https%3A%2F%2F...
-   * (en PHP, usar http_build_query() para que la codificación quede bien).
-   */
-  function leerDatosDesdeURL() {
-    const params = new URLSearchParams(window.location.search);
-    const curso = params.get("curso");
-    if (!curso) return null;
-    return {
-      course_name: curso,
-      profesor_nombre: params.get("profesor") || "Docente del curso",
-      profesor_img_url: params.get("profesor_img") || "",
-      video_url: params.get("video") || "",
-      actividades_json: leerActividadesDesdeURL(params)
-    };
+  /* ---------------------------------------------------------------------
+   * 3. Lectura de datos desde window.name (JSON) — con try/catch de rescate
+   * ------------------------------------------------------------------- */
+  function leerDatosDesdeWindowName() {
+    try {
+      if (!window.name) return null;
+      const recibidos = JSON.parse(window.name);
+      if (!recibidos || typeof recibidos !== "object" || !recibidos.curso) return null;
+      return recibidos;
+    } catch (e) {
+      return null;
+    }
   }
 
-  function leerActividadesDesdeURL(params) {
-    const actividades = [];
-    const declaradas = parseInt(params.get("cantidad_actividades"), 10);
-    const conCantidadExplicita = Number.isFinite(declaradas) && declaradas > 0;
-    const limite = conCantidadExplicita ? declaradas : 200;
-    for (let i = 1; i <= limite; i++) {
-      const nombre = params.get(`actividad_${i}_nombre`);
-      const url = params.get(`actividad_${i}_url`);
-      if (nombre && url) actividades.push({ titulo: nombre, link: url });
-      else if (!conCantidadExplicita) break;
-    }
-    return actividades;
+  function obtenerDatos() {
+    const recibidos = leerDatosDesdeWindowName();
+    if (!recibidos) return EJEMPLO_DEMO;
+    return {
+      curso: recibidos.curso,
+      profesor: Object.assign({}, EJEMPLO_DEMO.profesor, recibidos.profesor || {}),
+      video: recibidos.video || EJEMPLO_DEMO.video,
+      bienvenida: Object.assign({}, EJEMPLO_DEMO.bienvenida, recibidos.bienvenida || {}),
+      aprenderas: Array.isArray(recibidos.aprenderas) ? recibidos.aprenderas : EJEMPLO_DEMO.aprenderas,
+      tutorias: Array.isArray(recibidos.tutorias) ? recibidos.tutorias : EJEMPLO_DEMO.tutorias,
+      actividades: Array.isArray(recibidos.actividades) ? recibidos.actividades : EJEMPLO_DEMO.actividades
+    };
   }
 
   function toEmbedUrl(url) {
@@ -99,30 +149,27 @@
   }
 
   /* ---------------------------------------------------------------------
-   * 2. Utilidades
+   * 4. Utilidades
    * ------------------------------------------------------------------- */
-  const $ = (sel, ctx) => (ctx || document).querySelector(sel);
-  const $$ = (sel, ctx) => Array.from((ctx || document).querySelectorAll(sel));
-
   function icsDate(iso) {
     return iso.replace(/[-:]/g, "").split(".")[0] + "00";
   }
 
   function downloadIcs(tutoria) {
-    const uid = `incca-${tutoria.start}-${Math.random().toString(36).slice(2, 8)}@unincca`;
+    const uid = `incca-${tutoria.inicio}-${Math.random().toString(36).slice(2, 8)}@unincca`;
     const lines = [
-      "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//U.INCCA//Maestria Transformacion de Conflictos//ES",
+      "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//U.INCCA//Visor de recurso//ES",
       "BEGIN:VEVENT", `UID:${uid}`, `DTSTAMP:${icsDate(new Date().toISOString())}`,
-      `DTSTART:${icsDate(tutoria.start)}`, `DTEND:${icsDate(tutoria.end)}`,
-      `SUMMARY:${tutoria.title}`,
-      "DESCRIPTION:Tutoría sincrónica — Maestría en Transformación de Conflictos y Construcción de Paz\\, U.INCCA.",
+      `DTSTART:${icsDate(tutoria.inicio)}`, `DTEND:${icsDate(tutoria.fin)}`,
+      `SUMMARY:${tutoria.titulo}`,
+      "DESCRIPTION:Tutoría sincrónica — U.INCCA.",
       "LOCATION:INCCA Virtual", "END:VEVENT", "END:VCALENDAR"
     ];
     const blob = new Blob([lines.join("\r\n")], { type: "text/calendar;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `tutoria-${tutoria.start.slice(0, 10)}.ics`;
+    a.download = `tutoria-${tutoria.inicio.slice(0, 10)}.ics`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -148,7 +195,7 @@
   }
 
   /* ---------------------------------------------------------------------
-   * 3. Motor del deck — navegación entre diapositivas
+   * 5. Motor del deck — navegación entre diapositivas
    * ------------------------------------------------------------------- */
   const deck = {
     slideEls: [],
@@ -195,7 +242,6 @@
     },
 
     directionTo(idx) {
-      // distancia circular más corta determina la dirección visual de entrada
       const forward = (idx - this.current + this.total) % this.total;
       const backward = (this.current - idx + this.total) % this.total;
       return forward <= backward ? 1 : -1;
@@ -217,7 +263,7 @@
   };
 
   /* ---------------------------------------------------------------------
-   * 4. Render — chrome de navegación (topbar, dots, menú, flechas)
+   * 6. Render — chrome de navegación (topbar, dots, menú, flechas)
    * ------------------------------------------------------------------- */
   function renderChrome() {
     $("#deckDots").innerHTML = SLIDES.map((s, i) => `
@@ -271,32 +317,6 @@
     });
   }
 
-  /* ---------------------------------------------------------------------
-   * Pinta las partes dinámicas (curso, docente, video, actividades)
-   * ------------------------------------------------------------------- */
-  function renderizarDatosDinamicos(datos) {
-    document.title = `${datos.course_name} — U.INCCA`;
-    $("#courseName").textContent = datos.course_name || "Curso sin nombre";
-
-    const avatar = $("#teacherAvatar");
-    avatar.src = datos.profesor_img_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(datos.profesor_nombre || "Docente")}&background=E2E6E9&color=0B349D&size=300`;
-    avatar.alt = datos.profesor_nombre || "Docente del curso";
-    avatar.onerror = () => {
-      avatar.onerror = null;
-      avatar.src = "https://ui-avatars.com/api/?name=Docente&background=E2E6E9&color=0B349D&size=300";
-    };
-    $("#teacherName").textContent = datos.profesor_nombre || "Docente del curso";
-
-    $("#videoFrame").src = toEmbedUrl(datos.video_url);
-
-    ACTIVIDADES_ACTUALES = Array.isArray(datos.actividades_json) ? datos.actividades_json : [];
-    const n = ACTIVIDADES_ACTUALES.length;
-    $("#statActividades").dataset.counter = n;
-    $("#activitiesSub").textContent = n
-      ? `${n} actividad${n === 1 ? "" : "es"} disponible${n === 1 ? "" : "s"} — haz clic para abrir cada una.`
-      : "Este recurso todavía no tiene actividades.";
-  }
-
   function initKeyboard() {
     document.addEventListener("keydown", (e) => {
       if ($("#menuOverlay").classList.contains("is-open")) {
@@ -329,16 +349,56 @@
   }
 
   /* ---------------------------------------------------------------------
-   * 5. Render — sección "¿Qué aprenderás?"
+   * 7. Render — Hero / Bienvenida / Docente (a partir del JSON)
    * ------------------------------------------------------------------- */
-  function renderLearn() {
+  function renderHeroYBienvenidaYDocente(datos) {
+    document.title = `${datos.curso} — U.INCCA`;
+    $("#courseName").textContent = datos.curso || "Curso sin nombre";
+
+    // Docente
+    const avatar = $("#teacherAvatar");
+    avatar.src = datos.profesor.foto || `https://ui-avatars.com/api/?name=${encodeURIComponent(datos.profesor.nombre || "Docente")}&background=E2E6E9&color=0B349D&size=300`;
+    avatar.alt = datos.profesor.nombre || "Docente del curso";
+    avatar.onerror = () => {
+      avatar.onerror = null;
+      avatar.src = "https://ui-avatars.com/api/?name=Docente&background=E2E6E9&color=0B349D&size=300";
+    };
+    $("#teacherName").textContent = datos.profesor.nombre || "Docente del curso";
+    $("#teacherRole").textContent = datos.profesor.rol || "";
+    $("#teacherRole").hidden = !datos.profesor.rol;
+    $("#teacherBio").innerHTML = (datos.profesor.bio || []).map((p) => `<p>${p}</p>`).join("");
+    $("#teacherTags").innerHTML = (datos.profesor.etiquetas || []).map((t) => `
+      <span class="teacher-tag"><i class="fa-solid ${t.icono || "fa-tag"}" aria-hidden="true"></i> ${t.texto}</span>
+    `).join("");
+
+    // Bienvenida
+    $("#bienvenidaTitulo").textContent = datos.bienvenida.titulo || "¡Bienvenidos al curso!";
+    $("#bienvenidaParrafos").innerHTML = (datos.bienvenida.parrafos || []).map((p) => `<p>${p}</p>`).join("");
+    $("#bienvenidaFrase").textContent = datos.bienvenida.frase_destacada || "";
+    $(".quote-card").hidden = !datos.bienvenida.frase_destacada;
+
+    // Video
+    $("#videoFrame").src = toEmbedUrl(datos.video);
+
+    // Contadores del hero
+    $("#statActividades").dataset.counter = datos.actividades.length;
+    $("#statTutorias").dataset.counter = datos.tutorias.length;
+    $("#activitiesSub").textContent = datos.actividades.length
+      ? `${datos.actividades.length} actividad${datos.actividades.length === 1 ? "" : "es"} disponible${datos.actividades.length === 1 ? "" : "s"} — haz clic para abrir cada una.`
+      : "Este recurso todavía no tiene actividades.";
+  }
+
+  /* ---------------------------------------------------------------------
+   * 8. Render — "¿Qué aprenderás?"
+   * ------------------------------------------------------------------- */
+  function renderLearn(aprenderas) {
     const grid = $("#learnGrid");
-    grid.innerHTML = LEARN.map((item) => `
+    grid.innerHTML = aprenderas.map((item) => `
       <div class="learn-card" tabindex="0" role="button" aria-expanded="false">
-        <div class="learn-card-icon"><i class="fa-solid ${item.icon}" aria-hidden="true"></i></div>
-        <div class="learn-card-title">${item.title}</div>
+        <div class="learn-card-icon"><i class="fa-solid ${item.icono || "fa-star"}" aria-hidden="true"></i></div>
+        <div class="learn-card-title">${item.titulo}</div>
         <div class="learn-card-hint"><i class="fa-solid fa-arrows-up-down" aria-hidden="true"></i> Toca para expandir</div>
-        <div class="learn-card-overlay"><p>${item.detail}</p></div>
+        <div class="learn-card-overlay"><p>${item.detalle}</p></div>
       </div>
     `).join("");
 
@@ -355,7 +415,7 @@
   }
 
   /* ---------------------------------------------------------------------
-   * 6. Render — Tutorías (acordeón + descarga .ics)
+   * 9. Render — Tutorías (acordeón + descarga .ics)
    * ------------------------------------------------------------------- */
   function formatCountdown(startIso) {
     const diffMs = new Date(startIso) - new Date();
@@ -365,18 +425,18 @@
     return { label: `En ${days} días`, icon: "fa-hourglass-half" };
   }
 
-  function renderTutorias() {
+  function renderTutorias(tutorias) {
     const list = $("#tutoriaList");
-    list.innerHTML = TUTORIAS.map((t, i) => {
-      const status = formatCountdown(t.start);
+    list.innerHTML = tutorias.map((t, i) => {
+      const status = formatCountdown(t.inicio);
       return `
       <div class="tutoria-item" data-index="${i}">
         <button class="tutoria-head" aria-expanded="false">
           <div class="tutoria-head-left">
             <div class="tutoria-num">${i + 1}</div>
             <div>
-              <div class="tutoria-title">${t.title}</div>
-              <div class="tutoria-date"><i class="fa-regular fa-clock" aria-hidden="true"></i> ${t.dateLabel}</div>
+              <div class="tutoria-title">${t.titulo}</div>
+              <div class="tutoria-date"><i class="fa-regular fa-clock" aria-hidden="true"></i> ${t.fecha_label}</div>
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:10px">
@@ -386,7 +446,7 @@
         </button>
         <div class="tutoria-body">
           <div class="tutoria-body-inner">
-            <a class="btn btn-primary btn-sm" href="${t.recordingUrl}" target="_blank" rel="noopener"><i class="fa-solid fa-video" aria-hidden="true"></i> Ver grabación</a>
+            <a class="btn btn-primary btn-sm" href="${t.url_grabacion}" target="_blank" rel="noopener"><i class="fa-solid fa-video" aria-hidden="true"></i> Ver grabación</a>
             <button class="btn btn-outline btn-sm" data-ics-index="${i}"><i class="fa-regular fa-calendar-plus" aria-hidden="true"></i> Agregar al calendario</button>
           </div>
         </div>
@@ -414,24 +474,22 @@
     $$("[data-ics-index]", list).forEach((btn) => {
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
-        downloadIcs(TUTORIAS[Number(btn.dataset.icsIndex)]);
+        downloadIcs(tutorias[Number(btn.dataset.icsIndex)]);
         showToast("Evento descargado — ábrelo para agregarlo a tu calendario.", "fa-calendar-check");
       });
     });
   }
 
   /* ---------------------------------------------------------------------
-   * 7. Render — Actividades (simplificado: solo número + título + link)
+   * 10. Render — Actividades (número + título + link)
    * ------------------------------------------------------------------- */
-  let ACTIVIDADES_ACTUALES = [];
-
-  function renderActivityCards() {
+  function renderActivityCards(actividades) {
     const grid = $("#activityGrid");
-    grid.innerHTML = ACTIVIDADES_ACTUALES.length
-      ? ACTIVIDADES_ACTUALES.map((item, i) => `
-        <a class="activity-card" href="${item.link}" target="_blank" rel="noopener" style="text-decoration:none">
+    grid.innerHTML = actividades.length
+      ? actividades.map((item, i) => `
+        <a class="activity-card" href="${item.url}" target="_blank" rel="noopener" style="text-decoration:none">
           <div class="activity-badge">${i + 1}</div>
-          <div class="activity-card-title">${item.titulo}</div>
+          <div class="activity-card-title">${item.nombre}</div>
           <span class="btn btn-primary btn-sm activity-card-btn">Abrir actividad <i class="fa-solid fa-arrow-right activity-card-open" aria-hidden="true"></i></span>
         </a>
       `).join("")
@@ -439,7 +497,7 @@
   }
 
   /* ---------------------------------------------------------------------
-   * 8. Contadores animados (hero)
+   * 11. Contadores animados (hero)
    * ------------------------------------------------------------------- */
   function initCounters(root) {
     $$("[data-counter]", root).forEach((el) => {
@@ -462,13 +520,13 @@
    * Init
    * ------------------------------------------------------------------- */
   document.addEventListener("DOMContentLoaded", () => {
-    const datosReales = leerDatosDesdeURL();
-    renderizarDatosDinamicos(datosReales || EJEMPLO_DEMO);
+    const datos = obtenerDatos();
 
+    renderHeroYBienvenidaYDocente(datos);
     renderChrome();
-    renderLearn();
-    renderTutorias();
-    renderActivityCards();
+    renderLearn(datos.aprenderas);
+    renderTutorias(datos.tutorias);
+    renderActivityCards(datos.actividades);
     initMenu();
     initHeroCue();
     initGotoActividadesButtons();

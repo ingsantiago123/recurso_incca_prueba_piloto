@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prueba: visor embebido vía window.name — U.INCCA</title>
+<meta name="robots" content="noindex, nofollow">
+<style>
+  body { margin: 0; font-family: 'Segoe UI', Roboto, Arial, sans-serif; background: #E2E6E9; }
+  .info { padding: 14px 18px; background: #040C38; color: #fff; font-size: 13.5px; }
+  .info code { background: rgba(255,255,255,.12); padding: 2px 6px; border-radius: 4px; }
+  iframe { display: block; width: 100%; height: calc(100vh - 46px); border: 0; }
+</style>
+</head>
+<body>
+
+<div class="info">
+  Prueba: este archivo arma un JSON de ejemplo, lo inyecta en <code>iframe.contentWindow.name</code> ANTES de fijar el <code>src</code>, y el visor lo lee con <code>window.name</code> — así el plugin de Moodle debe embeberlo, sin límite de longitud de URL.
+</div>
+
+<iframe id="visor" title="Visor de recurso U.INCCA"></iframe>
+
+<script>
+  // Este objeto es exactamente lo que tu plugin de Moodle debe generar
+  // dinámicamente (por PHP) y pasarle al visor. Ver la estructura completa
+  // documentada al inicio de assets/js/main.js.
+  var datosDelRecurso = {
+    curso: "Ingeniería de Sistemas",
+    profesor: {
+      nombre: "Pepito Pérez",
+      foto: "https://ui-avatars.com/api/?name=Pepito+Perez&background=A58540&color=fff&size=300",
+      rol: "Ingeniero de Sistemas · Especialista en Desarrollo de Software",
+      bio: [
+        "Docente con experiencia en desarrollo web, bases de datos y arquitectura de software, enfocado en el aprendizaje práctico y basado en proyectos.",
+        "Ha acompañado procesos de formación en programación para estudiantes de pregrado y educación continuada."
+      ],
+      etiquetas: [
+        { icono: "fa-code", texto: "Desarrollo de software" },
+        { icono: "fa-database", texto: "Bases de datos" },
+        { icono: "fa-laptop-code", texto: "Proyectos aplicados" }
+      ]
+    },
+    video: "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
+    bienvenida: {
+      titulo: "¡Bienvenidos al curso de Ingeniería de Sistemas!",
+      parrafos: [
+        "En este curso construirás bases sólidas de programación, bases de datos y arquitectura de software mediante proyectos prácticos.",
+        "Trabajaremos con ejercicios reales y retroalimentación constante para que apliques cada concepto desde la primera semana."
+      ],
+      frase_destacada: "El código que no se entiende, no se puede mantener."
+    },
+    aprenderas: [
+      { icono: "fa-code", titulo: "Fundamentos de programación", detalle: "Variables, estructuras de control, funciones y buenas prácticas de código limpio." },
+      { icono: "fa-database", titulo: "Bases de datos relacionales", detalle: "Modelado de datos, SQL y diseño de esquemas normalizados." },
+      { icono: "fa-diagram-project", titulo: "Arquitectura de software", detalle: "Patrones de diseño, capas de aplicación y buenas prácticas de arquitectura." },
+      { icono: "fa-laptop-code", titulo: "Proyecto integrador", detalle: "Desarrollo de una aplicación completa aplicando todo lo aprendido en el curso." }
+    ],
+    tutorias: [
+      { titulo: "Encuentro 1: introducción al curso", fecha_label: "10 de agosto · 6:00 pm – 8:00 pm", inicio: "2026-08-10T18:00:00", fin: "2026-08-10T20:00:00", url_grabacion: "https://ejemplo.com/grabacion-1" },
+      { titulo: "Encuentro 2: bases de datos", fecha_label: "24 de agosto · 6:00 pm – 8:00 pm", inicio: "2026-08-24T18:00:00", fin: "2026-08-24T20:00:00", url_grabacion: "https://ejemplo.com/grabacion-2" }
+    ],
+    actividades: [
+      { nombre: "Foro: preséntate al curso", url: "https://ejemplo.com/actividad-1" },
+      { nombre: "Taller: primer programa en consola", url: "https://ejemplo.com/actividad-2" },
+      { nombre: "Quiz: fundamentos de programación", url: "https://ejemplo.com/actividad-3" },
+      { nombre: "Proyecto: modelo entidad-relación", url: "https://ejemplo.com/actividad-4" },
+      { nombre: "Entrega final del proyecto integrador", url: "https://ejemplo.com/actividad-5" }
+    ]
+  };
+
+  var iframe = document.getElementById("visor");
+  // OJO: hay que fijar contentWindow.name (el window.name real de adentro del
+  // iframe), no iframe.name (que solo es el atributo HTML del elemento).
+  iframe.contentWindow.name = JSON.stringify(datosDelRecurso);
+  iframe.src = "./index.html";
+</script>
+</body>
+</html>
