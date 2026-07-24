@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Prueba: visor embebido vía window.name — U.INCCA</title>
+<title>Prueba: visor embebido vía name estático — U.INCCA</title>
 <meta name="robots" content="noindex, nofollow">
 <style>
   body { margin: 0; font-family: 'Segoe UI', Roboto, Arial, sans-serif; background: #E2E6E9; }
@@ -15,78 +15,19 @@
 <body>
 
 <div class="info">
-  Prueba: este archivo arma un JSON de ejemplo, lo inyecta en <code>iframe.contentWindow.name</code> ANTES de fijar el <code>src</code>, y el visor lo lee con <code>window.name</code> — así el plugin de Moodle debe embeberlo, sin límite de longitud de URL.
+  Prueba: este es EXACTAMENTE el patrón que debe generar el plugin de Moodle — un
+  <code>&lt;iframe&gt;</code> con el atributo <code>name</code> estático (JSON completo,
+  sin ningún JavaScript en esta página) y <code>src</code> apuntando al visor.
 </div>
 
-<iframe id="incca-hero-section" title="Visor de recurso U.INCCA"></iframe>
-
-<script>
-  // Este objeto es exactamente lo que tu plugin de Moodle debe generar
-  // dinámicamente (por PHP) y pasarle al visor. Ver la estructura completa
-  // documentada al inicio de assets/js/main.js.
-  var datosDelRecurso = {
-    curso: "Ingeniería de Sistemas",
-    resumen: "Programa enfocado en el desarrollo de software, bases de datos y arquitectura de sistemas a través de proyectos prácticos.",
-    insignias: [
-      { icono: "fa-brain", texto: "Teórico · Práctico" },
-      { icono: "fa-award", texto: "3 Créditos" },
-      { icono: "fa-laptop", texto: "100% Virtual", destacada: true },
-      { icono: "fa-calendar-days", texto: "Fechas flexibles" },
-      { icono: "fa-clock", texto: "64h de trabajo directo" }
-    ],
-    unidades: 3,
-    horas_trabajo: 64,
-    profesor: {
-      nombre: "Pepito Pérez",
-      foto: "https://ui-avatars.com/api/?name=Pepito+Perez&background=A58540&color=fff&size=300",
-      rol: "Ingeniero de Sistemas · Especialista en Desarrollo de Software",
-      bio: [
-        "Docente con experiencia en desarrollo web, bases de datos y arquitectura de software, enfocado en el aprendizaje práctico y basado en proyectos.",
-        "Ha acompañado procesos de formación en programación para estudiantes de pregrado y educación continuada."
-      ],
-      etiquetas: [
-        { icono: "fa-code", texto: "Desarrollo de software" },
-        { icono: "fa-database", texto: "Bases de datos" },
-        { icono: "fa-laptop-code", texto: "Proyectos aplicados" }
-      ]
-    },
-    video: "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
-    video_titulo: "Conoce la metodología del curso",
-    video_parrafos: [
-      "Un recorrido por la estructura del curso, la metodología de evaluación y las herramientas que usarás durante el semestre."
-    ],
-    bienvenida: {
-      titulo: "¡Bienvenidos al curso de Ingeniería de Sistemas!",
-      parrafos: [
-        "En este curso construirás bases sólidas de programación, bases de datos y arquitectura de software mediante proyectos prácticos.",
-        "Trabajaremos con ejercicios reales y retroalimentación constante para que apliques cada concepto desde la primera semana."
-      ],
-      frase_destacada: "El código que no se entiende, no se puede mantener."
-    },
-    aprenderas: [
-      { icono: "fa-code", titulo: "Fundamentos de programación", detalle: "Variables, estructuras de control, funciones y buenas prácticas de código limpio." },
-      { icono: "fa-database", titulo: "Bases de datos relacionales", detalle: "Modelado de datos, SQL y diseño de esquemas normalizados." },
-      { icono: "fa-diagram-project", titulo: "Arquitectura de software", detalle: "Patrones de diseño, capas de aplicación y buenas prácticas de arquitectura." },
-      { icono: "fa-laptop-code", titulo: "Proyecto integrador", detalle: "Desarrollo de una aplicación completa aplicando todo lo aprendido en el curso." }
-    ],
-    tutorias: [
-      { titulo: "Encuentro 1: introducción al curso", fecha_label: "10 de agosto · 6:00 pm – 8:00 pm", inicio: "2026-08-10T18:00:00", fin: "2026-08-10T20:00:00", url_grabacion: "https://ejemplo.com/grabacion-1" },
-      { titulo: "Encuentro 2: bases de datos", fecha_label: "24 de agosto · 6:00 pm – 8:00 pm", inicio: "2026-08-24T18:00:00", fin: "2026-08-24T20:00:00", url_grabacion: "https://ejemplo.com/grabacion-2" }
-    ],
-    actividades: [
-      { nombre: "Foro: preséntate al curso", url: "https://ejemplo.com/actividad-1" },
-      { nombre: "Taller: primer programa en consola", url: "https://ejemplo.com/actividad-2" },
-      { nombre: "Quiz: fundamentos de programación", url: "https://ejemplo.com/actividad-3" },
-      { nombre: "Proyecto: modelo entidad-relación", url: "https://ejemplo.com/actividad-4" },
-      { nombre: "Entrega final del proyecto integrador", url: "https://ejemplo.com/actividad-5" }
-    ]
-  };
-
-  var iframe = document.getElementById("incca-hero-section");
-  // OJO: hay que fijar contentWindow.name (el window.name real de adentro del
-  // iframe), no iframe.name (que solo es el atributo HTML del elemento).
-  iframe.contentWindow.name = JSON.stringify(datosDelRecurso);
-  iframe.src = "./index.html";
-</script>
+<!--
+  Este es el HTML literal que debe producir el plugin: en PHP, se genera
+  con json_encode($datos) y se imprime tal cual dentro del atributo name,
+  entre comillas simples. No hace falta JavaScript en la página padre.
+-->
+<iframe id="incca-hero-section" title="Visor de recurso U.INCCA"
+  src="./index.html"
+  name='{"curso":"Ingeniería de Alimentos","resumen":"Fundamentos de ciencia y tecnología de alimentos, con énfasis en procesos de transformación, control de calidad e inocuidad alimentaria a lo largo de la cadena productiva.","insignias":[{"icono":"fa-brain","texto":"Teórico · Práctico"},{"icono":"fa-award","texto":"3 Créditos"},{"icono":"fa-laptop","texto":"100% Virtual","destacada":true},{"icono":"fa-calendar-days","texto":"Fechas flexibles"},{"icono":"fa-clock","texto":"80h de trabajo directo"}],"unidades":5,"horas_trabajo":80,"profesor":{"nombre":"Kevin Santiago Garzón Fauna","foto":"https://ui-avatars.com/api/?name=Kevin+Garzon&background=0B349D&color=fff&size=300&bold=true","rol":"Ingeniero de Alimentos · Especialista en Control de Calidad","bio":["Ingeniero de Alimentos con experiencia en procesos agroindustriales, control de calidad y gestión de inocuidad alimentaria en plantas de producción.","Ha acompañado procesos de formación en normatividad sanitaria y buenas prácticas de manufactura para estudiantes de pregrado y educación continuada."],"etiquetas":[{"icono":"fa-flask","texto":"Control de calidad"},{"icono":"fa-industry","texto":"Procesos agroindustriales"},{"icono":"fa-shield-halved","texto":"Inocuidad alimentaria"}]},"video":"https://www.youtube.com/watch?v=aqz-KE-bpKQ","video_titulo":"Conoce el laboratorio y la metodología del curso","video_parrafos":["Un recorrido por el laboratorio de alimentos, la metodología de evaluación y las herramientas que usarás a lo largo del semestre.","Verás cómo se conectan las clases teóricas con las prácticas de laboratorio y los proyectos aplicados de cada unidad."],"bienvenida":{"titulo":"¡Bienvenidos al curso de Ingeniería de Alimentos!","parrafos":["Nos alegra contar con tu participación en este curso, donde exploraremos los procesos que transforman la materia prima en alimentos seguros y de calidad.","A lo largo de cinco unidades abordaremos microbiología de alimentos, procesos de conservación, control de calidad y la normatividad que rige la industria alimentaria en Colombia.","Te invitamos a asumir este recorrido con curiosidad y rigor: aquí el conocimiento se construye combinando teoría, laboratorio y casos reales de la industria."],"frase_destacada":"La inocuidad alimentaria no es un requisito, es una responsabilidad."},"aprenderas":[{"icono":"fa-microscope","titulo":"Microbiología de alimentos","detalle":"Identificarás los microorganismos relevantes en la industria alimentaria y su impacto en la seguridad y vida útil de los productos."},{"icono":"fa-snowflake","titulo":"Procesos de conservación","detalle":"Analizarás los métodos de conservación (térmicos, por frío, deshidratación) y su efecto sobre las propiedades del alimento."},{"icono":"fa-clipboard-check","titulo":"Control de calidad","detalle":"Aplicarás herramientas de control de calidad y trazabilidad a lo largo de la cadena de producción alimentaria."},{"icono":"fa-gavel","titulo":"Normatividad e inocuidad","detalle":"Conocerás la normatividad sanitaria colombiana y los sistemas de gestión de inocuidad como HACCP."}],"tutorias":[{"titulo":"Encuentro 1: instalación del curso y laboratorio","fecha_label":"12 de agosto · 6:00 pm – 8:00 pm","inicio":"2026-08-12T18:00:00","fin":"2026-08-12T20:00:00","url_grabacion":"https://moodlepruebas.unincca.edu.co/mod/bigbluebuttonbn/view.php?id=101"},{"titulo":"Encuentro 2: microbiología y conservación","fecha_label":"26 de agosto · 6:00 pm – 8:00 pm","inicio":"2026-08-26T18:00:00","fin":"2026-08-26T20:00:00","url_grabacion":"https://moodlepruebas.unincca.edu.co/mod/bigbluebuttonbn/view.php?id=102"},{"titulo":"Encuentro 3: control de calidad e inocuidad","fecha_label":"9 de septiembre · 6:00 pm – 8:00 pm","inicio":"2026-09-09T18:00:00","fin":"2026-09-09T20:00:00","url_grabacion":"https://moodlepruebas.unincca.edu.co/mod/bigbluebuttonbn/view.php?id=103"}],"actividades":[{"nombre":"Foro: preséntate y cuéntanos tu experiencia con alimentos","url":"https://moodlepruebas.unincca.edu.co/mod/forum/view.php?id=201"},{"nombre":"Lectura: fundamentos de microbiología de alimentos","url":"https://moodlepruebas.unincca.edu.co/mod/resource/view.php?id=202"},{"nombre":"Laboratorio virtual: identificación de microorganismos","url":"https://moodlepruebas.unincca.edu.co/mod/h5pactivity/view.php?id=203"},{"nombre":"Quiz: métodos de conservación de alimentos","url":"https://moodlepruebas.unincca.edu.co/mod/quiz/view.php?id=204"},{"nombre":"Taller: diseño de un plan HACCP","url":"https://moodlepruebas.unincca.edu.co/mod/assign/view.php?id=205"},{"nombre":"Video: buenas prácticas de manufactura","url":"https://moodlepruebas.unincca.edu.co/mod/resource/view.php?id=206"},{"nombre":"Foro debate: normatividad sanitaria en Colombia","url":"https://moodlepruebas.unincca.edu.co/mod/forum/view.php?id=207"},{"nombre":"Proyecto final: control de calidad de un producto","url":"https://moodlepruebas.unincca.edu.co/mod/assign/view.php?id=208"},{"nombre":"Autoevaluación y cierre del curso","url":"https://moodlepruebas.unincca.edu.co/mod/quiz/view.php?id=209"}]}'>
+</iframe>
 </body>
 </html>
