@@ -23,6 +23,11 @@
  *
  * {
  *   "curso": "Nombre del curso",
+ *   "resumen": "Párrafo corto debajo del título del hero",
+ *   "insignias": [{ "icono": "fa-brain", "texto": "Teórico · Práctico",
+ *                    "destacada": false }],
+ *   "unidades": 4,
+ *   "horas_trabajo": 96,
  *   "profesor": {
  *     "nombre": "...", "foto": "url (opcional)",
  *     "rol": "... (opcional)",
@@ -30,6 +35,8 @@
  *     "etiquetas": [{ "icono": "fa-graduation-cap", "texto": "..." }]
  *   },
  *   "video": "url de YouTube/Vimeo/Drive",
+ *   "video_titulo": "Título junto al video",
+ *   "video_parrafos": ["párrafo 1", "párrafo 2"],
  *   "bienvenida": {
  *     "titulo": "...", "parrafos": ["...", "..."], "frase_destacada": "..."
  *   },
@@ -38,6 +45,11 @@
  *                  "fin": "ISO", "url_grabacion": "..." }],
  *   "actividades": [{ "nombre": "...", "url": "..." }]
  * }
+ *
+ * Todo lo que varía según la materia va en el JSON. Lo único que queda
+ * fijo en el HTML son etiquetas de interfaz que nunca cambian (textos de
+ * botones, nombre de secciones como "Actividades" o "Docente", el
+ * membrete "Universidad INCCA de Colombia" del topbar).
  * ------------------------------------------------------------------- */
 (function () {
   "use strict";
@@ -65,6 +77,16 @@
    * ------------------------------------------------------------------- */
   const EJEMPLO_DEMO = {
     curso: "Conflicto Social y Político en Colombia",
+    resumen: "Maestría en Transformación de Conflictos y Construcción de Paz — un recorrido crítico e interdisciplinar por las raíces, dinámicas y posibilidades de transformación del conflicto colombiano.",
+    insignias: [
+      { icono: "fa-brain", texto: "Teórico · Práctico" },
+      { icono: "fa-award", texto: "2 Créditos" },
+      { icono: "fa-laptop", texto: "100% Virtual", destacada: true },
+      { icono: "fa-calendar-days", texto: "Fechas flexibles" },
+      { icono: "fa-clock", texto: "96h de trabajo directo" }
+    ],
+    unidades: 4,
+    horas_trabajo: 96,
     profesor: {
       nombre: "Sergio Andrés Baquero Muñoz",
       foto: "",
@@ -80,6 +102,11 @@
       ]
     },
     video: "https://drive.google.com/file/d/1j9Nz5yjaUFQqirqmNAefUzu726Z0YxDV/preview",
+    video_titulo: "La ruta hacia un aprendizaje significativo",
+    video_parrafos: [
+      "Mucho más que un elemento integrador del plan de estudios: es el mapa que guía cada paso del viaje de aprendizaje, con herramientas y estrategias para hacer de cada unidad una oportunidad de crecimiento.",
+      "Docentes y estudiantes construyen juntos experiencias dinámicas, donde el conocimiento se convierte en acción y cada desafío es una puerta al descubrimiento."
+    ],
     bienvenida: {
       titulo: "¡Bienvenidos al curso!",
       parrafos: [
@@ -128,8 +155,14 @@
     if (!recibidos) return EJEMPLO_DEMO;
     return {
       curso: recibidos.curso,
+      resumen: recibidos.resumen || EJEMPLO_DEMO.resumen,
+      insignias: Array.isArray(recibidos.insignias) ? recibidos.insignias : EJEMPLO_DEMO.insignias,
+      unidades: Number.isFinite(recibidos.unidades) ? recibidos.unidades : EJEMPLO_DEMO.unidades,
+      horas_trabajo: Number.isFinite(recibidos.horas_trabajo) ? recibidos.horas_trabajo : EJEMPLO_DEMO.horas_trabajo,
       profesor: Object.assign({}, EJEMPLO_DEMO.profesor, recibidos.profesor || {}),
       video: recibidos.video || EJEMPLO_DEMO.video,
+      video_titulo: recibidos.video_titulo || EJEMPLO_DEMO.video_titulo,
+      video_parrafos: Array.isArray(recibidos.video_parrafos) ? recibidos.video_parrafos : EJEMPLO_DEMO.video_parrafos,
       bienvenida: Object.assign({}, EJEMPLO_DEMO.bienvenida, recibidos.bienvenida || {}),
       aprenderas: Array.isArray(recibidos.aprenderas) ? recibidos.aprenderas : EJEMPLO_DEMO.aprenderas,
       tutorias: Array.isArray(recibidos.tutorias) ? recibidos.tutorias : EJEMPLO_DEMO.tutorias,
@@ -354,6 +387,14 @@
   function renderHeroYBienvenidaYDocente(datos) {
     document.title = `${datos.curso} — U.INCCA`;
     $("#courseName").textContent = datos.curso || "Curso sin nombre";
+    $("#heroResumen").textContent = datos.resumen || "";
+
+    $("#heroBadges").innerHTML = (datos.insignias || []).map((b) => `
+      <span class="hero-badge ${b.destacada ? "hero-badge--solid" : ""}"><i class="fa-solid ${b.icono || "fa-circle"}" aria-hidden="true"></i> ${b.texto}</span>
+    `).join("");
+
+    $("#statUnidades").dataset.counter = datos.unidades;
+    $("#statHoras").dataset.counter = datos.horas_trabajo;
 
     // Docente
     const avatar = $("#teacherAvatar");
@@ -378,6 +419,8 @@
     $(".quote-card").hidden = !datos.bienvenida.frase_destacada;
 
     // Video
+    $("#videoTitulo").textContent = datos.video_titulo || "";
+    $("#videoParrafos").innerHTML = (datos.video_parrafos || []).map((p) => `<p>${p}</p>`).join("");
     $("#videoFrame").src = toEmbedUrl(datos.video);
 
     // Contadores del hero

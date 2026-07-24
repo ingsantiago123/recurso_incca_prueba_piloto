@@ -3,17 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Conflicto Social y Político en Colombia · Maestría en Transformación de Conflictos — U.INCCA</title>
-<meta name="description" content="Recorrido interactivo de la Maestría en Transformación de Conflictos y Construcción de Paz de la Universidad INCCA de Colombia: bienvenida, ruta de aprendizaje, docente, tutorías, DEA y actividades de la unidad.">
-<meta name="robots" content="index, follow">
+<title>Visor de recurso — U.INCCA</title>
+<meta name="description" content="Visor interactivo de recursos educativos de la Universidad INCCA de Colombia: bienvenida, ruta de aprendizaje, docente, tutorías, video y actividades — contenido parametrizado por curso.">
+<meta name="robots" content="noindex, follow">
 <meta name="theme-color" content="#040C38">
 <meta name="color-scheme" content="light">
-
-<meta property="og:type" content="website">
-<meta property="og:title" content="Conflicto Social y Político en Colombia · U.INCCA">
-<meta property="og:description" content="Maestría en Transformación de Conflictos y Construcción de Paz — recorrido crítico e interdisciplinar por el conflicto colombiano.">
-<meta property="og:locale" content="es_CO">
-<meta name="twitter:card" content="summary">
 
 <link rel="icon" href="./assets/img/favicon.png" type="image/png">
 <link rel="apple-touch-icon" href="./assets/img/apple-touch-icon.png">
@@ -25,27 +19,6 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 
 <link rel="stylesheet" href="./assets/css/styles.css">
-
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Course",
-  "name": "Conflicto Social y Político en Colombia",
-  "description": "Maestría en Transformación de Conflictos y Construcción de Paz — un recorrido crítico e interdisciplinar por las raíces, dinámicas y posibilidades de transformación del conflicto colombiano.",
-  "provider": {
-    "@type": "CollegeOrUniversity",
-    "name": "Universidad INCCA de Colombia",
-    "sameAs": "https://www.unincca.edu.co"
-  },
-  "inLanguage": "es",
-  "educationalCredentialAwarded": "Maestría en Transformación de Conflictos y Construcción de Paz",
-  "hasCourseInstance": {
-    "@type": "CourseInstance",
-    "courseMode": "online",
-    "courseWorkload": "PT96H"
-  }
-}
-</script>
 </head>
 <body>
 
@@ -62,7 +35,7 @@
   <header class="deck-topbar">
     <div class="deck-brand">
       <img class="deck-brand-mark" src="./assets/img/unincca-emblem.png" alt="Universidad INCCA de Colombia">
-      <span class="deck-brand-text">U.INCCA · Maestría en Transformación de Conflictos</span>
+      <span class="deck-brand-text">U.INCCA · Recurso educativo</span>
     </div>
     <div class="deck-topbar-right">
       <span class="deck-counter"><b id="slideCurrent">1</b> / <span id="slideTotal">7</span></span>
@@ -87,16 +60,10 @@
             <div class="hero-eyebrow-text">Universidad INCCA de Colombia · INCCA Virtual</div>
           </div>
 
-          <div class="hero-badges">
-            <span class="hero-badge"><i class="fa-solid fa-brain" aria-hidden="true"></i> Teórico · Práctico</span>
-            <span class="hero-badge"><i class="fa-solid fa-award" aria-hidden="true"></i> 2 Créditos</span>
-            <span class="hero-badge hero-badge--solid"><i class="fa-solid fa-laptop" aria-hidden="true"></i> 100% Virtual</span>
-            <span class="hero-badge"><i class="fa-regular fa-calendar" aria-hidden="true"></i> Fechas flexibles</span>
-            <span class="hero-badge"><i class="fa-regular fa-clock" aria-hidden="true"></i> 96h de trabajo directo</span>
-          </div>
+          <div class="hero-badges" id="heroBadges"></div>
 
           <h1 class="hero-title" id="courseName">—</h1>
-          <p class="hero-desc">Maestría en Transformación de Conflictos y Construcción de Paz — un recorrido crítico e interdisciplinar por las raíces, dinámicas y posibilidades de transformación del conflicto colombiano.</p>
+          <p class="hero-desc" id="heroResumen"></p>
 
           <div class="hero-cta">
             <button class="btn btn-gold" id="heroActivitiesCue">
@@ -106,8 +73,8 @@
           </div>
 
           <div class="stat-row">
-            <div class="stat-cell"><span class="stat-num" data-counter="4">0</span><span class="stat-label">Unidades</span></div>
-            <div class="stat-cell"><span class="stat-num" data-counter="96" data-counter-suffix="h">0</span><span class="stat-label">Trabajo directo</span></div>
+            <div class="stat-cell"><span class="stat-num" id="statUnidades" data-counter="0">0</span><span class="stat-label">Unidades</span></div>
+            <div class="stat-cell"><span class="stat-num" id="statHoras" data-counter="0" data-counter-suffix="h">0</span><span class="stat-label">Trabajo directo</span></div>
             <div class="stat-cell"><span class="stat-num" id="statTutorias" data-counter="0">0</span><span class="stat-label">Tutorías en vivo</span></div>
             <div class="stat-cell"><span class="stat-num" id="statActividades" data-counter="0">0</span><span class="stat-label">Actividades</span></div>
           </div>
@@ -180,10 +147,9 @@
       <div class="slide-body">
         <div class="dea-grid stagger">
           <div class="dea-text">
-            <div class="tag"><i class="fa-solid fa-compass" aria-hidden="true"></i> DEA · Diseño de Experiencia para el Aprendizaje</div>
-            <h2 class="heading" style="margin:10px 0 12px">La ruta hacia un aprendizaje significativo</h2>
-            <p>Mucho más que un elemento integrador del plan de estudios: es el mapa que guía cada paso del viaje de aprendizaje, con herramientas y estrategias para hacer de cada unidad una oportunidad de crecimiento.</p>
-            <p>Docentes y estudiantes construyen juntos experiencias dinámicas, donde el conocimiento se convierte en acción y cada desafío es una puerta al descubrimiento.</p>
+            <div class="tag"><i class="fa-solid fa-compass" aria-hidden="true"></i> Video de presentación</div>
+            <h2 class="heading" id="videoTitulo" style="margin:10px 0 12px"></h2>
+            <div id="videoParrafos"></div>
             <button class="btn btn-gold" id="deaActivitiesCue" style="margin-top:6px">
               <i class="fa-solid fa-door-open" aria-hidden="true"></i> Ir a las actividades
             </button>
