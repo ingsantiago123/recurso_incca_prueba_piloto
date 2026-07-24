@@ -71,69 +71,36 @@
   ];
 
   /* ---------------------------------------------------------------------
-   * 2. Recurso de ejemplo — se usa cuando window.name viene vacío/roto
-   *    (por ejemplo, al abrir index.html directo en el navegador, fuera
-   *    del iframe). Reutiliza el contenido original del curso piloto.
+   * 2. Placeholders — SOLO se usan campo por campo cuando ese campo en
+   *    particular no llegó en el JSON. Son deliberadamente genéricos
+   *    ("Nombre del curso") para que sea obvio, al probar, cuándo un dato
+   *    real está llegando y cuándo no — nunca se muestra un curso de
+   *    ejemplo que parezca información real.
    * ------------------------------------------------------------------- */
-  const EJEMPLO_DEMO = {
-    curso: "Conflicto Social y Político en Colombia",
-    resumen: "Maestría en Transformación de Conflictos y Construcción de Paz — un recorrido crítico e interdisciplinar por las raíces, dinámicas y posibilidades de transformación del conflicto colombiano.",
-    insignias: [
-      { icono: "fa-brain", texto: "Teórico · Práctico" },
-      { icono: "fa-award", texto: "2 Créditos" },
-      { icono: "fa-laptop", texto: "100% Virtual", destacada: true },
-      { icono: "fa-calendar-days", texto: "Fechas flexibles" },
-      { icono: "fa-clock", texto: "96h de trabajo directo" }
-    ],
-    unidades: 4,
-    horas_trabajo: 96,
+  const SIN_DATOS = {
+    curso: "Nombre del curso",
+    resumen: "Aquí aparecerá el resumen del curso.",
+    insignias: [],
+    unidades: 0,
+    horas_trabajo: 0,
     profesor: {
-      nombre: "Sergio Andrés Baquero Muñoz",
+      nombre: "Nombre del docente",
       foto: "",
-      rol: "Maestro en Música · Magíster en Transformación de Conflictos y Construcción de Paz",
-      bio: [
-        "Maestro en Música con énfasis en Composición y Arreglos, y Magíster en Transformación de Conflictos y Construcción de Paz, graduado con honores de la Universidad INCCA de Colombia. Cuenta con experiencia docente en iniciación musical, formación de ensambles universitarios y procesos educativos desde la extensión artística y cultural.",
-        "Ha sido representante estudiantil y miembro del claustro de gobierno universitario. Actualmente trabaja en la Secretaría Distrital de Integración Social, Subdirección para la Vejez, y continúa vinculado a la docencia universitaria."
-      ],
-      etiquetas: [
-        { icono: "fa-graduation-cap", texto: "Honores INCCA" },
-        { icono: "fa-music", texto: "Composición y arreglos" },
-        { icono: "fa-landmark", texto: "Gobierno universitario" }
-      ]
+      rol: "",
+      bio: [],
+      etiquetas: []
     },
-    video: "https://drive.google.com/file/d/1j9Nz5yjaUFQqirqmNAefUzu726Z0YxDV/preview",
-    video_titulo: "La ruta hacia un aprendizaje significativo",
-    video_parrafos: [
-      "Mucho más que un elemento integrador del plan de estudios: es el mapa que guía cada paso del viaje de aprendizaje, con herramientas y estrategias para hacer de cada unidad una oportunidad de crecimiento.",
-      "Docentes y estudiantes construyen juntos experiencias dinámicas, donde el conocimiento se convierte en acción y cada desafío es una puerta al descubrimiento."
-    ],
+    video: "",
+    video_titulo: "",
+    video_parrafos: [],
     bienvenida: {
-      titulo: "¡Bienvenidos al curso!",
-      parrafos: [
-        "Nos alegra contar con su participación en este espacio académico donde exploraremos, de manera crítica e interdisciplinar, las raíces, dinámicas y posibilidades de transformación del conflicto colombiano.",
-        "A lo largo de cuatro unidades abordaremos las causas estructurales del conflicto, el papel de las comunidades y la memoria, las persistencias del conflicto en la actualidad, y las alternativas de transformación desde la justicia social, el arte y la acción colectiva.",
-        "Les invitamos a asumir este recorrido con apertura, compromiso y mirada crítica: aquí el conocimiento se construye desde el diálogo, la experiencia y la reflexión compartida."
-      ],
-      frase_destacada: "Lucho por una educación que nos enseñe a pensar y no por una educación que nos enseñe a obedecer."
+      titulo: "Título de bienvenida",
+      parrafos: [],
+      frase_destacada: ""
     },
-    aprenderas: [
-      { icono: "fa-people-group", titulo: "Memoria y resistencias comunitarias", detalle: "Reconocerás y valorarás las experiencias y resistencias de las comunidades afectadas por el conflicto, comprendiendo el papel de la memoria colectiva, las narrativas locales y las prácticas culturales como herramientas de reconstrucción social." },
-      { icono: "fa-scale-balanced", titulo: "Causas estructurales del conflicto", detalle: "Analizarás críticamente las causas estructurales, sociales y políticas del conflicto armado en Colombia, aplicando teorías críticas e interdisciplinarias e identificando dinámicas de poder y desigualdad." },
-      { icono: "fa-seedling", titulo: "Propuestas de transformación social", detalle: "Diseñarás propuestas de intervención social y cultural que articulen memoria, justicia social y prácticas artísticas para la transformación de conflictos." },
-      { icono: "fa-dove", titulo: "Dinámicas contemporáneas y paz", detalle: "Evaluarás las dinámicas contemporáneas del conflicto, considerando factores económicos, políticos y sociales, procesos de paz y los desafíos actuales para la justicia social." }
-    ],
-    tutorias: [
-      { titulo: "Primer encuentro: instalación de la unidad", fecha_label: "14 de septiembre · 8:00 am – 9:00 pm", inicio: "2026-09-14T08:00:00", fin: "2026-09-14T21:00:00", url_grabacion: "https://moodlepruebas.unincca.edu.co/course/view.php?id=1857&section=3&act=t1" },
-      { titulo: "Segundo encuentro: causas estructurales", fecha_label: "21 de septiembre · 8:00 am – 9:00 pm", inicio: "2026-09-21T08:00:00", fin: "2026-09-21T21:00:00", url_grabacion: "https://moodlepruebas.unincca.edu.co/course/view.php?id=1857&section=3&act=t2" },
-      { titulo: "Tercer encuentro: memoria y territorio", fecha_label: "28 de septiembre · 8:00 am – 9:00 pm", inicio: "2026-09-28T08:00:00", fin: "2026-09-28T21:00:00", url_grabacion: "https://moodlepruebas.unincca.edu.co/course/view.php?id=1857&section=3&act=t3" },
-      { titulo: "Cuarto encuentro: cierre y evaluación", fecha_label: "5 de octubre · 8:00 am – 9:00 pm", inicio: "2026-10-05T08:00:00", fin: "2026-10-05T21:00:00", url_grabacion: "https://moodlepruebas.unincca.edu.co/course/view.php?id=1857&section=3&act=t4" }
-    ],
-    actividades: [
-      { nombre: "Foro: presentación y expectativas del curso", url: "https://moodlepruebas.unincca.edu.co/course/view.php?id=1857&section=3&act=1" },
-      { nombre: "Lectura: causas estructurales del conflicto armado", url: "https://moodlepruebas.unincca.edu.co/course/view.php?id=1857&section=3&act=2" },
-      { nombre: "Documental: testimonios de memoria", url: "https://moodlepruebas.unincca.edu.co/course/view.php?id=1857&section=3&act=3" },
-      { nombre: "Cuestionario: autoevaluación Unidad 1", url: "https://moodlepruebas.unincca.edu.co/course/view.php?id=1857&section=3&act=4" }
-    ]
+    aprenderas: [],
+    tutorias: [],
+    actividades: []
   };
 
   /* ---------------------------------------------------------------------
@@ -143,30 +110,32 @@
     try {
       if (!window.name) return null;
       const recibidos = JSON.parse(window.name);
-      if (!recibidos || typeof recibidos !== "object" || !recibidos.curso) return null;
+      if (!recibidos || typeof recibidos !== "object") return null;
       return recibidos;
     } catch (e) {
       return null;
     }
   }
 
+  // Completa, CAMPO POR CAMPO, lo que no haya llegado en el JSON con el
+  // placeholder correspondiente — así datos parciales muestran lo real
+  // que sí llegó y dejan a la vista, sin confundir, lo que todavía falta.
   function obtenerDatos() {
-    const recibidos = leerDatosDesdeWindowName();
-    if (!recibidos) return EJEMPLO_DEMO;
+    const recibidos = leerDatosDesdeWindowName() || {};
     return {
-      curso: recibidos.curso,
-      resumen: recibidos.resumen || EJEMPLO_DEMO.resumen,
-      insignias: Array.isArray(recibidos.insignias) ? recibidos.insignias : EJEMPLO_DEMO.insignias,
-      unidades: Number.isFinite(recibidos.unidades) ? recibidos.unidades : EJEMPLO_DEMO.unidades,
-      horas_trabajo: Number.isFinite(recibidos.horas_trabajo) ? recibidos.horas_trabajo : EJEMPLO_DEMO.horas_trabajo,
-      profesor: Object.assign({}, EJEMPLO_DEMO.profesor, recibidos.profesor || {}),
-      video: recibidos.video || EJEMPLO_DEMO.video,
-      video_titulo: recibidos.video_titulo || EJEMPLO_DEMO.video_titulo,
-      video_parrafos: Array.isArray(recibidos.video_parrafos) ? recibidos.video_parrafos : EJEMPLO_DEMO.video_parrafos,
-      bienvenida: Object.assign({}, EJEMPLO_DEMO.bienvenida, recibidos.bienvenida || {}),
-      aprenderas: Array.isArray(recibidos.aprenderas) ? recibidos.aprenderas : EJEMPLO_DEMO.aprenderas,
-      tutorias: Array.isArray(recibidos.tutorias) ? recibidos.tutorias : EJEMPLO_DEMO.tutorias,
-      actividades: Array.isArray(recibidos.actividades) ? recibidos.actividades : EJEMPLO_DEMO.actividades
+      curso: recibidos.curso || SIN_DATOS.curso,
+      resumen: recibidos.resumen || SIN_DATOS.resumen,
+      insignias: Array.isArray(recibidos.insignias) ? recibidos.insignias : SIN_DATOS.insignias,
+      unidades: Number.isFinite(recibidos.unidades) ? recibidos.unidades : SIN_DATOS.unidades,
+      horas_trabajo: Number.isFinite(recibidos.horas_trabajo) ? recibidos.horas_trabajo : SIN_DATOS.horas_trabajo,
+      profesor: Object.assign({}, SIN_DATOS.profesor, recibidos.profesor || {}),
+      video: recibidos.video || SIN_DATOS.video,
+      video_titulo: recibidos.video_titulo || SIN_DATOS.video_titulo,
+      video_parrafos: Array.isArray(recibidos.video_parrafos) ? recibidos.video_parrafos : SIN_DATOS.video_parrafos,
+      bienvenida: Object.assign({}, SIN_DATOS.bienvenida, recibidos.bienvenida || {}),
+      aprenderas: Array.isArray(recibidos.aprenderas) ? recibidos.aprenderas : SIN_DATOS.aprenderas,
+      tutorias: Array.isArray(recibidos.tutorias) ? recibidos.tutorias : SIN_DATOS.tutorias,
+      actividades: Array.isArray(recibidos.actividades) ? recibidos.actividades : SIN_DATOS.actividades
     };
   }
 
@@ -421,7 +390,12 @@
     // Video
     $("#videoTitulo").textContent = datos.video_titulo || "";
     $("#videoParrafos").innerHTML = (datos.video_parrafos || []).map((p) => `<p>${p}</p>`).join("");
-    $("#videoFrame").src = toEmbedUrl(datos.video);
+    if (datos.video) {
+      $("#videoFrame").src = toEmbedUrl(datos.video);
+      $(".dea-video-frame").hidden = false;
+    } else {
+      $(".dea-video-frame").hidden = true;
+    }
 
     // Contadores del hero
     $("#statActividades").dataset.counter = datos.actividades.length;
@@ -436,14 +410,14 @@
    * ------------------------------------------------------------------- */
   function renderLearn(aprenderas) {
     const grid = $("#learnGrid");
-    grid.innerHTML = aprenderas.map((item) => `
+    grid.innerHTML = aprenderas.length ? aprenderas.map((item) => `
       <div class="learn-card" tabindex="0" role="button" aria-expanded="false">
         <div class="learn-card-icon"><i class="fa-solid ${item.icono || "fa-star"}" aria-hidden="true"></i></div>
         <div class="learn-card-title">${item.titulo}</div>
         <div class="learn-card-hint"><i class="fa-solid fa-arrows-up-down" aria-hidden="true"></i> Toca para expandir</div>
         <div class="learn-card-overlay"><p>${item.detalle}</p></div>
       </div>
-    `).join("");
+    `).join("") : `<div class="activity-empty"><i class="fa-solid fa-route" aria-hidden="true"></i>Este recurso todavía no tiene ruta de aprendizaje.</div>`;
 
     function toggle(card) {
       const willOpen = !card.classList.contains("is-open");
@@ -470,7 +444,7 @@
 
   function renderTutorias(tutorias) {
     const list = $("#tutoriaList");
-    list.innerHTML = tutorias.map((t, i) => {
+    list.innerHTML = tutorias.length ? tutorias.map((t, i) => {
       const status = formatCountdown(t.inicio);
       return `
       <div class="tutoria-item" data-index="${i}">
@@ -494,7 +468,7 @@
           </div>
         </div>
       </div>`;
-    }).join("");
+    }).join("") : `<div class="activity-empty"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i>Este recurso todavía no tiene tutorías programadas.</div>`;
 
     $$(".tutoria-head", list).forEach((head) => {
       head.addEventListener("click", () => {
