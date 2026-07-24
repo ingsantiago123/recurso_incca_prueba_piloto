@@ -7,16 +7,24 @@
  * `window.name` — no desde la URL. Esto evita el límite de longitud de
  * URL (error 414) cuando hay muchas actividades.
  *
- * El sistema padre (Moodle) debe, ANTES de fijar el src del iframe:
+ * FORMA RECOMENDADA (la que usa Moodle): HTML estático, sin JavaScript,
+ * generado en PHP con json_encode() e impreso dentro del atributo name:
  *
- *   const iframe = document.getElementById("visor");
- *   // OJO: es contentWindow.name (el window.name real de adentro del
- *   // iframe) — NO iframe.name, que solo es el atributo HTML del tag.
+ *   <iframe id="incca-hero-section" title="Visor de recurso U.INCCA"
+ *     src="https://TU-USUARIO.github.io/TU-REPO/"
+ *     name='{"curso":"...", "profesor":{...}, "actividades":[...]}'>
+ *   </iframe>
+ *
+ * ALTERNATIVA (si el padre arma el iframe por JavaScript en vez de HTML
+ * estático): hay que fijar contentWindow.name — NO iframe.name, que solo
+ * es el atributo HTML del tag — ANTES de fijar el src:
+ *
+ *   const iframe = document.getElementById("incca-hero-section");
  *   iframe.contentWindow.name = JSON.stringify(datosDelRecurso);
  *   iframe.src = "https://TU-USUARIO.github.io/TU-REPO/";
  *
  * Ver test-iframe.html en la raíz del repo para un ejemplo completo y
- * funcional de este patrón (parent que arma el JSON y lo inyecta).
+ * funcional del patrón estático (el que se usa en producción).
  *
  * Estructura esperada del JSON (todos los campos son opcionales excepto
  * "curso"; lo que falte se completa con el recurso de ejemplo):
