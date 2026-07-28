@@ -51,7 +51,8 @@
  *   "aprenderas": [{ "icono": "fa-xxx", "titulo": "...", "detalle": "..." }],
  *   "tutorias": [{ "titulo": "...", "fecha_label": "...", "inicio": "ISO",
  *                  "fin": "ISO", "url_grabacion": "..." }],
- *   "actividades": [{ "nombre": "...", "url": "..." }]
+ *   "actividades": [{ "nombre": "...", "url": "...",
+ *                     "descripcion": "opcional, activa 'toca para ver más'" }]
  * }
  *
  * Todo lo que varía según la materia va en el JSON. Lo único que queda
@@ -471,7 +472,9 @@
         </button>
         <div class="tutoria-body">
           <div class="tutoria-body-inner">
-            <a class="btn btn-primary btn-sm" href="${t.url_grabacion}" target="_blank" rel="noopener"><i class="fa-solid fa-video" aria-hidden="true"></i> Ver grabación</a>
+            ${t.url_grabacion
+              ? `<a class="btn btn-primary btn-sm" href="${t.url_grabacion}" target="_blank" rel="noopener"><i class="fa-solid fa-video" aria-hidden="true"></i> Ver grabación</a>`
+              : `<span class="tutoria-sin-grabacion"><i class="fa-regular fa-clock" aria-hidden="true"></i> Grabación aún no disponible</span>`}
             <button class="btn btn-outline btn-sm" data-ics-index="${i}"><i class="fa-regular fa-calendar-plus" aria-hidden="true"></i> Agregar al calendario</button>
           </div>
         </div>
@@ -506,19 +509,39 @@
   }
 
   /* ---------------------------------------------------------------------
-   * 10. Render — Actividades (número + título + link)
+   * 10. Render — Actividades (número + título + link + descripción opcional)
    * ------------------------------------------------------------------- */
   function renderActivityCards(actividades) {
     const grid = $("#activityGrid");
     grid.innerHTML = actividades.length
-      ? actividades.map((item, i) => `
-        <a class="activity-card" href="${item.url}" target="_blank" rel="noopener" style="text-decoration:none">
-          <div class="activity-badge">${i + 1}</div>
-          <div class="activity-card-title">${item.nombre}</div>
-          <span class="btn btn-primary btn-sm activity-card-btn">Abrir actividad <i class="fa-solid fa-arrow-right activity-card-open" aria-hidden="true"></i></span>
-        </a>
-      `).join("")
+      ? actividades.map((item, i) => {
+          const descripcion = (item.descripcion || "").trim();
+          return `
+        <div class="activity-tile">
+          <a class="activity-card" href="${item.url}" target="_blank" rel="noopener" style="text-decoration:none">
+            <div class="activity-badge">${i + 1}</div>
+            <div class="activity-card-title">${item.nombre}</div>
+            <span class="btn btn-primary btn-sm activity-card-btn">Abrir actividad <i class="fa-solid fa-arrow-right activity-card-open" aria-hidden="true"></i></span>
+          </a>
+          ${descripcion ? `
+          <button type="button" class="activity-desc-toggle" aria-expanded="false">
+            <i class="fa-solid fa-chevron-down" aria-hidden="true"></i> Toca para ver más
+          </button>
+          <div class="activity-desc-panel" hidden><p>${descripcion}</p></div>
+          ` : ""}
+        </div>
+      `;
+        }).join("")
       : `<div class="activity-empty"><i class="fa-solid fa-inbox" aria-hidden="true"></i>Este recurso todavía no tiene actividades.</div>`;
+
+    $$(".activity-desc-toggle", grid).forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const panel = btn.nextElementSibling;
+        const willOpen = panel.hidden;
+        panel.hidden = !willOpen;
+        btn.setAttribute("aria-expanded", String(willOpen));
+      });
+    });
   }
 
   /* ---------------------------------------------------------------------

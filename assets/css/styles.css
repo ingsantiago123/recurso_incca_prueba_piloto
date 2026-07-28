@@ -524,6 +524,17 @@ button { font-family: inherit; cursor: pointer; }
 .activity-empty { grid-column: 1 / -1; text-align: center; padding: 30px 16px; color: var(--text-muted); }
 .activity-empty i { font-size: 24px; color: var(--platinum); margin-bottom: 10px; display: block; }
 
+.activity-tile { display: flex; flex-direction: column; }
+.activity-desc-toggle {
+  margin-top: 6px; align-self: flex-start; background: none; border: none; cursor: pointer;
+  font-size: 11.5px; color: #8a91a8; display: flex; align-items: center; gap: 5px; padding: 4px 2px;
+}
+.activity-desc-toggle .fa-chevron-down { transition: transform .2s; }
+.activity-desc-toggle[aria-expanded="true"] .fa-chevron-down { transform: rotate(180deg); }
+.activity-desc-panel { margin-top: 4px; padding: 10px 12px; background: rgba(4,12,56,0.03); border-radius: 8px; }
+.activity-desc-panel p { margin: 0; font-size: 12.5px; color: var(--text-muted); line-height: 1.5; }
+.tutoria-sin-grabacion { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-muted); }
+
 /* ---------- Toast ---------- */
 .toast {
   position: fixed; bottom: calc(var(--chrome-bottom) + 14px); left: 50%;
