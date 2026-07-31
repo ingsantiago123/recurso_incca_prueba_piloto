@@ -100,21 +100,20 @@ Todos los campos son opcionales excepto `curso`:
 
 **Nada de contenido va hardcodeado.** Lo único fijo en el HTML son
 etiquetas de interfaz que nunca cambian sin importar el curso: textos de
-botones ("Ir a las unidades", "INICIAR MÓDULO"), nombres de sección
-("Docente", "Tutorías") y el membrete "Universidad INCCA de Colombia"
-del topbar.
+botones ("Ir a las unidades", "INICIAR MÓDULO") y nombres de sección
+("Docente", "Tutorías").
 
 ## Las diapositivas — sección por sección
 
 El deck es un mazo de diapositivas de pantalla completa (no es una
-página con scroll) — se navega con las flechas de los costados, los
-puntos de abajo, las flechas del teclado, swipe (táctil) o el botón
-"Mapa del curso" (arriba a la derecha).
+página con scroll, y no tiene topbar ni "mapa del curso" — solo el
+contenido) — se navega con las flechas de los costados, los puntos de
+abajo, las flechas del teclado o swipe (táctil).
 
 La lista de diapositivas **no es fija**: normalmente son 7, pero
 "Docente tutor" solo aparece si el JSON trae la clave `profesor_tutor` —
-si no llega, esa diapositiva ni se cuenta ni aparece en el mapa/puntos.
-Se recalcula una vez, al cargar, en `construirSlides()` (`main.js`).
+si no llega, esa diapositiva ni se cuenta ni aparece en los puntos de
+abajo. Se recalcula una vez, al cargar, en `construirSlides()` (`main.js`).
 
 | # | id interno | Diapositiva | ¿Siempre existe? |
 |---|---|---|---|
@@ -379,7 +378,7 @@ todo el sitio (incluida la paleta calculada del acordeón de Unidades):
 | Variable | Color | Uso |
 |---|---|---|
 | `--oxford-blue` | `#040C38` | Fondos oscuros, títulos |
-| `--dodger-blue` | `#2B8BFA` | Degradé institucional (portada, topbar) |
+| `--dodger-blue` | `#2B8BFA` | Degradé institucional (portada, DEA) |
 | `--royal-blue` | `#0B349D` | Iconos, acentos |
 | `--light-cyan` | `#65CBE3` | Hover, estados activos, punta clara del degradé de Unidades |
 | `--old-gold` | `#CBB54E` | Destacados, botón primario dorado, costura de Unidades |

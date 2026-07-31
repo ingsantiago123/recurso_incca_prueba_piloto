@@ -30,21 +30,6 @@
 
 <div class="deck" id="deck">
 
-  <div class="deck-progress" id="deckProgress"></div>
-
-  <header class="deck-topbar">
-    <div class="deck-brand">
-      <img class="deck-brand-mark" src="./assets/img/unincca-emblem.png" alt="Universidad INCCA de Colombia">
-      <span class="deck-brand-text">U.INCCA · Recurso educativo</span>
-    </div>
-    <div class="deck-topbar-right">
-      <span class="deck-counter"><b id="slideCurrent">1</b> / <span id="slideTotal">7</span></span>
-      <button class="chrome-btn chrome-btn--menu" id="menuToggle" aria-expanded="false" aria-controls="menuOverlay">
-        <i class="fa-solid fa-table-cells-large" aria-hidden="true"></i> Mapa del curso
-      </button>
-    </div>
-  </header>
-
   <div class="slides" id="slides" role="region" aria-label="Contenido del curso, navegable por diapositivas">
 
     <!-- 1. HERO -->
@@ -204,8 +189,8 @@
       </div>
     </section>
 
-    <!-- 7. UNIDADES — a pantalla completa (de deck-topbar a deck-bottombar), sin el
-         padding/max-width del resto de diapositivas: ver .slide#unidades .slide-body -->
+    <!-- 7. UNIDADES — a pantalla completa (de arriba del todo hasta el deck-bottombar),
+         sin el padding/max-width del resto de diapositivas: ver .slide#unidades .slide-body -->
     <section class="slide" id="unidades" role="group" aria-roledescription="diapositiva" aria-label="Unidades del curso">
       <div class="slide-body">
         <div class="units-hero" id="unitsHero" aria-label="Módulos del curso"></div>
@@ -220,16 +205,6 @@
   <footer class="deck-bottombar">
     <nav class="deck-dots" id="deckDots" aria-label="Ir a diapositiva"></nav>
   </footer>
-
-  <div class="menu-overlay" id="menuOverlay">
-    <div class="menu-panel">
-      <div class="menu-panel-head">
-        <div class="menu-panel-title">Mapa del curso</div>
-        <button class="chrome-btn" id="menuClose" aria-label="Cerrar mapa del curso"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
-      </div>
-      <div class="menu-grid" id="menuGrid"></div>
-    </div>
-  </div>
 
 </div>
 

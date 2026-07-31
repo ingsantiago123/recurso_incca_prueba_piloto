@@ -31,7 +31,6 @@
   --shadow-strong: 0 20px 45px rgba(4, 12, 56, 0.22);
   --ease-out: cubic-bezier(.16,.84,.44,1);
 
-  --chrome-top: 56px;
   --chrome-bottom: 46px;
 }
 
@@ -100,89 +99,10 @@ button { font-family: inherit; cursor: pointer; }
   background: var(--oxford-blue);
 }
 
-.deck-progress {
-  position: absolute;
-  top: 0; left: 0;
-  height: 3px;
-  background: var(--gradient-gold);
-  z-index: 40;
-  transition: width .45s var(--ease-out);
-}
-
-/* ---------- Top chrome ----------
-   Mismo degradé institucional que la portada (--gradient-institutional:
-   dodger-blue → oxford-blue), pero traslúcido + con blur detrás — así se
-   integra como cristal con tinte de marca en vez de una barra plana, y
-   sigue funcionando de chrome fijo sobre cualquier diapositiva (clara u
-   oscura). El filo dorado de abajo es el mismo acento "azul + dorado" que
-   ya usan los botones y el acordeón de unidades. */
-.deck-topbar {
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: var(--chrome-top);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 18px;
-  z-index: 30;
-  /* Mismos 2 stops y misma dirección que --gradient-institutional, con UN
-     solo nivel de opacidad para las dos puntas — así la curva de la
-     transición es la misma que la del inicio, solo que translúcida (no
-     una versión más oscura con una parada extra en medio). */
-  background: linear-gradient(to left, rgba(43,139,250,.72), rgba(4,12,56,.72));
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-.deck-topbar::after {
-  content: "";
-  position: absolute; left: 0; right: 0; bottom: 0;
-  height: 2px;
-  background: var(--gradient-gold);
-  opacity: .8;
-}
-.deck-brand {
-  display: flex; align-items: center; gap: 10px;
-  color: var(--white);
-  font-weight: 700; font-size: 13px; letter-spacing: .3px;
-}
-.deck-brand-mark {
-  width: 30px; height: 30px;
-  object-fit: contain;
-  flex-shrink: 0;
-}
-.deck-brand-text { display: none; }
-@media (min-width: 560px) { .deck-brand-text { display: inline; } }
-
-.deck-topbar-right { display: flex; align-items: center; gap: 10px; }
-
-.deck-counter {
-  color: var(--platinum);
-  font-size: 12.5px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: .3px;
-}
-.deck-counter b { color: var(--white); }
-
-.chrome-btn {
-  border: 1px solid rgba(255,255,255,0.25);
-  background: rgba(255,255,255,0.06);
-  color: var(--white);
-  width: 34px; height: 34px;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 13px;
-  transition: background .2s, transform .2s, color .2s;
-  flex-shrink: 0;
-}
-.chrome-btn:hover { background: var(--light-cyan); color: var(--oxford-blue); transform: translateY(-2px); }
-.chrome-btn--menu { width: auto; padding: 0 14px; border-radius: 999px; gap: 8px; font-size: 12.5px; font-weight: 700; }
-
 /* ---------- Slides ---------- */
 .slides {
   position: absolute;
   inset: 0;
-  top: var(--chrome-top);
   bottom: var(--chrome-bottom);
 }
 
@@ -291,57 +211,6 @@ button { font-family: inherit; cursor: pointer; }
 }
 .deck-dot:hover { background: var(--light-cyan); }
 .deck-dot.is-active { width: 22px; background: var(--old-gold); }
-
-/* ---------- Menu overlay (mapa del curso) ---------- */
-.menu-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 50;
-  background: rgba(4,12,56,0.94);
-  backdrop-filter: blur(6px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .3s var(--ease-out);
-}
-.menu-overlay.is-open { opacity: 1; pointer-events: auto; }
-.menu-panel {
-  width: min(92%, 620px);
-  max-height: 82%;
-  overflow-y: auto;
-  padding: 20px;
-}
-.menu-panel-head {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 18px;
-  color: var(--white);
-}
-.menu-panel-title { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; color: var(--light-cyan); }
-.menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
-.menu-item {
-  display: flex; align-items: center; gap: 14px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: var(--radius-md);
-  padding: 14px 16px;
-  color: var(--white);
-  text-align: left;
-  transition: background .2s, border-color .2s, transform .2s;
-}
-.menu-item:hover { background: rgba(101,203,227,0.14); border-color: rgba(101,203,227,0.4); transform: translateX(4px); }
-.menu-item.is-current { border-color: var(--old-gold); background: rgba(203,181,78,0.12); }
-.menu-item-icon {
-  width: 38px; height: 38px;
-  border-radius: 10px;
-  background: var(--gradient-institutional);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 15px;
-  flex-shrink: 0;
-}
-.menu-item-label { font-weight: 700; font-size: 14px; }
-.menu-item-idx { font-size: 11.5px; color: var(--platinum); opacity: .7; }
 
 /* ==========================================================================
    Componentes de contenido reutilizables dentro de cada diapositiva
@@ -533,8 +402,8 @@ button { font-family: inherit; cursor: pointer; }
    cada módulo es un panel de acordeón que, al pulsar su CTA, redirige de
    verdad (enlace real, target="_blank") a la URL de esa sección en Moodle
    — no ejecuta lógica adicional, igual que cualquier link normal. */
-/* A pantalla completa: de deck-topbar a deck-bottombar, sin el padding/
-   max-width/centrado que usa el resto de diapositivas — igual que el
+/* A pantalla completa: de arriba del todo hasta el deck-bottombar, sin el
+   padding/max-width/centrado que usa el resto de diapositivas — igual que el
    hero del visor V2. El z-index de cada panel (para que la punta de
    flecha de un panel tape la costura del siguiente) se fija inline desde
    JS (style="z-index:…"), no aquí, porque depende de N (cantidad de
@@ -634,7 +503,7 @@ button { font-family: inherit; cursor: pointer; }
 
 /* ---------- Short-viewport tweaks ---------- */
 @media (max-height: 620px) {
-  :root { --chrome-top: 46px; --chrome-bottom: 40px; }
+  :root { --chrome-bottom: 40px; }
   .hero-badges, .hero-eyebrow { margin-bottom: 2px; }
   .stat-row { display: none; }
 }

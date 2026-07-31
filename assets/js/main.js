@@ -95,16 +95,16 @@
    * ------------------------------------------------------------------- */
   function construirSlides(datos) {
     const slides = [
-      { id: "hero", label: "Inicio", icon: "fa-house" },
-      { id: "bienvenida", label: "Bienvenida", icon: "fa-hand-holding-heart" },
-      { id: "aprenderas", label: "Aprenderás", icon: "fa-route" },
-      { id: "docente", label: "Docente creador", icon: "fa-chalkboard-user" }
+      { id: "hero", label: "Inicio" },
+      { id: "bienvenida", label: "Bienvenida" },
+      { id: "aprenderas", label: "Aprenderás" },
+      { id: "docente", label: "Docente creador" }
     ];
-    if (datos.profesor_tutor) slides.push({ id: "docente_tutor", label: "Docente tutor", icon: "fa-user-tie" });
+    if (datos.profesor_tutor) slides.push({ id: "docente_tutor", label: "Docente tutor" });
     slides.push(
-      { id: "tutorias", label: "Tutorías", icon: "fa-calendar-days" },
-      { id: "dea", label: "DEA", icon: "fa-compass" },
-      { id: "unidades", label: "Unidades", icon: "fa-layer-group" }
+      { id: "tutorias", label: "Tutorías" },
+      { id: "dea", label: "DEA" },
+      { id: "unidades", label: "Unidades" }
     );
     return slides;
   }
@@ -267,7 +267,6 @@
     init() {
       this.slideEls = SLIDES.map((s) => document.getElementById(s.id));
       this.total = this.slideEls.length;
-      $("#slideTotal").textContent = this.total;
       this.slideEls.forEach((el, i) => el.setAttribute("aria-hidden", i === 0 ? "false" : "true"));
       this.slideEls[0].classList.add("is-active");
       this.updateChrome();
@@ -313,10 +312,7 @@
     prev() { this.goTo(this.current - 1); },
 
     updateChrome() {
-      $("#slideCurrent").textContent = this.current + 1;
-      $("#deckProgress").style.width = ((this.current + 1) / this.total * 100) + "%";
       $$(".deck-dot").forEach((dot, i) => dot.classList.toggle("is-active", i === this.current));
-      $$(".menu-item").forEach((item, i) => item.classList.toggle("is-current", i === this.current));
     },
 
     runSlideExtras(id) {
@@ -325,43 +321,19 @@
   };
 
   /* ---------------------------------------------------------------------
-   * 6. Render — chrome de navegación (topbar, dots, menú, flechas)
+   * 6. Render — chrome de navegación (dots, flechas)
    * ------------------------------------------------------------------- */
   function renderChrome() {
     $("#deckDots").innerHTML = SLIDES.map((s, i) => `
       <button class="deck-dot" data-goto="${i}" aria-label="Ir a ${s.label}"></button>
     `).join("");
 
-    $("#menuGrid").innerHTML = SLIDES.map((s, i) => `
-      <button class="menu-item" data-goto="${i}">
-        <div class="menu-item-icon"><i class="fa-solid ${s.icon}" aria-hidden="true"></i></div>
-        <div>
-          <div class="menu-item-label">${s.label}</div>
-          <div class="menu-item-idx">Diapositiva ${i + 1} de ${SLIDES.length}</div>
-        </div>
-      </button>
-    `).join("");
-
     $$("[data-goto]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        deck.goTo(Number(btn.dataset.goto));
-        closeMenu();
-      });
+      btn.addEventListener("click", () => deck.goTo(Number(btn.dataset.goto)));
     });
 
     $("#prevBtn").addEventListener("click", () => deck.prev());
     $("#nextBtn").addEventListener("click", () => deck.next());
-  }
-
-  function openMenu() { $("#menuOverlay").classList.add("is-open"); $("#menuToggle").setAttribute("aria-expanded", "true"); }
-  function closeMenu() { $("#menuOverlay").classList.remove("is-open"); $("#menuToggle").setAttribute("aria-expanded", "false"); }
-
-  function initMenu() {
-    $("#menuToggle").addEventListener("click", () => {
-      $("#menuOverlay").classList.contains("is-open") ? closeMenu() : openMenu();
-    });
-    $("#menuClose").addEventListener("click", closeMenu);
-    $("#menuOverlay").addEventListener("click", (e) => { if (e.target.id === "menuOverlay") closeMenu(); });
   }
 
   function initHeroCue() {
@@ -381,15 +353,10 @@
 
   function initKeyboard() {
     document.addEventListener("keydown", (e) => {
-      if ($("#menuOverlay").classList.contains("is-open")) {
-        if (e.key === "Escape") closeMenu();
-        return;
-      }
       if (e.key === "ArrowRight" || e.key === "PageDown") { e.preventDefault(); deck.next(); }
       else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); deck.prev(); }
       else if (e.key === "Home") { e.preventDefault(); deck.goTo(0); }
       else if (e.key === "End") { e.preventDefault(); deck.goTo(deck.total - 1); }
-      else if (e.key === "Escape") { closeMenu(); }
     });
   }
 
@@ -712,7 +679,6 @@
     renderLearn(datos.aprenderas);
     renderTutorias(datos.tutorias);
     renderUnitsAccordion(datos.modulos);
-    initMenu();
     initHeroCue();
     initGotoUnitsButtons();
     initKeyboard();
