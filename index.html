@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Visor de recurso — U.INCCA</title>
-<meta name="description" content="Visor interactivo de recursos educativos de la Universidad INCCA de Colombia: bienvenida, ruta de aprendizaje, docente, tutorías, video y actividades — contenido parametrizado por curso.">
+<meta name="description" content="Visor interactivo de recursos educativos de la Universidad INCCA de Colombia: bienvenida, ruta de aprendizaje, docente, tutorías, video y unidades del curso — contenido parametrizado por curso.">
 <meta name="robots" content="noindex, follow">
 <meta name="theme-color" content="#040C38">
 <meta name="color-scheme" content="light">
@@ -66,8 +66,8 @@
           <p class="hero-desc" id="heroResumen"></p>
 
           <div class="hero-cta">
-            <button class="btn btn-gold" id="heroActivitiesCue">
-              <i class="fa-solid fa-arrow-right" aria-hidden="true"></i> Ir a las actividades
+            <button class="btn btn-gold" id="heroUnitsCue">
+              <i class="fa-solid fa-arrow-right" aria-hidden="true"></i> Ir a las unidades
             </button>
             <button class="link-underline" id="heroLearnCue">¿Qué aprenderás? <i class="fa-solid fa-arrow-right-long" aria-hidden="true"></i></button>
           </div>
@@ -76,7 +76,7 @@
             <div class="stat-cell"><span class="stat-num" id="statUnidades" data-counter="0">0</span><span class="stat-label">Unidades</span></div>
             <div class="stat-cell"><span class="stat-num" id="statHoras" data-counter="0" data-counter-suffix="h">0</span><span class="stat-label">Trabajo directo</span></div>
             <div class="stat-cell"><span class="stat-num" id="statTutorias" data-counter="0">0</span><span class="stat-label">Tutorías en vivo</span></div>
-            <div class="stat-cell"><span class="stat-num" id="statActividades" data-counter="0">0</span><span class="stat-label">Actividades</span></div>
+            <div class="stat-cell"><span class="stat-num" id="statModulos" data-counter="0">0</span><span class="stat-label">Módulos</span></div>
           </div>
         </div>
       </div>
@@ -111,21 +111,57 @@
       </div>
     </section>
 
-    <!-- 4. DOCENTE -->
+    <!-- 4. DOCENTE CREADOR -->
     <section class="slide" id="docente" role="group" aria-roledescription="diapositiva" aria-label="Docente creador">
       <div class="slide-body">
         <div class="slide-head">
           <div class="tag"><i class="fa-solid fa-chalkboard-user" aria-hidden="true"></i> Docente creador</div>
         </div>
         <div class="teacher-grid stagger">
-          <div class="teacher-avatar-frame">
-            <img class="teacher-avatar" id="teacherAvatar" src="" alt="">
+          <div class="teacher-media" id="teacherMedia">
+            <div class="teacher-video-frame" id="teacherVideoFrame" hidden>
+              <div class="ratio">
+                <iframe id="teacherVideo" src="" title="Video del docente creador" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+              </div>
+            </div>
+            <div class="teacher-avatar-frame" id="teacherAvatarFrame">
+              <img class="teacher-avatar" id="teacherAvatar" src="" alt="">
+            </div>
           </div>
           <div>
             <h3 class="teacher-name" id="teacherName">Docente del curso</h3>
             <div class="teacher-role" id="teacherRole"></div>
             <div class="teacher-bio" id="teacherBio"></div>
             <div class="teacher-tags" id="teacherTags"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4b. DOCENTE TUTOR — opcional: solo se muestra si el JSON trae
+         "profesor_tutor" (ver construirSlides() en main.js). Mismo
+         componente que el docente creador (.teacher-grid), otro rol. -->
+    <section class="slide" id="docente_tutor" role="group" aria-roledescription="diapositiva" aria-label="Docente tutor" hidden>
+      <div class="slide-body">
+        <div class="slide-head">
+          <div class="tag"><i class="fa-solid fa-user-tie" aria-hidden="true"></i> Docente tutor</div>
+        </div>
+        <div class="teacher-grid stagger">
+          <div class="teacher-media" id="tutorMedia">
+            <div class="teacher-video-frame" id="tutorVideoFrame" hidden>
+              <div class="ratio">
+                <iframe id="tutorVideo" src="" title="Video del docente tutor" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+              </div>
+            </div>
+            <div class="teacher-avatar-frame" id="tutorAvatarFrame">
+              <img class="teacher-avatar" id="tutorAvatar" src="" alt="">
+            </div>
+          </div>
+          <div>
+            <h3 class="teacher-name" id="tutorName">Docente del curso</h3>
+            <div class="teacher-role" id="tutorRole"></div>
+            <div class="teacher-bio" id="tutorBio"></div>
+            <div class="teacher-tags" id="tutorTags"></div>
           </div>
         </div>
       </div>
@@ -147,14 +183,19 @@
       <div class="slide-body">
         <div class="dea-grid stagger">
           <div class="dea-text">
-            <div class="tag"><i class="fa-solid fa-compass" aria-hidden="true"></i> Video de presentación</div>
+            <div class="tag"><i class="fa-solid fa-compass" aria-hidden="true"></i> Presentación · DEA</div>
             <h2 class="heading" id="videoTitulo" style="margin:10px 0 12px"></h2>
             <div id="videoParrafos"></div>
-            <button class="btn btn-gold" id="deaActivitiesCue" style="margin-top:6px">
-              <i class="fa-solid fa-door-open" aria-hidden="true"></i> Ir a las actividades
-            </button>
+            <div class="dea-btn-row">
+              <button class="btn btn-gold" id="deaUnitsCue">
+                <i class="fa-solid fa-door-open" aria-hidden="true"></i> Ir a las unidades
+              </button>
+              <a class="btn btn-ghost" id="deaDescargaBtn" href="#" target="_blank" rel="noopener" hidden>
+                <i class="fa-solid fa-download" aria-hidden="true"></i> Descargar material
+              </a>
+            </div>
           </div>
-          <div class="dea-video-frame">
+          <div class="dea-video-frame" id="deaVideoFrame">
             <div class="ratio">
               <iframe id="videoFrame" src="" title="Video de presentación del curso" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe>
             </div>
@@ -163,16 +204,11 @@
       </div>
     </section>
 
-    <!-- 7. ACTIVIDADES -->
-    <section class="slide" id="actividades" role="group" aria-roledescription="diapositiva" aria-label="Actividades de la unidad">
+    <!-- 7. UNIDADES — a pantalla completa (de deck-topbar a deck-bottombar), sin el
+         padding/max-width del resto de diapositivas: ver .slide#unidades .slide-body -->
+    <section class="slide" id="unidades" role="group" aria-roledescription="diapositiva" aria-label="Unidades del curso">
       <div class="slide-body">
-        <div class="slide-head">
-          <div class="tag"><i class="fa-solid fa-list-check" aria-hidden="true"></i> Actividades</div>
-          <h2 class="heading">Actividades del recurso</h2>
-          <p class="sub" id="activitiesSub">Haz clic para abrir cada una.</p>
-        </div>
-
-        <div class="activity-grid" id="activityGrid"></div>
+        <div class="units-hero" id="unitsHero" aria-label="Módulos del curso"></div>
       </div>
     </section>
 

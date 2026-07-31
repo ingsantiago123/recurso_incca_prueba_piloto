@@ -109,7 +109,13 @@ button { font-family: inherit; cursor: pointer; }
   transition: width .45s var(--ease-out);
 }
 
-/* ---------- Top chrome ---------- */
+/* ---------- Top chrome ----------
+   Mismo degradé institucional que la portada (--gradient-institutional:
+   dodger-blue → oxford-blue), pero traslúcido + con blur detrás — así se
+   integra como cristal con tinte de marca en vez de una barra plana, y
+   sigue funcionando de chrome fijo sobre cualquier diapositiva (clara u
+   oscura). El filo dorado de abajo es el mismo acento "azul + dorado" que
+   ya usan los botones y el acordeón de unidades. */
 .deck-topbar {
   position: absolute;
   top: 0; left: 0; right: 0;
@@ -119,8 +125,20 @@ button { font-family: inherit; cursor: pointer; }
   justify-content: space-between;
   padding: 0 18px;
   z-index: 30;
-  background: rgba(4,12,56,0.55);
-  backdrop-filter: blur(8px);
+  /* Mismos 2 stops y misma dirección que --gradient-institutional, con UN
+     solo nivel de opacidad para las dos puntas — así la curva de la
+     transición es la misma que la del inicio, solo que translúcida (no
+     una versión más oscura con una parada extra en medio). */
+  background: linear-gradient(to left, rgba(43,139,250,.72), rgba(4,12,56,.72));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.deck-topbar::after {
+  content: "";
+  position: absolute; left: 0; right: 0; bottom: 0;
+  height: 2px;
+  background: var(--gradient-gold);
+  opacity: .8;
 }
 .deck-brand {
   display: flex; align-items: center; gap: 10px;
@@ -448,18 +466,36 @@ button { font-family: inherit; cursor: pointer; }
 .learn-card.is-open .learn-card-overlay { transform: translateY(0); }
 .learn-card-overlay p { font-size: 12.8px; color: var(--text-muted); line-height: 1.5; margin: 0; }
 
-/* ---------- Docente ---------- */
-.teacher-grid { display: grid; grid-template-columns: 170px 1fr; gap: 26px; align-items: center; }
-@media (max-width: 600px) { .teacher-grid { grid-template-columns: 1fr; justify-items: center; text-align: center; } }
-.teacher-avatar-frame { position: relative; width: 150px; height: 150px; flex-shrink: 0; }
-.teacher-avatar { width: 150px; height: 150px; border-radius: var(--radius-lg); object-fit: cover; background: var(--gradient-institutional); box-shadow: var(--shadow-strong); }
+/* ---------- Docente ----------
+   Media a la izquierda (video si hay, si no el avatar solo, centrado en
+   la misma columna) + info a la derecha. Cuando hay video, el avatar se
+   convierte en una chapa circular superpuesta sobre su esquina — así el
+   video es el protagonista en vez de quedar como un bloque pegado abajo. */
+.teacher-grid { display: grid; grid-template-columns: minmax(200px, 300px) 1fr; gap: 34px; align-items: center; }
+@media (max-width: 700px) { .teacher-grid { grid-template-columns: 1fr; justify-items: center; text-align: center; } }
+
+.teacher-media { position: relative; display: flex; justify-content: center; }
+.teacher-video-frame { width: 100%; border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-strong); background: #0b1230; }
+.teacher-video-frame .ratio { aspect-ratio: 16/9; }
+.teacher-video-frame iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+.teacher-avatar-frame { position: relative; width: 170px; height: 170px; flex-shrink: 0; }
+.teacher-avatar { width: 170px; height: 170px; border-radius: var(--radius-lg); object-fit: cover; background: var(--gradient-institutional); box-shadow: var(--shadow-strong); }
 .teacher-avatar-frame::after { content: ""; position: absolute; inset: -7px; border-radius: calc(var(--radius-lg) + 7px); border: 2px dashed rgba(11,52,157,0.25); pointer-events: none; }
+
+/* Con video: el avatar pasa a ser una chapa circular chica sobre la
+   esquina inferior izquierda del video, no un bloque aparte. */
+.teacher-media.has-video { display: block; }
+.teacher-media.has-video .teacher-avatar-frame { position: absolute; left: -12px; bottom: -12px; width: 74px; height: 74px; z-index: 2; }
+.teacher-media.has-video .teacher-avatar { width: 74px; height: 74px; border-radius: 50%; border: 4px solid var(--white); }
+.teacher-media.has-video .teacher-avatar-frame::after { content: none; }
+
 .teacher-name { font-size: 21px; font-weight: 700; color: var(--oxford-blue); margin: 0 0 6px; }
 .teacher-role { color: var(--royal-blue); font-weight: 600; font-size: 12.5px; margin-bottom: 10px; }
 .teacher-bio p { color: var(--text-muted); font-size: 13.3px; margin: 0 0 8px; }
 .teacher-bio p:last-child { margin-bottom: 0; }
 .teacher-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
-@media (max-width: 600px) { .teacher-tags { justify-content: center; } }
+@media (max-width: 700px) { .teacher-tags { justify-content: center; } .teacher-media.has-video .teacher-avatar-frame { left: 50%; transform: translateX(-50%); bottom: -20px; } }
 .teacher-tag { background: var(--platinum); color: var(--oxford-blue); font-size: 11.5px; font-weight: 600; padding: 5px 12px; border-radius: 999px; display: inline-flex; align-items: center; gap: 5px; }
 .teacher-tag i { color: var(--royal-blue); font-size: 10px; }
 
@@ -484,45 +520,101 @@ button { font-family: inherit; cursor: pointer; }
 .dea-grid { display: grid; grid-template-columns: 1fr 0.9fr; gap: 26px; align-items: center; }
 @media (max-width: 760px) { .dea-grid { grid-template-columns: 1fr; } }
 .dea-text p { font-size: 13.5px; opacity: .92; margin: 0 0 10px; }
+.dea-btn-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 6px; }
 .dea-video-frame { background: rgba(0,0,0,0.2); border-radius: var(--radius-md); padding: 10px; border: 1px solid rgba(255,255,255,0.2); }
 .dea-video-frame .ratio { aspect-ratio: 16/9; border-radius: 9px; overflow: hidden; background: #05102e; }
 .dea-video-frame iframe { width: 100%; height: 100%; border: 0; }
 
-/* ---------- Actividades ---------- */
-.activity-toolbar { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; }
-.activity-filters { display: flex; flex-wrap: wrap; gap: 6px; }
-.filter-chip { border: 1.5px solid var(--platinum); background: var(--white); color: var(--text-muted); font-size: 12px; font-weight: 600; padding: 6px 13px; border-radius: 999px; transition: all .2s; display: inline-flex; align-items: center; gap: 5px; }
-.filter-chip:hover { border-color: var(--dodger-blue); color: var(--royal-blue); }
-.filter-chip.is-active { background: var(--gradient-institutional); border-color: transparent; color: var(--white); }
-.activity-search { position: relative; min-width: 190px; }
-.activity-search input { width: 100%; padding: 8px 12px 8px 34px; border-radius: 999px; border: 1.5px solid var(--platinum); font-size: 13px; font-family: inherit; color: var(--text-body); transition: border-color .2s; }
-.activity-search input:focus { border-color: var(--dodger-blue); outline: none; }
-.activity-search i { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: #9099b3; font-size: 12px; }
+/* ---------- Unidades (acordeón de módulos: CONECTA / INCCA APOYO / Semana N) ----------
+   Reemplaza al antiguo grid de "actividades". El curso entrega un arreglo
+   ORDENADO de módulos (JSON: datos.modulos), indistinguibles entre sí para
+   el diseño — CONECTA, INCCA APOYO y cada Semana se pintan con el mismo
+   componente, solo cambia el nombre. Ya no hay contenido "en la página":
+   cada módulo es un panel de acordeón que, al pulsar su CTA, redirige de
+   verdad (enlace real, target="_blank") a la URL de esa sección en Moodle
+   — no ejecuta lógica adicional, igual que cualquier link normal. */
+/* A pantalla completa: de deck-topbar a deck-bottombar, sin el padding/
+   max-width/centrado que usa el resto de diapositivas — igual que el
+   hero del visor V2. El z-index de cada panel (para que la punta de
+   flecha de un panel tape la costura del siguiente) se fija inline desde
+   JS (style="z-index:…"), no aquí, porque depende de N (cantidad de
+   módulos), que es dinámica. */
+.slide#unidades .slide-body { max-width: none; padding: 0; gap: 0; overflow: hidden; justify-content: stretch; }
+.units-hero { position: relative; display: flex; width: 100%; height: 100%; }
+.unit-panel {
+  position: relative; flex: 1 1 0; min-width: 54px; height: 100%;
+  display: flex; flex-direction: column; container-type: inline-size;
+  border: none; padding: 0; color: var(--white); cursor: pointer;
+  clip-path: polygon(0 0, calc(100% - 46px) 0, 100% 50%, calc(100% - 46px) 100%, 0 100%);
+  transition: flex .5s var(--ease-out);
+  margin-left: -46px;
+  /* Color sólido propio (fijo por panel, para que se note la separación
+     y la forma de cada uno), tomado de un punto del degradé institucional
+     claro→oscuro — se fija por JS vía la variable --unit-color, según la
+     posición del módulo (índice/total). La costura dorada de arriba
+     mantiene la identidad azul + dorado uniendo todos los paneles. */
+  background: var(--unit-color, var(--royal-blue));
+  box-shadow: inset 0 4px 0 0 var(--old-gold);
+}
+.unit-panel:first-child { margin-left: 0; }
+.unit-panel:last-child { clip-path: none; }
+.unit-panel.expanded { flex: 6 1 0%; cursor: default; background: linear-gradient(165deg, var(--oxford-blue), #020818 85%); box-shadow: inset 0 0 0 2px rgba(203,181,78,.35); }
 
-.progress-tracker { background: var(--platinum); border-radius: var(--radius-md); padding: 12px 18px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-.progress-tracker-track { flex: 1; min-width: 140px; height: 8px; background: rgba(4,12,56,0.1); border-radius: 999px; overflow: hidden; }
-.progress-tracker-fill { height: 100%; background: var(--gradient-institutional); border-radius: 999px; width: 0%; transition: width .4s var(--ease-out); }
-.progress-tracker-label { font-size: 12.5px; font-weight: 700; color: var(--oxford-blue); white-space: nowrap; }
-.progress-tracker-reset { font-size: 11.5px; font-weight: 600; color: var(--royal-blue); background: none; border: none; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
-.progress-tracker-reset:hover { color: var(--light-cyan); }
+.unit-panel-icon { position: absolute; top: 14%; left: 50%; transform: translateX(-50%); font-size: clamp(28px, 26cqw, 100px); color: var(--white); opacity: .95; text-shadow: 0 2px 10px rgba(2,8,24,.55), 0 0 30px rgba(2,8,24,.35); transition: opacity .3s var(--ease-out); }
+.unit-panel-number { position: absolute; top: 14%; left: 50%; transform: translateX(-50%); font-size: clamp(30px, 30cqw, 130px); font-weight: 800; line-height: 1; color: var(--white); opacity: .95; text-shadow: 0 2px 10px rgba(2,8,24,.55), 0 0 30px rgba(2,8,24,.35); transition: opacity .3s var(--ease-out); }
+.unit-panel.expanded .unit-panel-icon, .unit-panel.expanded .unit-panel-number { opacity: 0; }
 
-.activity-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
-.activity-card { position: relative; display: block; background: var(--white); border-radius: var(--radius-md); padding: 16px 18px; text-decoration: none; border: 1px solid rgba(4,12,56,0.08); box-shadow: 0 6px 14px rgba(4,12,56,0.05); transition: transform .25s var(--ease-out), box-shadow .25s var(--ease-out), opacity .25s, border-color .25s; }
-.activity-card:hover { transform: translateY(-4px) scale(1.005); box-shadow: var(--shadow-strong); border-color: rgba(43,139,250,0.3); }
-.activity-card.is-hidden { display: none; }
-.activity-card.is-done { border-color: rgba(101,203,227,0.5); background: linear-gradient(180deg, rgba(101,203,227,0.06), #fff 40%); }
-.activity-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding-right: 32px; gap: 8px; }
-.activity-badge { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--white); background: var(--royal-blue); flex-shrink: 0; }
-.activity-type { font-size: 10.5px; letter-spacing: 1.2px; text-transform: uppercase; color: #8a91a8; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.activity-check { position: absolute; top: 14px; right: 14px; width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--platinum); display: flex; align-items: center; justify-content: center; color: transparent; font-size: 10px; background: var(--white); flex-shrink: 0; transition: all .2s; }
-.activity-card.is-done .activity-check { background: var(--light-cyan); border-color: var(--light-cyan); color: var(--oxford-blue); }
-.activity-card-title { font-weight: 700; font-size: 13.5px; color: var(--oxford-blue); margin-bottom: 8px; line-height: 1.35; padding-right: 20px; }
-.activity-gamified-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 700; color: var(--bronze); background: rgba(203,181,78,0.14); padding: 4px 9px; border-radius: 999px; margin-bottom: 10px; }
-.activity-card-foot { display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; color: #8a91a8; }
-.activity-card-open { color: var(--royal-blue); font-size: 14px; transition: transform .2s; }
-.activity-card:hover .activity-card-open { transform: translateX(4px); color: var(--light-cyan); }
+.unit-footer { position: absolute; left: 0; bottom: 0; z-index: 2; transition: opacity .25s var(--ease-out); }
+.unit-panel.expanded .unit-footer { opacity: 0; pointer-events: none; }
+.unit-footer-shape { background: var(--white); padding: 9px 20px 9px 15px; clip-path: polygon(0 0,100% 0,86% 100%,0 100%); min-width: 100px; }
+.unit-footer-label { color: var(--royal-blue); font-weight: 800; letter-spacing: .02em; font-size: .82rem; white-space: nowrap; }
+
+/* Foto de fondo (temática académica) + velo azul institucional encima —
+   dos capas de background-image: el degradé pinta SOBRE la foto, así el
+   texto sigue siendo legible y el tono combina con el resto del visor. */
+.unit-active-content {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  opacity: 0; pointer-events: none; transition: opacity .35s var(--ease-out) .15s;
+  padding: 64px 6% 54px;
+  background-image: linear-gradient(165deg, rgba(4,12,56,.9), rgba(4,12,56,.88) 55%, rgba(2,8,24,.96)), url("https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=1600&q=60&auto=format&fit=crop");
+  background-size: cover;
+  background-position: center;
+}
+.unit-panel.expanded .unit-active-content { opacity: 1; pointer-events: auto; }
+.unit-watermark { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; pointer-events: none; z-index: 0; }
+.unit-watermark span { font-size: clamp(40px,8vw,130px); font-weight: 800; color: var(--white); opacity: .07; white-space: nowrap; letter-spacing: .02em; }
+
+.unit-tag { position: relative; z-index: 1; align-self: flex-start; background: var(--gradient-gold); color: var(--oxford-blue); font-weight: 800; letter-spacing: .06em; font-size: .78rem; padding: 7px 16px; border-radius: 2px 8px 2px 8px; }
+.unit-title { position: relative; z-index: 1; color: var(--white); font-weight: 700; margin-top: 16px; font-size: clamp(1.5rem,3.6vw,2.8rem); line-height: 1.14; max-width: 65%; }
+.unit-illustration { position: relative; z-index: 1; flex: 1 1 auto; display: flex; align-items: center; justify-content: center; min-height: 0; overflow: hidden; }
+.unit-illustration svg, .unit-illustration img { width: 100%; height: 100%; max-width: 320px; max-height: 100%; object-fit: contain; filter: drop-shadow(0 14px 30px rgba(2,8,24,.45)); }
+
+.unit-cta { position: relative; z-index: 1; align-self: flex-start; text-decoration: none; display: flex; align-items: center; gap: 12px; color: var(--white); font-weight: 700; font-size: 1rem; }
+.unit-cta-arrow { width: 42px; height: 42px; border-radius: 50%; background: var(--gradient-gold); color: var(--oxford-blue); display: flex; align-items: center; justify-content: center; font-size: 14px; transition: transform .25s var(--ease-out); flex-shrink: 0; }
+.unit-cta:hover .unit-cta-arrow { transform: translateX(5px); }
+
 .activity-empty { grid-column: 1 / -1; text-align: center; padding: 30px 16px; color: var(--text-muted); }
 .activity-empty i { font-size: 24px; color: var(--platinum); margin-bottom: 10px; display: block; }
+
+@media (max-width: 760px) {
+  .units-hero { flex-direction: column; }
+  .unit-panel {
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 22px), 50% 100%, 0 calc(100% - 22px));
+    margin: -22px 0 0 0 !important;
+    flex: 1; min-width: 0;
+    box-shadow: inset 4px 0 0 0 var(--old-gold);
+  }
+  .unit-panel:first-child { margin-top: 0 !important; }
+  .unit-panel:last-child { clip-path: none; }
+  .unit-panel.expanded { flex: 8; box-shadow: inset 0 0 0 2px rgba(203,181,78,.35); }
+  .unit-panel-icon, .unit-panel-number { top: 14px; font-size: 22px; }
+  .unit-footer { bottom: 22px; padding-bottom: 4px; }
+  .unit-footer-shape { padding: 6px 14px 6px 11px; min-width: 80px; }
+  .unit-footer-label { font-size: .7rem; }
+  .unit-active-content { padding: 30px 7% 24px; }
+  .unit-title { max-width: 100%; font-size: 1.3rem; }
+  .unit-illustration svg { max-width: 58vw; }
+}
 
 /* ---------- Toast ---------- */
 .toast {

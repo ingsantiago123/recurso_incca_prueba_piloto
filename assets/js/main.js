@@ -3,16 +3,16 @@
  * Única dependencia externa: Font Awesome (iconos), vía CDN en index.html.
  * ---------------------------------------------------------------------
  * TODO el contenido (curso, docente, bienvenida, aprenderás, tutorías,
- * video, actividades) llega como UN SOLO objeto JSON leído desde
+ * video, unidades/módulos) llega como UN SOLO objeto JSON leído desde
  * `window.name` — no desde la URL. Esto evita el límite de longitud de
- * URL (error 414) cuando hay muchas actividades.
+ * URL (error 414) cuando el curso tiene muchos módulos.
  *
  * FORMA RECOMENDADA (la que usa Moodle): HTML estático, sin JavaScript,
  * generado en PHP con json_encode() e impreso dentro del atributo name:
  *
  *   <iframe id="incca-hero-section" title="Visor de recurso U.INCCA"
  *     src="https://TU-USUARIO.github.io/TU-REPO/"
- *     name='{"curso":"...", "profesor":{...}, "actividades":[...]}'>
+ *     name='{"curso":"...", "profesor":{...}, "modulos":[...]}'>
  *   </iframe>
  *
  * ALTERNATIVA (si el padre arma el iframe por JavaScript en vez de HTML
@@ -40,23 +40,43 @@
  *     "nombre": "...", "foto": "url (opcional)",
  *     "rol": "... (opcional)",
  *     "bio": ["párrafo 1", "párrafo 2"],
- *     "etiquetas": [{ "icono": "fa-graduation-cap", "texto": "..." }]
+ *     "etiquetas": [{ "icono": "fa-graduation-cap", "texto": "..." }],
+ *     "video": "url de YouTube/Vimeo/Drive (opcional; video del docente)"
  *   },
- *   "video": "url de YouTube/Vimeo/Drive",
+ *   "profesor_tutor": mismo formato que "profesor" (opcional). Si esta
+ *     clave no llega, la diapositiva "Docente tutor" ni se muestra — no
+ *     todo curso tiene ese rol asignado, así que no hay diapositiva
+ *     genérica de relleno para él.
+ *   "video": "url de YouTube/Vimeo/Drive (presentación del curso / DEA)",
  *   "video_titulo": "Título junto al video",
  *   "video_parrafos": ["párrafo 1", "párrafo 2"],
+ *   "video_descarga_url": "url opcional de descarga del material (p. ej. el DEA)",
  *   "bienvenida": {
  *     "titulo": "...", "parrafos": ["...", "..."], "frase_destacada": "..."
  *   },
  *   "aprenderas": [{ "icono": "fa-xxx", "titulo": "...", "detalle": "..." }],
  *   "tutorias": [{ "titulo": "...", "fecha_label": "...", "inicio": "ISO",
  *                  "fin": "ISO", "url_grabacion": "..." }],
- *   "actividades": [{ "nombre": "...", "url": "..." }]
+ *   "modulos": [{ "nombre": "...", "url": "...", "ilustracion": "url (opcional)" }]
  * }
+ *
+ * "modulos" es el mosaico real del curso en Moodle — un arreglo YA
+ * ORDENADO tal como debe verse (p. ej. CONECTA, INCCA APOYO, Semana 1,
+ * Semana 2...). La cantidad es dinámica (no hay un número fijo de
+ * semanas). El ícono/número grande de cada panel NO es un campo del JSON:
+ * se infiere del propio "nombre" (ver unitVisualMeta) reconociendo los
+ * patrones reales del mosaico — "CONECTA" → ícono de foro, "APOYO" →
+ * ícono de ayuda, "Semana N" → el número N en grande; cualquier otro
+ * nombre cae en un ícono genérico. "ilustracion" sí es un campo de datos
+ * (url de imagen, opcional) que se muestra en el panel expandido; si
+ * falta, simplemente no se muestra ilustración. Al pulsar su CTA
+ * "INICIAR MÓDULO" no se ejecuta contenido dentro del visor: es un enlace
+ * real (target="_blank") a la URL de esa sección en Moodle, igual que
+ * cualquier otro link — el visor no reemplaza esa página, solo la referencia.
  *
  * Todo lo que varía según la materia va en el JSON. Lo único que queda
  * fijo en el HTML son etiquetas de interfaz que nunca cambian (textos de
- * botones, nombre de secciones como "Actividades" o "Docente", el
+ * botones, nombre de secciones como "Unidades" o "Docente", el
  * membrete "Universidad INCCA de Colombia" del topbar).
  * ------------------------------------------------------------------- */
 (function () {
@@ -66,17 +86,29 @@
   const $$ = (sel, ctx) => Array.from((ctx || document).querySelectorAll(sel));
 
   /* ---------------------------------------------------------------------
-   * 1. Estructura de diapositivas (fija — no es "contenido", es diseño)
+   * 1. Estructura de diapositivas (fija — no es "contenido", es diseño).
+   *    Es una función y no una lista fija porque "Docente tutor" es una
+   *    diapositiva opcional: solo existe si el JSON trae "profesor_tutor"
+   *    (el curso real puede no tener ese rol asignado todavía). SLIDES se
+   *    recalcula una vez, con los datos ya cargados, antes de armar el
+   *    resto del chrome (ver DOMContentLoaded al final del archivo).
    * ------------------------------------------------------------------- */
-  const SLIDES = [
-    { id: "hero", label: "Inicio", icon: "fa-house" },
-    { id: "bienvenida", label: "Bienvenida", icon: "fa-hand-holding-heart" },
-    { id: "aprenderas", label: "Aprenderás", icon: "fa-route" },
-    { id: "docente", label: "Docente", icon: "fa-chalkboard-user" },
-    { id: "tutorias", label: "Tutorías", icon: "fa-calendar-days" },
-    { id: "dea", label: "DEA", icon: "fa-compass" },
-    { id: "actividades", label: "Actividades", icon: "fa-list-check" }
-  ];
+  function construirSlides(datos) {
+    const slides = [
+      { id: "hero", label: "Inicio", icon: "fa-house" },
+      { id: "bienvenida", label: "Bienvenida", icon: "fa-hand-holding-heart" },
+      { id: "aprenderas", label: "Aprenderás", icon: "fa-route" },
+      { id: "docente", label: "Docente creador", icon: "fa-chalkboard-user" }
+    ];
+    if (datos.profesor_tutor) slides.push({ id: "docente_tutor", label: "Docente tutor", icon: "fa-user-tie" });
+    slides.push(
+      { id: "tutorias", label: "Tutorías", icon: "fa-calendar-days" },
+      { id: "dea", label: "DEA", icon: "fa-compass" },
+      { id: "unidades", label: "Unidades", icon: "fa-layer-group" }
+    );
+    return slides;
+  }
+  let SLIDES = [];
 
   /* ---------------------------------------------------------------------
    * 2. Placeholders — SOLO se usan campo por campo cuando ese campo en
@@ -96,11 +128,13 @@
       foto: "",
       rol: "",
       bio: [],
-      etiquetas: []
+      etiquetas: [],
+      video: ""
     },
     video: "",
     video_titulo: "",
     video_parrafos: [],
+    video_descarga_url: "",
     bienvenida: {
       titulo: "Título de bienvenida",
       parrafos: [],
@@ -108,8 +142,12 @@
     },
     aprenderas: [],
     tutorias: [],
-    actividades: []
+    modulos: []
   };
+  // Placeholder por-campo para cada módulo del mosaico (CONECTA, INCCA
+  // APOYO, Semana N...) — se aplica ítem a ítem, igual que el resto del
+  // patrón, para que un módulo sin url siga viéndose sin romper el panel.
+  const SIN_DATOS_MODULO = { nombre: "Nombre del módulo", url: "#", ilustracion: "" };
 
   /* ---------------------------------------------------------------------
    * 3. Lectura de datos desde window.name (JSON) — con try/catch de rescate
@@ -137,13 +175,27 @@
       unidades: Number.isFinite(recibidos.unidades) ? recibidos.unidades : SIN_DATOS.unidades,
       horas_trabajo: Number.isFinite(recibidos.horas_trabajo) ? recibidos.horas_trabajo : SIN_DATOS.horas_trabajo,
       profesor: Object.assign({}, SIN_DATOS.profesor, recibidos.profesor || {}),
+      // A diferencia de "profesor" (siempre existe, con placeholders si
+      // falta), "profesor_tutor" es null cuando el JSON no trae esa clave
+      // — el curso puede no tener ese rol asignado todavía — y eso es lo
+      // que decide si la diapositiva "Docente tutor" existe o no. Si SÍ
+      // llega la clave (aunque venga casi vacía), se completa campo a
+      // campo igual que el resto del patrón.
+      profesor_tutor: (recibidos.profesor_tutor && typeof recibidos.profesor_tutor === "object")
+        ? Object.assign({}, SIN_DATOS.profesor, recibidos.profesor_tutor)
+        : null,
       video: recibidos.video || SIN_DATOS.video,
       video_titulo: recibidos.video_titulo || SIN_DATOS.video_titulo,
       video_parrafos: Array.isArray(recibidos.video_parrafos) ? recibidos.video_parrafos : SIN_DATOS.video_parrafos,
+      video_descarga_url: recibidos.video_descarga_url || SIN_DATOS.video_descarga_url,
       bienvenida: Object.assign({}, SIN_DATOS.bienvenida, recibidos.bienvenida || {}),
       aprenderas: Array.isArray(recibidos.aprenderas) ? recibidos.aprenderas : SIN_DATOS.aprenderas,
       tutorias: Array.isArray(recibidos.tutorias) ? recibidos.tutorias : SIN_DATOS.tutorias,
-      actividades: Array.isArray(recibidos.actividades) ? recibidos.actividades : SIN_DATOS.actividades
+      modulos: (Array.isArray(recibidos.modulos) ? recibidos.modulos : SIN_DATOS.modulos).map((m) => ({
+        nombre: (m && m.nombre) || SIN_DATOS_MODULO.nombre,
+        url: (m && m.url) || SIN_DATOS_MODULO.url,
+        ilustracion: (m && m.ilustracion) || SIN_DATOS_MODULO.ilustracion
+      }))
     };
   }
 
@@ -319,9 +371,9 @@
     btn.addEventListener("click", () => deck.goTo(targetIndex));
   }
 
-  function initGotoActividadesButtons() {
-    const targetIndex = SLIDES.findIndex((s) => s.id === "actividades");
-    ["heroActivitiesCue", "deaActivitiesCue"].forEach((id) => {
+  function initGotoUnitsButtons() {
+    const targetIndex = SLIDES.findIndex((s) => s.id === "unidades");
+    ["heroUnitsCue", "deaUnitsCue"].forEach((id) => {
       const btn = $(`#${id}`);
       if (btn) btn.addEventListener("click", () => deck.goTo(targetIndex));
     });
@@ -361,6 +413,33 @@
   /* ---------------------------------------------------------------------
    * 7. Render — Hero / Bienvenida / Docente (a partir del JSON)
    * ------------------------------------------------------------------- */
+  // Se usa para el docente creador (siempre presente) y el docente tutor
+  // (solo si el JSON trae "profesor_tutor") — misma tarjeta, mismos ids
+  // con prefijo distinto ("teacher"/"tutor") en el HTML de cada slide.
+  function renderTeacherCard(idPrefix, profesor) {
+    const avatar = $(`#${idPrefix}Avatar`);
+    avatar.src = profesor.foto || `https://ui-avatars.com/api/?name=${encodeURIComponent(profesor.nombre || "Docente")}&background=E2E6E9&color=0B349D&size=300`;
+    avatar.alt = profesor.nombre || "Docente del curso";
+    avatar.onerror = () => {
+      avatar.onerror = null;
+      avatar.src = "https://ui-avatars.com/api/?name=Docente&background=E2E6E9&color=0B349D&size=300";
+    };
+    $(`#${idPrefix}Name`).textContent = profesor.nombre || "Docente del curso";
+    $(`#${idPrefix}Role`).textContent = profesor.rol || "";
+    $(`#${idPrefix}Role`).hidden = !profesor.rol;
+    $(`#${idPrefix}Bio`).innerHTML = (profesor.bio || []).map((p) => `<p>${p}</p>`).join("");
+    $(`#${idPrefix}Tags`).innerHTML = (profesor.etiquetas || []).map((t) => `
+      <span class="teacher-tag"><i class="fa-solid ${t.icono || "fa-tag"}" aria-hidden="true"></i> ${t.texto}</span>
+    `).join("");
+    $(`#${idPrefix}Media`).classList.toggle("has-video", Boolean(profesor.video));
+    if (profesor.video) {
+      $(`#${idPrefix}Video`).src = toEmbedUrl(profesor.video);
+      $(`#${idPrefix}VideoFrame`).hidden = false;
+    } else {
+      $(`#${idPrefix}VideoFrame`).hidden = true;
+    }
+  }
+
   function renderHeroYBienvenidaYDocente(datos) {
     document.title = `${datos.curso} — U.INCCA`;
     $("#courseName").textContent = datos.curso || "Curso sin nombre";
@@ -373,21 +452,9 @@
     $("#statUnidades").dataset.counter = datos.unidades;
     $("#statHoras").dataset.counter = datos.horas_trabajo;
 
-    // Docente
-    const avatar = $("#teacherAvatar");
-    avatar.src = datos.profesor.foto || `https://ui-avatars.com/api/?name=${encodeURIComponent(datos.profesor.nombre || "Docente")}&background=E2E6E9&color=0B349D&size=300`;
-    avatar.alt = datos.profesor.nombre || "Docente del curso";
-    avatar.onerror = () => {
-      avatar.onerror = null;
-      avatar.src = "https://ui-avatars.com/api/?name=Docente&background=E2E6E9&color=0B349D&size=300";
-    };
-    $("#teacherName").textContent = datos.profesor.nombre || "Docente del curso";
-    $("#teacherRole").textContent = datos.profesor.rol || "";
-    $("#teacherRole").hidden = !datos.profesor.rol;
-    $("#teacherBio").innerHTML = (datos.profesor.bio || []).map((p) => `<p>${p}</p>`).join("");
-    $("#teacherTags").innerHTML = (datos.profesor.etiquetas || []).map((t) => `
-      <span class="teacher-tag"><i class="fa-solid ${t.icono || "fa-tag"}" aria-hidden="true"></i> ${t.texto}</span>
-    `).join("");
+    // Docente creador (+ docente tutor, si el JSON lo trae — ver renderTeacherCard)
+    renderTeacherCard("teacher", datos.profesor);
+    if (datos.profesor_tutor) renderTeacherCard("tutor", datos.profesor_tutor);
 
     // Bienvenida
     $("#bienvenidaTitulo").textContent = datos.bienvenida.titulo || "¡Bienvenidos al curso!";
@@ -400,17 +467,21 @@
     $("#videoParrafos").innerHTML = (datos.video_parrafos || []).map((p) => `<p>${p}</p>`).join("");
     if (datos.video) {
       $("#videoFrame").src = toEmbedUrl(datos.video);
-      $(".dea-video-frame").hidden = false;
+      $("#deaVideoFrame").hidden = false;
     } else {
-      $(".dea-video-frame").hidden = true;
+      $("#deaVideoFrame").hidden = true;
+    }
+    const descargaBtn = $("#deaDescargaBtn");
+    if (datos.video_descarga_url) {
+      descargaBtn.href = datos.video_descarga_url;
+      descargaBtn.hidden = false;
+    } else {
+      descargaBtn.hidden = true;
     }
 
     // Contadores del hero
-    $("#statActividades").dataset.counter = datos.actividades.length;
+    $("#statModulos").dataset.counter = datos.modulos.length;
     $("#statTutorias").dataset.counter = datos.tutorias.length;
-    $("#activitiesSub").textContent = datos.actividades.length
-      ? `${datos.actividades.length} actividad${datos.actividades.length === 1 ? "" : "es"} disponible${datos.actividades.length === 1 ? "" : "s"} — haz clic para abrir cada una.`
-      : "Este recurso todavía no tiene actividades.";
   }
 
   /* ---------------------------------------------------------------------
@@ -506,19 +577,105 @@
   }
 
   /* ---------------------------------------------------------------------
-   * 10. Render — Actividades (número + título + link)
+   * 10. Render — Unidades (acordeón horizontal de módulos)
+   * Cada módulo (CONECTA, INCCA APOYO, Semana N...) es un panel-acordeón:
+   * clic para expandir/contraer, y su CTA "INICIAR MÓDULO" es un <a> real
+   * (target="_blank") a la url del módulo — no dispara lógica propia, solo
+   * navega, igual que cualquier enlace normal de Moodle.
    * ------------------------------------------------------------------- */
-  function renderActivityCards(actividades) {
-    const grid = $("#activityGrid");
-    grid.innerHTML = actividades.length
-      ? actividades.map((item, i) => `
-        <a class="activity-card" href="${item.url}" target="_blank" rel="noopener" style="text-decoration:none">
-          <div class="activity-badge">${i + 1}</div>
-          <div class="activity-card-title">${item.nombre}</div>
-          <span class="btn btn-primary btn-sm activity-card-btn">Abrir actividad <i class="fa-solid fa-arrow-right activity-card-open" aria-hidden="true"></i></span>
-        </a>
-      `).join("")
-      : `<div class="activity-empty"><i class="fa-solid fa-inbox" aria-hidden="true"></i>Este recurso todavía no tiene actividades.</div>`;
+  // Paleta institucional del más claro al más oscuro (mismos tonos que
+  // --gradient-institutional). Cada panel recibe UN color sólido tomado de
+  // un punto de este degradé según su posición (índice/total) — no el
+  // degradé completo — para que se note la progresión clara→oscura Y la
+  // separación/forma de cada panel a la vez, en vez de una sola mancha
+  // continua o colores sueltos sin relación entre sí.
+  const UNIT_GRADIENT_STOPS = [
+    { t: 0, rgb: [101, 203, 227] },   // light-cyan
+    { t: 0.42, rgb: [43, 139, 250] }, // dodger-blue
+    { t: 0.70, rgb: [11, 52, 157] },  // royal-blue
+    { t: 1, rgb: [4, 12, 56] }        // oxford-blue
+  ];
+  function unitColorAt(t) {
+    t = Math.max(0, Math.min(1, t));
+    for (let i = 0; i < UNIT_GRADIENT_STOPS.length - 1; i++) {
+      const a = UNIT_GRADIENT_STOPS[i], b = UNIT_GRADIENT_STOPS[i + 1];
+      if (t >= a.t && t <= b.t) {
+        const localT = (t - a.t) / (b.t - a.t || 1);
+        const rgb = a.rgb.map((c, idx) => Math.round(c + (b.rgb[idx] - c) * localT));
+        return `rgb(${rgb.join(",")})`;
+      }
+    }
+    return `rgb(${UNIT_GRADIENT_STOPS[UNIT_GRADIENT_STOPS.length - 1].rgb.join(",")})`;
+  }
+
+  // El nombre es lo único garantizado por módulo, así que el ícono/número
+  // "más asertado" se infiere del propio nombre — no es un campo aparte
+  // del JSON. Reconoce los patrones reales del mosaico de Moodle (CONECTA,
+  // INCCA APOYO, Semana N); cualquier otro nombre cae en un ícono genérico.
+  function unitVisualMeta(nombre) {
+    const n = (nombre || "").toLowerCase();
+    if (n.includes("conecta")) return { icon: "fa-comments" };
+    if (n.includes("apoyo")) return { icon: "fa-handshake" };
+    const num = n.match(/(\d+)/);
+    if (n.includes("semana") && num) return { number: num[1] };
+    return { icon: "fa-layer-group" };
+  }
+
+  function renderUnitsAccordion(modulos) {
+    const hero = $("#unitsHero");
+    if (!hero) return;
+    if (!modulos.length) {
+      hero.innerHTML = `<div class="activity-empty"><i class="fa-solid fa-door-closed" aria-hidden="true"></i>Este recurso todavía no tiene unidades.</div>`;
+      return;
+    }
+    hero.innerHTML = modulos.map((m, i) => {
+      const meta = unitVisualMeta(m.nombre);
+      const iconoHtml = meta.number
+        ? `<div class="unit-panel-number" aria-hidden="true">${meta.number}</div>`
+        : `<div class="unit-panel-icon" aria-hidden="true"><i class="fa-solid ${meta.icon}"></i></div>`;
+      const t = modulos.length > 1 ? i / (modulos.length - 1) : 0;
+      const color = unitColorAt(t);
+      return `
+      <div class="unit-panel" role="button" tabindex="0" data-unit="${i}" aria-label="${m.nombre}" style="z-index:${modulos.length - i}; --unit-color:${color}">
+        ${iconoHtml}
+        <div class="unit-footer">
+          <div class="unit-footer-shape"><span class="unit-footer-label">${m.nombre}</span></div>
+        </div>
+        <div class="unit-active-content">
+          <div class="unit-watermark" aria-hidden="true"><span>${m.nombre} · ${m.nombre}</span></div>
+          <span class="unit-tag">UNIDAD ${i + 1}</span>
+          <h3 class="unit-title">${m.nombre}</h3>
+          <div class="unit-illustration">${m.ilustracion ? `<img src="${m.ilustracion}" alt="" loading="lazy">` : ""}</div>
+          <a class="unit-cta" href="${m.url}" target="_blank" rel="noopener">
+            INICIAR MÓDULO
+            <span class="unit-cta-arrow"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
+          </a>
+        </div>
+      </div>`;
+    }).join("");
+
+    // Si la imagen no carga (link roto, hotlink bloqueado...), se retira
+    // en vez de dejar el ícono de imagen rota — el panel sigue viéndose bien
+    // con solo el tag/título/CTA.
+    $$(".unit-illustration img", hero).forEach((img) => {
+      img.addEventListener("error", () => img.remove(), { once: true });
+    });
+
+    $$(".unit-panel", hero).forEach((panelEl) => {
+      panelEl.addEventListener("click", (e) => {
+        if (e.target.closest(".unit-cta")) return; // el <a> maneja su propia navegación
+        toggleUnit(panelEl);
+      });
+      panelEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleUnit(panelEl); }
+      });
+    });
+  }
+
+  function toggleUnit(panelEl) {
+    const willOpen = !panelEl.classList.contains("expanded");
+    $$(".unit-panel", panelEl.parentElement).forEach((p) => p.classList.remove("expanded"));
+    if (willOpen) panelEl.classList.add("expanded");
   }
 
   /* ---------------------------------------------------------------------
@@ -546,15 +703,18 @@
    * ------------------------------------------------------------------- */
   document.addEventListener("DOMContentLoaded", () => {
     const datos = obtenerDatos();
+    SLIDES = construirSlides(datos);
+    const tutorSlide = $("#docente_tutor");
+    if (tutorSlide) tutorSlide.hidden = !datos.profesor_tutor;
 
     renderHeroYBienvenidaYDocente(datos);
     renderChrome();
     renderLearn(datos.aprenderas);
     renderTutorias(datos.tutorias);
-    renderActivityCards(datos.actividades);
+    renderUnitsAccordion(datos.modulos);
     initMenu();
     initHeroCue();
-    initGotoActividadesButtons();
+    initGotoUnitsButtons();
     initKeyboard();
     initSwipe();
     deck.init();
