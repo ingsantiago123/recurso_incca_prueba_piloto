@@ -396,7 +396,7 @@ controlar cada una sin tocar nada más:
   "secciones": {
     "aprenderas": { "visible": false },
     "unidades":   { "orden": 0 },
-    "hero":       { "orden": 1 }
+    "docente":    { "orden": 1 }
   }
 }
 ```
@@ -408,9 +408,16 @@ Cada clave es el id de una diapositiva fija. Ambos campos son opcionales:
 | `visible` | booleano | `true` para todas, excepto `docente_tutor` (que sigue dependiendo de si llegó `profesor_tutor`, salvo que acá se fuerce explícitamente) |
 | `orden` | número | Su posición en la lista de arriba (0 a 7) |
 
-El ejemplo de arriba deja "Unidades" como primera diapositiva, "Inicio"
-como segunda, y saca "Aprenderás" del mazo por completo (no cuenta en
-los puntos de abajo ni en ningún lado).
+El ejemplo de arriba deja "Unidades" como primera diapositiva **después
+de la portada**, "Docente creador" justo después de esa, y saca
+"Aprenderás" del mazo por completo (no cuenta en los puntos de abajo ni
+en ningún lado).
+
+> **`hero` (la portada) es la única excepción: no se puede ocultar ni
+> reordenar.** Cualquier `visible`/`orden` que le manden a `"hero"` en
+> `secciones` se ignora — siempre existe, siempre visible, y siempre es
+> la primera diapositiva del mazo. Es una regla forzada en código
+> (`construirSlides()`), no una convención opcional.
 
 ### Agregar diapositivas nuevas — `diapositivas_extra`
 

@@ -98,7 +98,7 @@
  *   "secciones": {
  *     "aprenderas": { "visible": false },
  *     "unidades":   { "orden": 0 },
- *     "hero":       { "orden": 1 }
+ *     "docente":    { "orden": 1 }
  *   }
  *
  * Cada clave es el id de la diapositiva (ver la lista de arriba); ambos
@@ -108,6 +108,13 @@
  * con "diapositivas_extra" (ver abajo): el orden final de TODO el mazo
  * es el resultado de mezclar ambas listas y ordenar por "orden" — así se
  * puede intercalar una diapositiva custom entre dos fijas.
+ *
+ * EXCEPCIÓN — "hero" (la portada) es la única diapositiva que NO se
+ * puede tocar desde "secciones": siempre existe, siempre visible, y
+ * siempre es la primera, sin importar qué "visible"/"orden" le manden.
+ * Es una decisión de diseño (siempre tiene que haber una portada, y sea
+ * cual sea el resto del orden tiene que abrir el mazo) forzada en código
+ * — no una convención que dependa de que el plugin "se porte bien".
  *
  * DIAPOSITIVAS CUSTOM (opcional, vía "diapositivas_extra"): agrega
  * diapositivas nuevas sin tocar el HTML/JS, insertando HTML/CSS directo
@@ -171,6 +178,13 @@
     const config = datos.secciones;
 
     const fijas = SLIDES_FIJAS.map((s, i) => {
+      // "hero" es la portada: SIEMPRE existe y SIEMPRE es la primera —
+      // no se puede ocultar ni reordenar desde "secciones", pase lo que
+      // pase en el JSON. -Infinity garantiza que ningún "orden" (por
+      // grande o negativo que sea) pueda colarse antes.
+      if (s.id === "hero") {
+        return { id: s.id, label: s.label, custom: null, visible: true, orden: -Infinity };
+      }
       const override = config[s.id] || {};
       // "docente_tutor" es la única fija cuya visibilidad por defecto NO
       // es "siempre visible": sin override explícito, depende de si
