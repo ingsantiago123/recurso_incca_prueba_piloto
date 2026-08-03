@@ -94,7 +94,9 @@ Todos los campos son opcionales excepto `curso`:
   "bienvenida": { "titulo": "...", "parrafos": ["...", "..."], "frase_destacada": "..." },
   "aprenderas": [{ "icono": "fa-xxx", "titulo": "...", "detalle": "..." }],
   "tutorias": [{ "titulo": "...", "fecha_label": "...", "inicio": "ISO", "fin": "ISO", "url_grabacion": "..." }],
-  "modulos": [{ "nombre": "...", "url": "...", "ilustracion": "url (opcional)" }]
+  "modulos": [{ "nombre": "...", "url": "...", "ilustracion": "url (opcional)", "sectionid": "número (opcional)" }],
+  "secciones": "opcional — mostrar/ocultar/reordenar las 8 diapositivas fijas, ver más abajo",
+  "diapositivas_extra": "opcional — agregar diapositivas nuevas (iframe o HTML), ver más abajo"
 }
 ```
 
@@ -110,10 +112,11 @@ página con scroll, y no tiene topbar ni "mapa del curso" — solo el
 contenido) — se navega con las flechas de los costados, los puntos de
 abajo, las flechas del teclado o swipe (táctil).
 
-La lista de diapositivas **no es fija**: normalmente son 7, pero
-"Docente tutor" solo aparece si el JSON trae la clave `profesor_tutor` —
-si no llega, esa diapositiva ni se cuenta ni aparece en los puntos de
-abajo. Se recalcula una vez, al cargar, en `construirSlides()` (`main.js`).
+La lista de diapositivas **no es fija**: por defecto son 7 u 8 (según si
+llega `profesor_tutor`), pero el orden, la visibilidad de cada una y hasta
+diapositivas nuevas por completo se pueden controlar desde el JSON — ver
+["Personalizar el mazo"](#personalizar-el-mazo-mostrarocultar-reordenar-y-diapositivas-custom)
+más abajo. Esta tabla es el estado **por defecto**, sin ningún override:
 
 | # | id interno | Diapositiva | ¿Siempre existe? |
 |---|---|---|---|
@@ -371,6 +374,95 @@ en pestaña nueva, el botón "INICIAR MÓDULO":
 Sin `sectionid` este puente ni se intenta — el link se comporta como uno
 normal. Ver `initUnitCta()` en `assets/js/main.js` para la implementación
 completa.
+
+---
+
+## Personalizar el mazo: mostrar/ocultar, reordenar y diapositivas custom
+
+Todo esto es opcional y se administra 100% desde el JSON — no hace falta
+tocar código para ocultar una diapositiva, cambiar su posición o agregar
+una nueva.
+
+### Mostrar, ocultar y reordenar las 8 diapositivas fijas — `secciones`
+
+Por defecto existen las 8 diapositivas de siempre, en este orden: `hero`,
+`bienvenida`, `aprenderas`, `docente`, `docente_tutor`, `tutorias`,
+`dea`, `unidades` (`docente_tutor` además solo aparece si llegó
+`profesor_tutor`, como se explicó arriba). El campo `secciones` deja
+controlar cada una sin tocar nada más:
+
+```json
+{
+  "secciones": {
+    "aprenderas": { "visible": false },
+    "unidades":   { "orden": 0 },
+    "hero":       { "orden": 1 }
+  }
+}
+```
+
+Cada clave es el id de una diapositiva fija. Ambos campos son opcionales:
+
+| Campo | Tipo | Default si falta |
+|---|---|---|
+| `visible` | booleano | `true` para todas, excepto `docente_tutor` (que sigue dependiendo de si llegó `profesor_tutor`, salvo que acá se fuerce explícitamente) |
+| `orden` | número | Su posición en la lista de arriba (0 a 7) |
+
+El ejemplo de arriba deja "Unidades" como primera diapositiva, "Inicio"
+como segunda, y saca "Aprenderás" del mazo por completo (no cuenta en
+los puntos de abajo ni en ningún lado).
+
+### Agregar diapositivas nuevas — `diapositivas_extra`
+
+Inserta contenido nuevo sin tocar el HTML/JS del visor — un iframe o
+HTML/CSS directo (de confianza, se inyecta tal cual — mismo criterio que
+los cuadros de "insertar HTML" del propio Moodle):
+
+```json
+{
+  "diapositivas_extra": [
+    {
+      "id": "webinar-cierre",
+      "tipo": "media",
+      "orden": 8,
+      "titulo": "Webinar de cierre",
+      "descripcion": "Grabación del encuentro de cierre del módulo.",
+      "iframe": "https://www.youtube.com/embed/XXXXXXXXXXX"
+    },
+    {
+      "id": "encuesta-satisfaccion",
+      "tipo": "pagina",
+      "orden": 9,
+      "iframe": "https://forms.gle/XXXXXXXXXXX"
+    }
+  ]
+}
+```
+
+| Campo | Obligatorio | Qué es |
+|---|---|---|
+| `id` | Sí | Identificador único de la diapositiva (no puede repetirse ni coincidir con las fijas) |
+| `tipo` | No (default `"media"`) | `"media"` o `"pagina"` — ver abajo |
+| `orden` | No | Comparte la misma numeración que `secciones` — así se puede intercalar una diapositiva custom entre dos fijas. Sin este campo, se agrega al final |
+| `visible` | No (default `true`) | Igual que en `secciones` |
+| `titulo` / `descripcion` | No | Solo se usan/muestran en tipo `"media"` |
+| `iframe` | No* | URL a embeber. Si llegan `iframe` y `html`, gana `iframe` |
+| `html` | No* | HTML/CSS a inyectar directo. *Si no llega ninguno de los dos, se muestra un mensaje de "sin contenido" en vez de una diapositiva rota |
+
+**Los dos tipos:**
+
+- **`"media"`** — diapositiva normal, con márgenes, igual que "Docente" o
+  "Tutorías": título + descripción arriba, y el iframe/html en un marco
+  contenido con un botón para abrirlo en un **modal de pantalla
+  completa** (más grande, con el mismo título/descripción).
+- **`"pagina"`** — a pantalla completa, igual que "Unidades": el iframe/
+  html ocupa toda la diapositiva de punta a punta, sin título ni
+  descripción. Solo quedan las flechas prev/next (y los puntos de abajo)
+  para salir de ahí — pensado para contenido que necesita todo el
+  espacio (un formulario largo, un recurso interactivo completo, etc.).
+
+Implementación completa en `construirSlides()`, `renderCustomSlides()` y
+`crearSlideCustom()` (`assets/js/main.js`).
 
 ---
 

@@ -190,8 +190,9 @@
     </section>
 
     <!-- 7. UNIDADES — a pantalla completa (de arriba del todo hasta el deck-bottombar),
-         sin el padding/max-width del resto de diapositivas: ver .slide#unidades .slide-body -->
-    <section class="slide" id="unidades" role="group" aria-roledescription="diapositiva" aria-label="Unidades del curso">
+         sin el padding/max-width del resto de diapositivas: ver .slide-fullbleed .slide-body.
+         Misma clase que usan las diapositivas custom tipo "pagina" (ver main.js). -->
+    <section class="slide slide-fullbleed" id="unidades" role="group" aria-roledescription="diapositiva" aria-label="Unidades del curso">
       <div class="slide-body">
         <div class="units-hero" id="unitsHero" aria-label="Módulos del curso"></div>
       </div>
@@ -206,6 +207,20 @@
     <nav class="deck-dots" id="deckDots" aria-label="Ir a diapositiva"></nav>
   </footer>
 
+</div>
+
+<!-- Modal de pantalla completa para diapositivas custom tipo "media" —
+     ver renderCustomSlides()/openMediaModal() en main.js. Vacío por
+     diseño: se llena con el mismo iframe/html de la diapositiva al abrir. -->
+<div class="media-modal-overlay" id="customMediaModalOverlay">
+  <div class="media-modal" role="dialog" aria-modal="true" aria-labelledby="customMediaModalTitle">
+    <button class="media-modal-close" id="customMediaModalClose" aria-label="Cerrar">
+      <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+    </button>
+    <h3 class="media-modal-title" id="customMediaModalTitle"></h3>
+    <p class="media-modal-descripcion" id="customMediaModalDescripcion"></p>
+    <div class="media-modal-body" id="customMediaModalBody"></div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>

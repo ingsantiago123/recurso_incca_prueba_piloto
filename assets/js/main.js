@@ -58,7 +58,9 @@
  *   "tutorias": [{ "titulo": "...", "fecha_label": "...", "inicio": "ISO",
  *                  "fin": "ISO", "url_grabacion": "..." }],
  *   "modulos": [{ "nombre": "...", "url": "...", "ilustracion": "url (opcional)",
- *                 "sectionid": "número opcional — ver 'Puente con Moodle' abajo" }]
+ *                 "sectionid": "número opcional — ver 'Puente con Moodle' abajo" }],
+ *   "secciones": "opcional — ver 'Secciones: mostrar/ocultar/reordenar' abajo",
+ *   "diapositivas_extra": "opcional — ver 'Diapositivas custom' abajo"
  * }
  *
  * "modulos" es el mosaico real del curso en Moodle — un arreglo YA
@@ -87,10 +89,56 @@
  * sin él, el puente no puede identificar qué módulo abrir y el link se
  * comporta exactamente como si el campo no existiera.
  *
+ * SECCIONES: mostrar/ocultar/reordenar (opcional, vía "secciones"). Por
+ * defecto existen 8 diapositivas fijas, en este orden: hero, bienvenida,
+ * aprenderas, docente, docente_tutor, tutorias, dea, unidades ("docente_
+ * tutor" además solo aparece si llegó "profesor_tutor", como siempre).
+ * "secciones" deja controlar cada una desde el JSON, sin tocar código:
+ *
+ *   "secciones": {
+ *     "aprenderas": { "visible": false },
+ *     "unidades":   { "orden": 0 },
+ *     "hero":       { "orden": 1 }
+ *   }
+ *
+ * Cada clave es el id de la diapositiva (ver la lista de arriba); ambos
+ * campos son opcionales — "visible" (default true, o el default de
+ * "docente_tutor" si no se especifica) y "orden" (default: su posición
+ * en la lista de arriba, 0 a 7). "orden" comparte la misma numeración
+ * con "diapositivas_extra" (ver abajo): el orden final de TODO el mazo
+ * es el resultado de mezclar ambas listas y ordenar por "orden" — así se
+ * puede intercalar una diapositiva custom entre dos fijas.
+ *
+ * DIAPOSITIVAS CUSTOM (opcional, vía "diapositivas_extra"): agrega
+ * diapositivas nuevas sin tocar el HTML/JS, insertando HTML/CSS directo
+ * o un iframe:
+ *
+ *   "diapositivas_extra": [{
+ *     "id": "webinar-cierre",        // único, obligatorio
+ *     "tipo": "media",               // "media" o "pagina" (default: "media")
+ *     "orden": 8,                    // opcional, ver arriba
+ *     "visible": true,               // opcional, default true
+ *     "titulo": "Webinar de cierre", // solo se usa/muestra en tipo "media"
+ *     "descripcion": "...",          // solo se usa/muestra en tipo "media"
+ *     "iframe": "https://...",       // el contenido: iframe (si llegan los dos, gana "iframe")
+ *     "html": "<div>...</div>"       // o HTML/CSS de confianza, inyectado tal cual (mismo criterio que Moodle)
+ *   }]
+ *
+ * Dos tipos:
+ *   - "media": diapositiva normal (con márgenes, como "Docente" o
+ *     "Tutorías") — muestra título + descripción + el iframe/html en un
+ *     marco contenido, con un botón para abrirlo en un modal de pantalla
+ *     completa.
+ *   - "pagina": a pantalla completa, igual que "Unidades" — el iframe/
+ *     html ocupa toda la diapositiva, sin título/descripción; solo
+ *     quedan las flechas prev/next (y los puntos de abajo) para navegar.
+ *
+ * Ver construirSlides(), renderCustomSlides() y crearSlideCustom() más
+ * abajo para la implementación completa.
+ *
  * Todo lo que varía según la materia va en el JSON. Lo único que queda
  * fijo en el HTML son etiquetas de interfaz que nunca cambian (textos de
- * botones, nombre de secciones como "Unidades" o "Docente", el
- * membrete "Universidad INCCA de Colombia" del topbar).
+ * botones, nombre de secciones como "Unidades" o "Docente").
  * ------------------------------------------------------------------- */
 (function () {
   "use strict";
@@ -99,27 +147,59 @@
   const $$ = (sel, ctx) => Array.from((ctx || document).querySelectorAll(sel));
 
   /* ---------------------------------------------------------------------
-   * 1. Estructura de diapositivas (fija — no es "contenido", es diseño).
-   *    Es una función y no una lista fija porque "Docente tutor" es una
-   *    diapositiva opcional: solo existe si el JSON trae "profesor_tutor"
-   *    (el curso real puede no tener ese rol asignado todavía). SLIDES se
-   *    recalcula una vez, con los datos ya cargados, antes de armar el
-   *    resto del chrome (ver DOMContentLoaded al final del archivo).
+   * 1. Estructura de diapositivas — combina las 8 fijas (diseño: existen
+   *    en el HTML, con visibilidad/orden por defecto) con las diapositivas
+   *    extra que traiga el JSON (datos.diapositivas_extra) y con los
+   *    overrides de datos.secciones. Se recalcula una vez, con los datos
+   *    ya cargados, antes de armar el resto del chrome (ver
+   *    DOMContentLoaded al final del archivo). Contrato completo de
+   *    "secciones" y "diapositivas_extra" documentado en el comentario de
+   *    esquema al inicio del archivo.
    * ------------------------------------------------------------------- */
+  const SLIDES_FIJAS = [
+    { id: "hero", label: "Inicio" },
+    { id: "bienvenida", label: "Bienvenida" },
+    { id: "aprenderas", label: "Aprenderás" },
+    { id: "docente", label: "Docente creador" },
+    { id: "docente_tutor", label: "Docente tutor" },
+    { id: "tutorias", label: "Tutorías" },
+    { id: "dea", label: "DEA" },
+    { id: "unidades", label: "Unidades" }
+  ];
+
   function construirSlides(datos) {
-    const slides = [
-      { id: "hero", label: "Inicio" },
-      { id: "bienvenida", label: "Bienvenida" },
-      { id: "aprenderas", label: "Aprenderás" },
-      { id: "docente", label: "Docente creador" }
-    ];
-    if (datos.profesor_tutor) slides.push({ id: "docente_tutor", label: "Docente tutor" });
-    slides.push(
-      { id: "tutorias", label: "Tutorías" },
-      { id: "dea", label: "DEA" },
-      { id: "unidades", label: "Unidades" }
-    );
-    return slides;
+    const config = datos.secciones;
+
+    const fijas = SLIDES_FIJAS.map((s, i) => {
+      const override = config[s.id] || {};
+      // "docente_tutor" es la única fija cuya visibilidad por defecto NO
+      // es "siempre visible": sin override explícito, depende de si
+      // llegó profesor_tutor (mismo comportamiento de siempre). Un
+      // override explícito (true/false) en "secciones" manda por encima
+      // de esa inferencia.
+      const visibleDefault = s.id === "docente_tutor" ? Boolean(datos.profesor_tutor) : true;
+      return {
+        id: s.id,
+        label: s.label,
+        custom: null,
+        visible: typeof override.visible === "boolean" ? override.visible : visibleDefault,
+        orden: Number.isFinite(override.orden) ? override.orden : i
+      };
+    });
+
+    const extra = datos.diapositivas_extra
+      .filter((d) => d && d.id)
+      .map((d, i) => ({
+        id: `custom-${d.id}`,
+        label: d.titulo || String(d.id),
+        custom: d,
+        visible: d.visible !== false,
+        orden: Number.isFinite(d.orden) ? d.orden : SLIDES_FIJAS.length + i
+      }));
+
+    return fijas.concat(extra)
+      .filter((s) => s.visible)
+      .sort((a, b) => a.orden - b.orden);
   }
   let SLIDES = [];
 
@@ -209,7 +289,13 @@
         url: (m && m.url) || SIN_DATOS_MODULO.url,
         ilustracion: (m && m.ilustracion) || SIN_DATOS_MODULO.ilustracion,
         sectionid: (m && m.sectionid) || SIN_DATOS_MODULO.sectionid
-      }))
+      })),
+      // Config estructural (qué diapositivas mostrar, en qué orden) — no
+      // es "contenido" con placeholder, es config; por eso el default es
+      // simplemente "vacío" (sin overrides / sin diapositivas extra), no
+      // un objeto de ejemplo. Ver construirSlides().
+      secciones: (recibidos.secciones && typeof recibidos.secciones === "object") ? recibidos.secciones : {},
+      diapositivas_extra: Array.isArray(recibidos.diapositivas_extra) ? recibidos.diapositivas_extra : []
     };
   }
 
@@ -698,7 +784,109 @@
   }
 
   /* ---------------------------------------------------------------------
-   * 11. Contadores animados (hero)
+   * 11. Render — Diapositivas custom (datos.diapositivas_extra)
+   * Cada entrada de "diapositivas_extra" no tiene un <section> propio en
+   * index.html — se crea acá, en JS, la primera vez que aparece en SLIDES.
+   * Dos tipos (campo "tipo", cualquier valor que no sea "pagina" cae en
+   * "media"):
+   *   - "media": diapositiva normal (con padding, como Docente o
+   *     Tutorías) con título + descripción + el iframe/html en un marco
+   *     contenido, más un botón para abrirlo en el modal de pantalla
+   *     completa ("otra pantalla").
+   *   - "pagina": a pantalla completa (misma clase .slide-fullbleed que
+   *     usa Unidades) — el iframe/html ocupa toda la diapositiva, sin
+   *     título/descripción; solo quedan las flechas prev/next (y los
+   *     puntos de abajo) para navegar.
+   * El contenido es "iframe" (url) o "html" (string, inyectado tal cual
+   * — es contenido de confianza que arma el plugin de Moodle, mismo
+   * criterio que los cuadros de "insertar HTML" del propio Moodle) — si
+   * llegan ambos, gana "iframe"; si no llega ninguno, se muestra un
+   * mensaje de "sin contenido" en vez de una diapositiva vacía rota.
+   * ------------------------------------------------------------------- */
+  function contenidoEmbebidoCustom(custom) {
+    if (custom.iframe) {
+      const tituloSeguro = (custom.titulo || "Recurso").replace(/"/g, "&quot;");
+      return `<iframe src="${custom.iframe}" title="${tituloSeguro}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe>`;
+    }
+    if (custom.html) return custom.html;
+    return `<div class="activity-empty"><i class="fa-solid fa-inbox" aria-hidden="true"></i>Este recurso todavía no tiene contenido.</div>`;
+  }
+
+  function crearSlideCustom(id, custom) {
+    const esPagina = custom.tipo === "pagina";
+    const section = document.createElement("section");
+    section.id = id;
+    section.setAttribute("role", "group");
+    section.setAttribute("aria-roledescription", "diapositiva");
+    section.setAttribute("aria-label", custom.titulo || String(custom.id));
+    section.className = esPagina ? "slide slide-fullbleed" : "slide";
+
+    if (esPagina) {
+      section.innerHTML = `
+        <div class="slide-body">
+          <div class="custom-page">${contenidoEmbebidoCustom(custom)}</div>
+        </div>`;
+    } else {
+      section.innerHTML = `
+        <div class="slide-body">
+          <div class="slide-head">
+            <div class="tag"><i class="fa-solid fa-photo-film" aria-hidden="true"></i> Recurso</div>
+            ${custom.titulo ? `<h2 class="heading">${custom.titulo}</h2>` : ""}
+            ${custom.descripcion ? `<p class="sub">${custom.descripcion}</p>` : ""}
+          </div>
+          <div class="custom-media-frame">
+            ${contenidoEmbebidoCustom(custom)}
+            <button class="custom-media-expand" type="button" aria-label="Abrir en pantalla completa">
+              <i class="fa-solid fa-expand" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>`;
+      $(".custom-media-expand", section).addEventListener("click", () => openMediaModal(custom));
+    }
+    return section;
+  }
+
+  // Crea (si hace falta) el <section> de cada diapositiva custom y
+  // reordena TODAS las diapositivas (fijas + custom) dentro de #slides
+  // según el orden final ya calculado en SLIDES — reinsertar un nodo que
+  // ya es hijo de #slides simplemente lo mueve a esa posición, así que
+  // este mismo paso resuelve tanto crear las nuevas como reordenar las
+  // fijas cuando "orden" las cambia de lugar.
+  function renderCustomSlides(slides) {
+    const contenedor = $("#slides");
+    slides.forEach((s) => {
+      let el = document.getElementById(s.id);
+      if (!el && s.custom) el = crearSlideCustom(s.id, s.custom);
+      if (el) contenedor.appendChild(el);
+    });
+  }
+
+  function openMediaModal(custom) {
+    $("#customMediaModalTitle").textContent = custom.titulo || "";
+    $("#customMediaModalTitle").hidden = !custom.titulo;
+    $("#customMediaModalDescripcion").textContent = custom.descripcion || "";
+    $("#customMediaModalDescripcion").hidden = !custom.descripcion;
+    $("#customMediaModalBody").innerHTML = contenidoEmbebidoCustom(custom);
+    $("#customMediaModalOverlay").classList.add("is-open");
+  }
+
+  function closeMediaModal() {
+    $("#customMediaModalOverlay").classList.remove("is-open");
+    $("#customMediaModalBody").innerHTML = ""; // corta el iframe al cerrar (que no siga sonando/corriendo de fondo)
+  }
+
+  function initMediaModal() {
+    $("#customMediaModalClose").addEventListener("click", closeMediaModal);
+    $("#customMediaModalOverlay").addEventListener("click", (e) => {
+      if (e.target.id === "customMediaModalOverlay") closeMediaModal();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && $("#customMediaModalOverlay").classList.contains("is-open")) closeMediaModal();
+    });
+  }
+
+  /* ---------------------------------------------------------------------
+   * 12. Contadores animados (hero)
    * ------------------------------------------------------------------- */
   function initCounters(root) {
     $$("[data-counter]", root).forEach((el) => {
@@ -723,9 +911,17 @@
   document.addEventListener("DOMContentLoaded", () => {
     const datos = obtenerDatos();
     SLIDES = construirSlides(datos);
-    const tutorSlide = $("#docente_tutor");
-    if (tutorSlide) tutorSlide.hidden = !datos.profesor_tutor;
 
+    // Cualquier diapositiva FIJA que quedó fuera de SLIDES (visible:false
+    // propio, o —para "docente_tutor"— ausencia de profesor_tutor) se
+    // saca del árbol de accesibilidad, no solo se deja invisible por CSS.
+    const idsVisibles = new Set(SLIDES.map((s) => s.id));
+    SLIDES_FIJAS.forEach((s) => {
+      const el = document.getElementById(s.id);
+      if (el) el.hidden = !idsVisibles.has(s.id);
+    });
+
+    renderCustomSlides(SLIDES);
     renderHeroYBienvenidaYDocente(datos);
     renderChrome();
     renderLearn(datos.aprenderas);
@@ -733,6 +929,7 @@
     renderUnitsAccordion(datos.modulos);
     initHeroCue();
     initGotoUnitsButtons();
+    initMediaModal();
     initKeyboard();
     initSwipe();
     deck.init();

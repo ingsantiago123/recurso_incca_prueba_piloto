@@ -124,6 +124,11 @@ button { font-family: inherit; cursor: pointer; }
 .slide.is-enter-left { transform: translateX(-5%) scale(.97); opacity: 0; z-index: 2; }
 .slide.is-exit-left { transform: translateX(-5%) scale(.97); opacity: 0; z-index: 2; }
 .slide.is-exit-right { transform: translateX(5%) scale(.97); opacity: 0; z-index: 2; }
+/* .slide ya fija su propio "display" (flex), que por especificidad
+   empataría con la regla [hidden] del navegador — sin esto, una
+   diapositiva fija oculta vía datos.secciones seguiría ocupando su lugar
+   en el árbol de accesibilidad aunque ya esté invisible por opacity. */
+.slide[hidden] { display: none; }
 
 .slide-body {
   width: 100%;
@@ -408,7 +413,7 @@ button { font-family: inherit; cursor: pointer; }
    flecha de un panel tape la costura del siguiente) se fija inline desde
    JS (style="z-index:…"), no aquí, porque depende de N (cantidad de
    módulos), que es dinámica. */
-.slide#unidades .slide-body { max-width: none; padding: 0; gap: 0; overflow: hidden; justify-content: stretch; }
+.slide-fullbleed .slide-body { max-width: none; padding: 0; gap: 0; overflow: hidden; justify-content: stretch; }
 .units-hero { position: relative; display: flex; width: 100%; height: 100%; }
 .unit-panel {
   position: relative; flex: 1 1 0; min-width: 54px; height: 100%;
@@ -483,6 +488,60 @@ button { font-family: inherit; cursor: pointer; }
   .unit-active-content { padding: 30px 7% 24px; }
   .unit-title { max-width: 100%; font-size: 1.3rem; }
   .unit-illustration svg { max-width: 58vw; }
+}
+
+/* ---------- Diapositivas custom (datos.diapositivas_extra) ----------
+   Tipo "pagina": el iframe/html ocupa toda la diapositiva (misma clase
+   .slide-fullbleed que usa Unidades). Tipo "media": diapositiva normal
+   con título/descripción + el contenido en un marco contenido, con botón
+   para abrirlo en el modal de pantalla completa de abajo. */
+.custom-page { position: relative; width: 100%; height: 100%; overflow: auto; background: var(--white); }
+.custom-page iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+.custom-media-frame {
+  position: relative; flex: 1; min-height: 240px;
+  border-radius: var(--radius-md); overflow: hidden;
+  background: var(--platinum); box-shadow: 0 6px 16px rgba(4,12,56,0.06);
+  border: 1px solid rgba(4,12,56,0.08);
+}
+.custom-media-frame iframe { width: 100%; height: 100%; min-height: 320px; border: 0; display: block; }
+.custom-media-expand {
+  position: absolute; top: 12px; right: 12px; width: 38px; height: 38px;
+  border-radius: 50%; border: none; background: rgba(4,12,56,.55); color: var(--white);
+  display: flex; align-items: center; justify-content: center; font-size: 14px;
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  transition: background .2s, transform .2s;
+}
+.custom-media-expand:hover { background: var(--oxford-blue); transform: scale(1.06); }
+
+/* ---------- Modal de pantalla completa (diapositivas custom tipo "media") ---------- */
+.media-modal-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(4,12,56,.85); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center; padding: 4vh 3vw;
+  opacity: 0; pointer-events: none; transition: opacity .25s var(--ease-out);
+}
+.media-modal-overlay.is-open { opacity: 1; pointer-events: auto; }
+.media-modal {
+  width: min(1100px, 100%); height: min(86vh, 720px); max-height: 92vh;
+  background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow-strong);
+  padding: 20px 22px; display: flex; flex-direction: column; gap: 8px; position: relative;
+  transform: scale(.96); transition: transform .25s var(--ease-out);
+}
+.media-modal-overlay.is-open .media-modal { transform: scale(1); }
+.media-modal-close {
+  position: absolute; top: 14px; right: 14px; width: 34px; height: 34px; border-radius: 50%;
+  border: none; background: var(--platinum); color: var(--oxford-blue);
+  display: flex; align-items: center; justify-content: center; font-size: 13px; z-index: 1;
+}
+.media-modal-close:hover { background: var(--light-cyan); }
+.media-modal-title { font-size: clamp(1.1rem, 2.2vw, 1.5rem); font-weight: 700; color: var(--oxford-blue); padding-right: 40px; }
+.media-modal-descripcion { color: var(--text-muted); font-size: 13.5px; }
+.media-modal-body { flex: 1; min-height: 0; border-radius: var(--radius-sm); overflow: hidden; background: var(--platinum); }
+.media-modal-body iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+@media (max-width: 620px) {
+  .media-modal { padding: 16px; height: min(88vh, 640px); }
 }
 
 /* ---------- Toast ---------- */
