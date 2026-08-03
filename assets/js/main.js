@@ -600,7 +600,9 @@
       const iconoHtml = meta.number
         ? `<div class="unit-panel-number" aria-hidden="true">${meta.number}</div>`
         : `<div class="unit-panel-icon" aria-hidden="true"><i class="fa-solid ${meta.icon}"></i></div>`;
-      const t = modulos.length > 1 ? i / (modulos.length - 1) : 0;
+      // Invertido a propósito: el primer módulo sale más oscuro y el
+      // degradé se va aclarando hacia el último (antes era al revés).
+      const t = modulos.length > 1 ? 1 - i / (modulos.length - 1) : 1;
       const color = unitColorAt(t);
       return `
       <div class="unit-panel" role="button" tabindex="0" data-unit="${i}" aria-label="${m.nombre}" style="z-index:${modulos.length - i}; --unit-color:${color}">
