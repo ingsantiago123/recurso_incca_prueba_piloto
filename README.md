@@ -310,12 +310,12 @@ acordeón horizontal de paneles — uno por cada módulo del curso.
 ```json
 {
   "modulos": [
-    { "nombre": "CONECTA", "url": "https://moodle.../section.php?id=50" },
-    { "nombre": "INCCA APOYO", "url": "https://moodle.../section.php?id=51" },
-    { "nombre": "Semana 1", "url": "https://moodle.../section.php?id=52", "ilustracion": "https://.../semana1.png" },
-    { "nombre": "Semana 2", "url": "https://moodle.../section.php?id=53" },
-    { "nombre": "Semana 3", "url": "https://moodle.../section.php?id=54" },
-    { "nombre": "Semana 4", "url": "https://moodle.../section.php?id=55" }
+    { "nombre": "CONECTA", "url": "https://moodle.../section.php?id=50", "sectionid": 50 },
+    { "nombre": "INCCA APOYO", "url": "https://moodle.../section.php?id=51", "sectionid": 51 },
+    { "nombre": "Semana 1", "url": "https://moodle.../section.php?id=52", "sectionid": 52, "ilustracion": "https://.../semana1.png" },
+    { "nombre": "Semana 2", "url": "https://moodle.../section.php?id=53", "sectionid": 53 },
+    { "nombre": "Semana 3", "url": "https://moodle.../section.php?id=54", "sectionid": 54 },
+    { "nombre": "Semana 4", "url": "https://moodle.../section.php?id=55", "sectionid": 55 }
   ]
 }
 ```
@@ -328,8 +328,9 @@ lleguen.
 | Campo | Tipo | Qué hace | Si falta |
 |---|---|---|---|
 | `nombre` | texto | Nombre del módulo — se muestra en la chapa (colapsado) y como título (expandido). También se usa para **inferir** el ícono/número del panel, ver abajo | "Nombre del módulo" |
-| `url` | texto | A dónde navega el botón **"INICIAR MÓDULO"** — es un enlace real (`<a target="_blank">`), no ejecuta nada dentro del visor, solo abre esa URL en pestaña nueva | `#` (no navega a ningún lado) |
+| `url` | texto | A dónde navega el botón **"INICIAR MÓDULO"** cuando no hay puente con Moodle (ver abajo) — enlace real (`<a target="_blank">`), no ejecuta nada dentro del visor | `#` (no navega a ningún lado) |
 | `ilustracion` | url de imagen (opcional) | Imagen mostrada en el panel expandido | No se muestra ninguna ilustración (el panel se ve bien igual, solo sin imagen) |
+| `sectionid` | número (opcional) | Id real de la sección en Moodle — habilita el puente con la página padre (ver abajo) | Sin este campo, "INICIAR MÓDULO" siempre navega a `url` en pestaña nueva |
 
 **El ícono/color de cada panel NO son campos del JSON** — son diseño
 fijo, calculado automáticamente:
@@ -342,9 +343,34 @@ fijo, calculado automáticamente:
   diseño, todos los módulos son indistinguibles entre sí salvo por su
   nombre — no hay un campo `"tipo"` aparte que decir "esto es un foro".
 - **Color**: cada panel recibe un color sólido tomado de un punto del
-  degradé institucional (claro → oscuro) según su posición — el primer
-  módulo sale más claro, el último más oscuro. Se recalcula solo según
+  degradé institucional (oscuro → claro) según su posición — el primer
+  módulo sale más oscuro, el último más claro. Se recalcula solo según
   cuántos módulos lleguen (función `unitColorAt()`).
+
+### Puente con Moodle (opcional, vía `sectionid`)
+
+Pensado para cuando el visor está embebido dentro de la **misma página
+de curso** que contiene esos módulos (formato de curso "Mosaicos" /
+`format_tiles`, con el plugin `local_visorincca`). En vez de abrir `url`
+en pestaña nueva, el botón "INICIAR MÓDULO":
+
+1. Le avisa a la ventana padre por `postMessage`:
+   ```js
+   { source: "visorincca", type: "abrir-modulo", sectionid: <number> }
+   ```
+2. Espera hasta 500 ms una confirmación del padre:
+   ```js
+   { source: "visorincca", type: "modulo-abierto", sectionid: <number> }
+   ```
+3. Si llega la confirmación a tiempo, no navega a ningún lado — el padre
+   ya abrió el mosaico nativo ahí mismo. Si no llega (el visor no está
+   embebido, el padre no tiene el plugin, o cualquier otro caso), cae de
+   vuelta a `window.open(url, "_blank", "noopener")` — el comportamiento
+   de siempre. Un click **nunca** se queda sin efecto.
+
+Sin `sectionid` este puente ni se intenta — el link se comporta como uno
+normal. Ver `initUnitCta()` en `assets/js/main.js` para la implementación
+completa.
 
 ---
 

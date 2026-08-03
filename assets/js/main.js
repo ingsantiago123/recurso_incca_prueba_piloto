@@ -57,7 +57,8 @@
  *   "aprenderas": [{ "icono": "fa-xxx", "titulo": "...", "detalle": "..." }],
  *   "tutorias": [{ "titulo": "...", "fecha_label": "...", "inicio": "ISO",
  *                  "fin": "ISO", "url_grabacion": "..." }],
- *   "modulos": [{ "nombre": "...", "url": "...", "ilustracion": "url (opcional)" }]
+ *   "modulos": [{ "nombre": "...", "url": "...", "ilustracion": "url (opcional)",
+ *                 "sectionid": "número opcional — ver 'Puente con Moodle' abajo" }]
  * }
  *
  * "modulos" es el mosaico real del curso en Moodle — un arreglo YA
@@ -70,9 +71,21 @@
  * nombre cae en un ícono genérico. "ilustracion" sí es un campo de datos
  * (url de imagen, opcional) que se muestra en el panel expandido; si
  * falta, simplemente no se muestra ilustración. Al pulsar su CTA
- * "INICIAR MÓDULO" no se ejecuta contenido dentro del visor: es un enlace
- * real (target="_blank") a la URL de esa sección en Moodle, igual que
- * cualquier otro link — el visor no reemplaza esa página, solo la referencia.
+ * "INICIAR MÓDULO" normalmente es un enlace real (target="_blank") a la
+ * URL de esa sección en Moodle — el visor no reemplaza esa página, solo
+ * la referencia (ver excepción del puente con Moodle, justo abajo).
+ *
+ * PUENTE CON MOODLE (opcional, vía "sectionid"): si el visor está
+ * embebido dentro de la MISMA página de curso que contiene esos módulos
+ * (típicamente formato de curso "Mosaicos"/format_tiles + el plugin
+ * local_visorincca), en vez de abrir "url" en pestaña nueva le avisa a la
+ * ventana padre por postMessage para que abra el mosaico nativo ahí
+ * mismo. Ver initUnitCta() más abajo para el contrato exacto del mensaje
+ * y el fallback (si no hay "sectionid", o no hay confirmación del padre
+ * en 500ms, o el visor no está embebido — se abre "url" en pestaña nueva,
+ * igual que siempre). "sectionid" es el id real de esa sección en Moodle;
+ * sin él, el puente no puede identificar qué módulo abrir y el link se
+ * comporta exactamente como si el campo no existiera.
  *
  * Todo lo que varía según la materia va en el JSON. Lo único que queda
  * fijo en el HTML son etiquetas de interfaz que nunca cambian (textos de
@@ -147,7 +160,7 @@
   // Placeholder por-campo para cada módulo del mosaico (CONECTA, INCCA
   // APOYO, Semana N...) — se aplica ítem a ítem, igual que el resto del
   // patrón, para que un módulo sin url siga viéndose sin romper el panel.
-  const SIN_DATOS_MODULO = { nombre: "Nombre del módulo", url: "#", ilustracion: "" };
+  const SIN_DATOS_MODULO = { nombre: "Nombre del módulo", url: "#", ilustracion: "", sectionid: null };
 
   /* ---------------------------------------------------------------------
    * 3. Lectura de datos desde window.name (JSON) — con try/catch de rescate
@@ -194,7 +207,8 @@
       modulos: (Array.isArray(recibidos.modulos) ? recibidos.modulos : SIN_DATOS.modulos).map((m) => ({
         nombre: (m && m.nombre) || SIN_DATOS_MODULO.nombre,
         url: (m && m.url) || SIN_DATOS_MODULO.url,
-        ilustracion: (m && m.ilustracion) || SIN_DATOS_MODULO.ilustracion
+        ilustracion: (m && m.ilustracion) || SIN_DATOS_MODULO.ilustracion,
+        sectionid: (m && m.sectionid) || SIN_DATOS_MODULO.sectionid
       }))
     };
   }
@@ -615,7 +629,7 @@
           <span class="unit-tag">UNIDAD ${i + 1}</span>
           <h3 class="unit-title">${m.nombre}</h3>
           <div class="unit-illustration">${m.ilustracion ? `<img src="${m.ilustracion}" alt="" loading="lazy">` : ""}</div>
-          <a class="unit-cta" href="${m.url}" target="_blank" rel="noopener">
+          <a class="unit-cta" href="${m.url}" target="_blank" rel="noopener" data-sectionid="${m.sectionid || ""}">
             INICIAR MÓDULO
             <span class="unit-cta-arrow"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
           </a>
@@ -629,6 +643,8 @@
     $$(".unit-illustration img", hero).forEach((img) => {
       img.addEventListener("error", () => img.remove(), { once: true });
     });
+
+    $$(".unit-cta", hero).forEach((a) => initUnitCta(a));
 
     $$(".unit-panel", hero).forEach((panelEl) => {
       panelEl.addEventListener("click", (e) => {
@@ -645,6 +661,40 @@
     const willOpen = !panelEl.classList.contains("expanded");
     $$(".unit-panel", panelEl.parentElement).forEach((p) => p.classList.remove("expanded"));
     if (willOpen) panelEl.classList.add("expanded");
+  }
+
+  // Puente con la página que embebe el visor (Moodle + local_visorincca +
+  // formato de curso "Mosaicos"): en vez de navegar de una, le avisa a la
+  // ventana padre por postMessage para que abra el mosaico nativo ahí mismo,
+  // sin pestaña nueva ni recarga. Si no hay confirmación a tiempo — porque
+  // el visor está suelto (sin iframe), el padre no tiene el plugin, o
+  // cualquier otro caso no contemplado — cae de vuelta a abrir "url" en
+  // pestaña nueva, el comportamiento de siempre. Nunca debe quedar un click
+  // sin efecto.
+  const UNIT_CTA_ACK_TIMEOUT_MS = 500;
+  function initUnitCta(a) {
+    a.addEventListener("click", (e) => {
+      const sectionid = Number(a.dataset.sectionid) || null;
+      if (window.self === window.top || !sectionid) return; // no embebido o sin dato para el puente: link normal
+
+      e.preventDefault();
+      let confirmado = false;
+
+      const alRecibirMensaje = (ev) => {
+        const d = ev.data;
+        if (d && d.source === "visorincca" && d.type === "modulo-abierto" && d.sectionid === sectionid) {
+          confirmado = true;
+          window.removeEventListener("message", alRecibirMensaje);
+        }
+      };
+      window.addEventListener("message", alRecibirMensaje);
+      window.parent.postMessage({ source: "visorincca", type: "abrir-modulo", sectionid }, "*");
+
+      setTimeout(() => {
+        window.removeEventListener("message", alRecibirMensaje);
+        if (!confirmado) window.open(a.href, "_blank", "noopener");
+      }, UNIT_CTA_ACK_TIMEOUT_MS);
+    });
   }
 
   /* ---------------------------------------------------------------------
