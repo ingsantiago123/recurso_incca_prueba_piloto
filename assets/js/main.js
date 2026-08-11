@@ -737,11 +737,26 @@
       </div>`;
     }).join("");
 
-    // Si la imagen no carga (link roto, hotlink bloqueado...), se retira
-    // en vez de dejar el ícono de imagen rota — el panel sigue viéndose bien
-    // con solo el tag/título/CTA.
+    // Si la imagen no carga inline (confirmado: algunos Moodle bloquean la
+    // carga cross-site de pluginfile.php desde <img> en un navegador real,
+    // aunque la MISMA url funcione perfecto navegando directo — sin que
+    // haya ningún header CORS/CORP/Referer distinto entre los dos casos,
+    // así que no hay forma confiable de "arreglar" la carga inline desde
+    // acá) no se borra sin más: se reemplaza por un link que abre esa
+    // misma url en pestaña nueva — eso sí funciona siempre, es navegación
+    // normal. El campo "ilustracion" del JSON no cambia, solo cómo se usa.
     $$(".unit-illustration img", hero).forEach((img) => {
-      img.addEventListener("error", () => img.remove(), { once: true });
+      img.addEventListener("error", () => {
+        const url = img.getAttribute("src");
+        const contenedor = img.closest(".unit-illustration");
+        img.remove();
+        if (contenedor && url) {
+          contenedor.innerHTML = `
+            <a class="unit-illustration-fallback" href="${url}" target="_blank" rel="noopener">
+              <i class="fa-solid fa-image" aria-hidden="true"></i> Ver ilustración
+            </a>`;
+        }
+      }, { once: true });
     });
 
     $$(".unit-cta", hero).forEach((a) => initUnitCta(a));
