@@ -132,7 +132,12 @@ button { font-family: inherit; cursor: pointer; }
 
 .slide-body {
   width: 100%;
-  max-width: 1160px;
+  /* Antes era un fijo de 1160px — en pantallas grandes dejaba muchísimo
+     margen vacío a los costados. Ahora crece con el viewport (mismo piso
+     de 1160px que ya tenía, para no cambiar nada en pantallas normales/
+     chicas) hasta un techo de 1720px, para que no se vuelva absurdamente
+     ancho en monitores 4K/ultrawide. */
+  max-width: clamp(1160px, 80vw, 1720px);
   margin: 0 auto;
   padding: clamp(14px, 3.4vh, 40px) clamp(16px, 5vw, 56px);
   display: flex;
@@ -493,7 +498,13 @@ button { font-family: inherit; cursor: pointer; }
   .unit-panel:first-child { margin-top: 0 !important; }
   .unit-panel:last-child { clip-path: none; }
   .unit-panel.expanded { flex: 8; box-shadow: inset 0 0 0 2px rgba(203,181,78,.35); }
-  .unit-panel-icon, .unit-panel-number { top: 14px; font-size: 22px; }
+  /* Apiladas, cada franja es un "home plate" (rectángulo con la punta
+     apuntando hacia abajo, ver el clip-path de arriba): la franja de
+     ARRIBA se solapa 22px sobre el centro de ESTA, justo donde el ícono
+     quedaba centrado con top:14px — por eso se veía tapado. Centrarlo en
+     el 58% (un poco más abajo de la mitad) lo saca de esa zona de
+     solape sin pegarlo a la chapa del nombre, que está anclada abajo. */
+  .unit-panel-icon, .unit-panel-number { top: 58%; left: 50%; transform: translate(-50%, -50%); font-size: 22px; }
   .unit-footer { bottom: 22px; padding-bottom: 4px; }
   .unit-footer-shape { padding: 6px 14px 6px 11px; min-width: 80px; }
   .unit-footer-label { font-size: .7rem; }
