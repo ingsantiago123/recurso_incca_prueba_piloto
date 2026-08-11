@@ -737,26 +737,42 @@
       </div>`;
     }).join("");
 
-    // Si la imagen no carga inline (confirmado: algunos Moodle bloquean la
-    // carga cross-site de pluginfile.php desde <img> en un navegador real,
-    // aunque la MISMA url funcione perfecto navegando directo — sin que
-    // haya ningún header CORS/CORP/Referer distinto entre los dos casos,
-    // así que no hay forma confiable de "arreglar" la carga inline desde
-    // acá) no se borra sin más: se reemplaza por un link que abre esa
-    // misma url en pestaña nueva — eso sí funciona siempre, es navegación
-    // normal. El campo "ilustracion" del JSON no cambia, solo cómo se usa.
+    // Confirmado con curl (headers idénticos a un <img> real: Referer,
+    // Sec-Fetch-*, UA de Chrome, repetido varias veces) que algunos Moodle
+    // bloquean la carga cross-site de pluginfile.php desde <img> en el
+    // navegador real, aunque la MISMA url funcione perfecto navegando
+    // directo y el servidor nunca mande ningún header CORS/CORP/Referer
+    // distinto entre los dos casos — no hay nada del lado del visor que
+    // pueda "arreglar" eso de forma confiable. Por eso, si el intento
+    // directo falla, se reintenta UNA vez a través de un proxy de
+    // imágenes genérico (images.weserv.nl — no depende de ningún dominio
+    // de Moodle en particular, sirve cualquier url pública): el navegador
+    // ya no le pide la imagen al dominio bloqueado, se la pide a un CDN
+    // conocido que sí manda Access-Control-Allow-Origin. Si el proxy
+    // TAMBIÉN falla (url realmente rota/inexistente), recién ahí se cae al
+    // link "Ver ilustración" como último recurso. El campo "ilustracion"
+    // del JSON no cambia en ningún paso, solo cómo se usa acá.
+    function proxyIlustracionUrl(url) {
+      return `https://images.weserv.nl/?url=${encodeURIComponent(url)}`;
+    }
     $$(".unit-illustration img", hero).forEach((img) => {
+      const urlOriginal = img.getAttribute("src");
+      let viaProxy = false;
       img.addEventListener("error", () => {
-        const url = img.getAttribute("src");
+        if (!viaProxy) {
+          viaProxy = true;
+          img.src = proxyIlustracionUrl(urlOriginal);
+          return;
+        }
         const contenedor = img.closest(".unit-illustration");
         img.remove();
-        if (contenedor && url) {
+        if (contenedor && urlOriginal) {
           contenedor.innerHTML = `
-            <a class="unit-illustration-fallback" href="${url}" target="_blank" rel="noopener">
+            <a class="unit-illustration-fallback" href="${urlOriginal}" target="_blank" rel="noopener">
               <i class="fa-solid fa-image" aria-hidden="true"></i> Ver ilustración
             </a>`;
         }
-      }, { once: true });
+      });
     });
 
     $$(".unit-cta", hero).forEach((a) => initUnitCta(a));
