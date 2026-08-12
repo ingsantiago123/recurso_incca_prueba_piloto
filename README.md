@@ -235,6 +235,16 @@ esquina; sin video, el avatar se muestra solo, centrado y grande.
 | `profesor.etiquetas` | Chips debajo de la biografía | 2 etiquetas de ejemplo |
 | `profesor.video` | Video 16:9 protagonista de la tarjeta (YouTube/Vimeo/Drive, se convierte solo a su versión embebible) | Video de ejemplo; si el JSON manda explícitamente `""`, no se muestra el bloque y el avatar vuelve a su tamaño completo |
 
+> **Links de Google Drive: deben ser públicos.** Un link de Drive que no
+> esté compartido como "Cualquier persona con el enlace" (rol Lector) no
+> se puede embeber — el iframe queda en blanco, sin ningún error visible,
+> porque Google redirige a su pantalla de login y esa pantalla no se
+> puede mostrar dentro de un iframe. Esto pasa aunque el link funcione
+> perfecto al abrirlo directo en una pestaña (ahí sí hay una sesión de
+> Google activa). Para arreglarlo: en Drive, click derecho al archivo →
+> Compartir → Acceso general → "Cualquier persona con el enlace" →
+> Lector. Aplica igual a `video` (DEA) y `video_descarga_url`.
+
 ---
 
 ### 4b. Docente tutor (`docente_tutor`) — opcional
