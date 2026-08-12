@@ -100,7 +100,7 @@ button { font-family: inherit; cursor: pointer; }
   height: 100dvh;
   width: 100%;
   overflow: hidden;
-  background: var(--oxford-blue);
+  background: var(--gradient-institutional);
 }
 
 /* ---------- Slides ---------- */
@@ -333,6 +333,13 @@ button { font-family: inherit; cursor: pointer; }
 
 /* ---------- Hero (slide 1) ---------- */
 .hero-body { justify-content: center; position: relative; }
+/* Capa decorativa a pantalla completa, hermana de .slide-body (no hija) a
+   propósito: #hero .slide-body tiene max-width angosto (columna de
+   lectura, ver más abajo) — si el punteado/los blobs fueran hijos suyos
+   quedarían encogidos a esa columna central en vez de cubrir todo el
+   ancho de la diapositiva, y además su desborde (right:-6%/left:-8%)
+   generaba scroll horizontal fantasma dentro de .slide-body. */
+.hero-bg-layer { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
 .hero-blob { position: absolute; border-radius: 50%; pointer-events: none; filter: blur(1px); }
 .hero-blob--gold { top: 6%; right: -6%; width: 220px; height: 220px; background: radial-gradient(circle at 30% 30%, rgba(203,181,78,.55), rgba(203,181,78,0) 70%); animation: incca-float 10s ease-in-out infinite; }
 .hero-blob--cyan { bottom: 4%; left: -8%; width: 260px; height: 260px; background: radial-gradient(circle at 60% 40%, rgba(101,203,227,.38), rgba(101,203,227,0) 70%); animation: incca-float2 12s ease-in-out infinite; }
