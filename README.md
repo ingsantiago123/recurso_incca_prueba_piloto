@@ -34,6 +34,8 @@ index.html               ← único punto de entrada
 assets/css/styles.css    ← paleta institucional + estilos del deck
 assets/js/main.js        ← lee el JSON y pinta todo (comentario de esquema al inicio del archivo)
 assets/img/               ← escudo + íconos de pestaña
+assets/img-temp/          ← ilustraciones genéricas de módulo (CONECTA/INCCA APOYO/Semana 1-4),
+                             usadas como respaldo automático — ver "ilustracion" en Unidades
 ```
 
 ## Cómo embeberlo en Moodle
@@ -339,7 +341,7 @@ lleguen.
 |---|---|---|---|
 | `nombre` | texto | Nombre del módulo — se muestra en la chapa (colapsado) y como título (expandido). También se usa para **inferir** el ícono/número del panel, ver abajo | Nombre de ejemplo (si `modulos` no llega, se muestran 4 módulos de ejemplo: CONECTA, INCCA APOYO, Semana 1, Semana 2) |
 | `url` | texto | A dónde navega el botón **"INICIAR MÓDULO"** cuando no hay puente con Moodle (ver abajo) — enlace real (`<a target="_blank">`), no ejecuta nada dentro del visor | `#` (no navega a ningún lado) |
-| `ilustracion` | url de imagen (opcional) | Imagen mostrada en el panel expandido | No se muestra ninguna ilustración (el panel se ve bien igual, solo sin imagen) |
+| `ilustracion` | url de imagen (opcional) | Imagen mostrada en el panel expandido | Si el `nombre` matchea "conecta"/"apoyo"/"semana 1-4", se infiere automáticamente uno de los PNG genéricos que ya trae el visor (`assets/img-temp/`); si no matchea nada, no se muestra ilustración (el panel se ve bien igual, solo sin imagen) |
 | `sectionid` | número (opcional) | Id real de la sección en Moodle — habilita el puente con la página padre (ver abajo) | Sin este campo, "INICIAR MÓDULO" siempre navega a `url` en pestaña nueva |
 
 **El ícono/color de cada panel NO son campos del JSON** — son diseño

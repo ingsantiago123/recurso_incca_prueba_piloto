@@ -163,15 +163,17 @@
    *    "secciones" y "diapositivas_extra" documentado en el comentario de
    *    esquema al inicio del archivo.
    * ------------------------------------------------------------------- */
+  // El ícono es puramente de diseño (para la barra flotante de abajo) —
+  // no afecta el contenido ni se puede sobreescribir desde el JSON.
   const SLIDES_FIJAS = [
-    { id: "hero", label: "Inicio" },
-    { id: "bienvenida", label: "Bienvenida" },
-    { id: "aprenderas", label: "Aprenderás" },
-    { id: "docente", label: "Docente creador" },
-    { id: "docente_tutor", label: "Docente tutor" },
-    { id: "tutorias", label: "Tutorías" },
-    { id: "dea", label: "DEA" },
-    { id: "unidades", label: "Unidades" }
+    { id: "hero", label: "Inicio", icon: "fa-house" },
+    { id: "bienvenida", label: "Bienvenida", icon: "fa-hand-holding-heart" },
+    { id: "aprenderas", label: "Aprenderás", icon: "fa-route" },
+    { id: "docente", label: "Docente creador", icon: "fa-chalkboard-user" },
+    { id: "docente_tutor", label: "Docente tutor", icon: "fa-user-tie" },
+    { id: "tutorias", label: "Tutorías", icon: "fa-calendar-days" },
+    { id: "dea", label: "DEA", icon: "fa-compass" },
+    { id: "unidades", label: "Unidades", icon: "fa-layer-group" }
   ];
 
   function construirSlides(datos) {
@@ -183,7 +185,7 @@
       // pase en el JSON. -Infinity garantiza que ningún "orden" (por
       // grande o negativo que sea) pueda colarse antes.
       if (s.id === "hero") {
-        return { id: s.id, label: s.label, custom: null, visible: true, orden: -Infinity };
+        return { id: s.id, label: s.label, icon: s.icon, custom: null, visible: true, orden: -Infinity };
       }
       const override = config[s.id] || {};
       // "docente_tutor" es la única fija cuya visibilidad por defecto NO
@@ -195,6 +197,7 @@
       return {
         id: s.id,
         label: s.label,
+        icon: s.icon,
         custom: null,
         visible: typeof override.visible === "boolean" ? override.visible : visibleDefault,
         orden: Number.isFinite(override.orden) ? override.orden : i
@@ -206,6 +209,7 @@
       .map((d, i) => ({
         id: `custom-${d.id}`,
         label: d.titulo || String(d.id),
+        icon: d.tipo === "pagina" ? "fa-window-maximize" : "fa-photo-film",
         custom: d,
         visible: d.visible !== false,
         orden: Number.isFinite(d.orden) ? d.orden : SLIDES_FIJAS.length + i
@@ -339,7 +343,7 @@
       modulos: (Array.isArray(recibidos.modulos) ? recibidos.modulos : SIN_DATOS.modulos).map((m) => ({
         nombre: (m && m.nombre) || SIN_DATOS_MODULO.nombre,
         url: (m && m.url) || SIN_DATOS_MODULO.url,
-        ilustracion: (m && m.ilustracion) || SIN_DATOS_MODULO.ilustracion,
+        ilustracion: (m && m.ilustracion) || inferirIlustracion(m && m.nombre) || SIN_DATOS_MODULO.ilustracion,
         sectionid: (m && m.sectionid) || SIN_DATOS_MODULO.sectionid
       })),
       // Config estructural (qué diapositivas mostrar, en qué orden) — no
@@ -464,7 +468,7 @@
     prev() { this.goTo(this.current - 1); },
 
     updateChrome() {
-      $$(".deck-dot").forEach((dot, i) => dot.classList.toggle("is-active", i === this.current));
+      $$(".floatnav-item").forEach((item, i) => item.classList.toggle("is-active", i === this.current));
     },
 
     runSlideExtras(id) {
@@ -473,11 +477,14 @@
   };
 
   /* ---------------------------------------------------------------------
-   * 6. Render — chrome de navegación (dots, flechas)
+   * 6. Render — chrome de navegación (barra flotante con íconos, flechas)
    * ------------------------------------------------------------------- */
   function renderChrome() {
-    $("#deckDots").innerHTML = SLIDES.map((s, i) => `
-      <button class="deck-dot" data-goto="${i}" aria-label="Ir a ${s.label}"></button>
+    $("#deckFloatNav").innerHTML = SLIDES.map((s, i) => `
+      <button class="floatnav-item" data-goto="${i}" aria-label="Ir a ${s.label}" title="${s.label}">
+        <i class="fa-solid ${s.icon}" aria-hidden="true"></i>
+        <span class="floatnav-item-label">${s.label}</span>
+      </button>
     `).join("");
 
     $$("[data-goto]").forEach((btn) => {
@@ -671,17 +678,14 @@
     $$(".tutoria-head", list).forEach((head) => {
       head.addEventListener("click", () => {
         const item = head.closest(".tutoria-item");
-        const body = $(".tutoria-body", item);
         const isOpen = item.classList.contains("is-open");
         $$(".tutoria-item", list).forEach((other) => {
           other.classList.remove("is-open");
           $(".tutoria-head", other).setAttribute("aria-expanded", "false");
-          $(".tutoria-body", other).style.maxHeight = null;
         });
         if (!isOpen) {
           item.classList.add("is-open");
           head.setAttribute("aria-expanded", "true");
-          body.style.maxHeight = body.scrollHeight + "px";
         }
       });
     });
@@ -738,6 +742,23 @@
     const num = n.match(/(\d+)/);
     if (n.includes("semana") && num) return { number: num[1] };
     return { icon: "fa-layer-group" };
+  }
+
+  // Ilustración de respaldo cuando el módulo no trae "ilustracion"
+  // explícita — mismo criterio de inferencia por nombre que
+  // unitVisualMeta(), usando los PNG genéricos que el visor ya trae
+  // consigo (CONECTA/INCCA APOYO/Semana 1-4). No son contenido específico
+  // de ningún curso — son la ilustración estándar de cada tipo de módulo,
+  // por eso vale tenerlos como respaldo incluso sin dato del JSON. Si el
+  // nombre no matchea ningún patrón conocido, no hay respaldo (mejor sin
+  // imagen que una genérica que no pega con nada).
+  function inferirIlustracion(nombre) {
+    const n = (nombre || "").toLowerCase();
+    if (n.includes("conecta")) return "./assets/img-temp/CONECTA.png";
+    if (n.includes("apoyo")) return "./assets/img-temp/incca-apoyo.png";
+    const semana = n.match(/semana\s*([1-4])\b/);
+    if (semana) return `./assets/img-temp/semana${semana[1]}.png`;
+    return "";
   }
 
   function renderUnitsAccordion(modulos) {

@@ -31,7 +31,11 @@
   --shadow-strong: 0 20px 45px rgba(4, 12, 56, 0.22);
   --ease-out: cubic-bezier(.16,.84,.44,1);
 
-  --chrome-bottom: 46px;
+  /* Espacio que cada diapositiva deja libre abajo para que la barra
+     flotante (.deck-floatnav, position:absolute) nunca tape contenido —
+     ya no es una barra de chrome sólida de punta a punta, así que esto
+     es solo margen de despeje, no la altura real de nada. */
+  --chrome-bottom: 90px;
 }
 
 * , *::before, *::after { box-sizing: border-box; }
@@ -131,12 +135,15 @@ button { font-family: inherit; cursor: pointer; }
 .slide[hidden] { display: none; }
 
 .slide-body {
+  position: relative;
   width: 100%;
   /* Antes era un fijo de 1160px — en pantallas grandes dejaba muchísimo
      margen vacío a los costados. Ahora crece con el viewport (mismo piso
      de 1160px que ya tenía, para no cambiar nada en pantallas normales/
      chicas) hasta un techo de 1720px, para que no se vuelva absurdamente
-     ancho en monitores 4K/ultrawide. */
+     ancho en monitores 4K/ultrawide. Inicio y Tutorías angostan este
+     mismo valor más abajo — son contenido más "de texto/lista" que se
+     lee mejor sin estirarse tanto. */
   max-width: clamp(1160px, 80vw, 1720px);
   margin: 0 auto;
   padding: clamp(14px, 3.4vh, 40px) clamp(16px, 5vw, 56px);
@@ -157,6 +164,24 @@ button { font-family: inherit; cursor: pointer; }
 .slide.on-dark { background: var(--gradient-institutional); color: var(--white); }
 .slide.on-dark-solid { background: var(--oxford-blue); color: var(--white); }
 
+/* Inicio (título + resumen) y Tutorías (lista centrada) leen mejor más
+   angostos que el resto de las diapositivas — mismo piso/techo relativo. */
+#hero .slide-body { max-width: clamp(760px, 64vw, 1180px); }
+#tutorias .slide-body { max-width: clamp(680px, 56vw, 1000px); }
+
+/* Blobs decorativos (mismo lenguaje visual que el hero) — Docente se
+   sentía muy plano sin ningún fondo ambiental. */
+.slide#docente::before, .slide#docente_tutor::before {
+  content: ""; position: absolute; top: -10%; right: -8%; width: 38%; height: 60%;
+  border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, rgba(43,139,250,.10), rgba(43,139,250,0) 70%);
+}
+.slide#docente::after, .slide#docente_tutor::after {
+  content: ""; position: absolute; bottom: -14%; left: -6%; width: 34%; height: 55%;
+  border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, rgba(203,181,78,.14), rgba(203,181,78,0) 70%);
+}
+
 /* Reveal en cascada — se retriggerea vía JS cada vez que la diapositiva se activa */
 .stagger > * { opacity: 0; }
 .stagger.is-playing > * { animation: incca-rise .6s var(--ease-out) both; }
@@ -171,7 +196,13 @@ button { font-family: inherit; cursor: pointer; }
 .stagger.is-playing > *:nth-child(9) { animation-delay: .51s; }
 .stagger.is-playing > *:nth-child(10) { animation-delay: .57s; }
 
-/* ---------- Bottom chrome: arrows + dots ---------- */
+/* ---------- Bottom chrome: flechas glass + barra flotante con íconos ----------
+   Reemplaza los círculos blancos sólidos y la barra de puntos por un
+   tratamiento "glass" (blur + saturate, fondo azul translúcido) — más
+   liviano visualmente que una barra de chrome sólida de punta a punta,
+   y la barra inferior ahora muestra un ícono por diapositiva (más
+   contexto que un punto) con la etiqueta de texto apareciendo solo en
+   la diapositiva activa. */
 .deck-arrow {
   position: absolute;
   top: 50%;
@@ -179,48 +210,61 @@ button { font-family: inherit; cursor: pointer; }
   z-index: 35;
   width: 46px; height: 46px;
   border-radius: 50%;
-  border: 1px solid rgba(4,12,56,0.12);
-  background: rgba(255,255,255,0.92);
-  color: var(--oxford-blue);
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(4,12,56,0.5);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  color: var(--white);
   display: flex; align-items: center; justify-content: center;
-  font-size: 16px;
-  box-shadow: var(--shadow-soft);
-  transition: background .2s, color .2s, transform .2s;
+  font-size: 15px;
+  box-shadow: 0 8px 24px rgba(4,12,56,.3);
+  transition: background .2s, transform .2s;
 }
-.deck-arrow:hover { background: var(--gradient-institutional); color: var(--white); transform: translateY(-50%) scale(1.08); }
-.deck-arrow--prev { left: 12px; }
-.deck-arrow--next { right: 12px; }
+.deck-arrow:hover { background: rgba(4,12,56,.75); transform: translateY(-50%) scale(1.08); }
+.deck-arrow:active { transform: translateY(-50%) scale(.94); }
+.deck-arrow--prev { left: 18px; }
+.deck-arrow--next { right: 18px; }
 @media (max-width: 560px) {
   .deck-arrow { width: 38px; height: 38px; font-size: 14px; }
-  .deck-arrow--prev { left: 6px; }
-  .deck-arrow--next { right: 6px; }
+  .deck-arrow--prev { left: 8px; }
+  .deck-arrow--next { right: 8px; }
 }
 
-.deck-bottombar {
+.deck-floatnav {
   position: absolute;
-  left: 0; right: 0; bottom: 0;
-  height: var(--chrome-bottom);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  z-index: 30;
-  background: rgba(4,12,56,0.55);
-  backdrop-filter: blur(8px);
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-.deck-dots { display: flex; align-items: center; gap: 8px; }
-.deck-dot {
-  border: none;
-  background: rgba(255,255,255,0.3);
-  width: 8px; height: 8px;
+  left: 50%; bottom: 18px;
+  transform: translateX(-50%);
+  z-index: 45;
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px;
   border-radius: 999px;
-  padding: 0;
-  transition: all .25s var(--ease-out);
+  background: rgba(4,12,56,.55);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255,255,255,.14);
+  box-shadow: 0 12px 34px rgba(4,12,56,.35);
+  max-width: min(92vw, 720px);
+  overflow-x: auto;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom));
 }
-.deck-dot:hover { background: var(--light-cyan); }
-.deck-dot.is-active { width: 22px; background: var(--old-gold); }
+.floatnav-item {
+  display: flex; align-items: center; gap: 8px;
+  border: none; background: transparent; color: var(--white);
+  border-radius: 999px; height: 40px; padding: 0 12px;
+  flex-shrink: 0;
+  transition: background .3s var(--ease-out), color .3s var(--ease-out), padding .3s var(--ease-out);
+}
+.floatnav-item:hover { background: rgba(255,255,255,.12); }
+.floatnav-item i { font-size: 12px; opacity: .75; transition: font-size .3s, opacity .3s; }
+.floatnav-item-label {
+  font-size: 12px; font-weight: 700; white-space: nowrap;
+  max-width: 0; opacity: 0; overflow: hidden;
+  transition: max-width .3s var(--ease-out), opacity .2s var(--ease-out);
+}
+.floatnav-item.is-active { background: var(--gradient-gold); color: var(--oxford-blue); padding: 0 16px; }
+.floatnav-item.is-active:hover { background: var(--gradient-gold); }
+.floatnav-item.is-active i { font-size: 13px; opacity: 1; }
+.floatnav-item.is-active .floatnav-item-label { max-width: 160px; opacity: 1; }
 
 /* ==========================================================================
    Componentes de contenido reutilizables dentro de cada diapositiva
@@ -324,18 +368,18 @@ button { font-family: inherit; cursor: pointer; }
 /* ---------- Learn cards ---------- */
 .learn-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
 .learn-card {
-  position: relative; min-height: 168px;
+  position: relative; min-height: 172px;
   background: var(--white);
-  border-radius: var(--radius-md);
-  padding: 18px 20px;
+  border-radius: 20px;
+  padding: 20px 22px;
   cursor: pointer;
   box-shadow: 0 8px 20px rgba(4,12,56,0.07);
   border: 1px solid rgba(4,12,56,0.07);
   overflow: hidden;
   transition: transform .25s var(--ease-out), box-shadow .25s var(--ease-out);
 }
-.learn-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-strong); }
-.learn-card-icon { width: 34px; height: 34px; border-radius: 9px; background: var(--royal-blue); color: var(--white); display: flex; align-items: center; justify-content: center; font-weight: 700; margin-bottom: 12px; font-size: 14px; transition: background .25s, color .25s; }
+.learn-card:hover, .learn-card.is-open { transform: translateY(-4px); box-shadow: var(--shadow-strong); }
+.learn-card-icon { width: 36px; height: 36px; border-radius: 10px; background: var(--royal-blue); color: var(--white); display: flex; align-items: center; justify-content: center; font-weight: 700; margin-bottom: 12px; font-size: 14px; transition: background .25s, color .25s; }
 .learn-card:hover .learn-card-icon, .learn-card.is-open .learn-card-icon { background: var(--light-cyan); color: var(--oxford-blue); }
 .learn-card-title { font-weight: 700; font-size: 14.5px; color: var(--oxford-blue); margin-bottom: 6px; transition: color .2s; }
 .learn-card:hover .learn-card-title { color: var(--royal-blue); }
@@ -391,8 +435,12 @@ button { font-family: inherit; cursor: pointer; }
 .tutoria-date { font-size: 11.5px; color: #c9cfe0; margin-top: 2px; display: flex; align-items: center; gap: 5px; }
 .tutoria-chevron { transition: transform .25s; color: var(--old-gold); flex-shrink: 0; }
 .tutoria-item.is-open .tutoria-chevron { transform: rotate(180deg); }
-.tutoria-body { max-height: 0; overflow: hidden; transition: max-height .35s var(--ease-out); }
-.tutoria-body-inner { padding: 0 16px 16px 56px; display: flex; flex-wrap: wrap; gap: 10px; }
+/* Colapso con grid-template-rows en vez de max-height calculado en JS —
+   no depende de medir scrollHeight, así que sigue siendo correcto aunque
+   el contenido cambie de alto (texto largo, salto de línea, etc.). */
+.tutoria-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .35s var(--ease-out); }
+.tutoria-item.is-open .tutoria-body { grid-template-rows: 1fr; }
+.tutoria-body-inner { min-height: 0; overflow: hidden; padding: 0 16px 16px 56px; display: flex; flex-wrap: wrap; gap: 10px; }
 @media (max-width: 480px) { .tutoria-body-inner { padding-left: 16px; } }
 
 /* ---------- DEA ---------- */
@@ -412,7 +460,7 @@ button { font-family: inherit; cursor: pointer; }
    cada módulo es un panel de acordeón que, al pulsar su CTA, redirige de
    verdad (enlace real, target="_blank") a la URL de esa sección en Moodle
    — no ejecuta lógica adicional, igual que cualquier link normal. */
-/* A pantalla completa: de arriba del todo hasta el deck-bottombar, sin el
+/* A pantalla completa: de arriba del todo hasta abajo del todo, sin el
    padding/max-width/centrado que usa el resto de diapositivas — igual que el
    hero del visor V2. El z-index de cada panel (para que la punta de
    flecha de un panel tape la costura del siguiente) se fija inline desde
@@ -585,7 +633,8 @@ button { font-family: inherit; cursor: pointer; }
 
 /* ---------- Short-viewport tweaks ---------- */
 @media (max-height: 620px) {
-  :root { --chrome-bottom: 40px; }
+  :root { --chrome-bottom: 74px; }
+  .deck-floatnav { bottom: 10px; }
   .hero-badges, .hero-eyebrow { margin-bottom: 2px; }
   .stat-row { display: none; }
 }
