@@ -427,7 +427,7 @@ button { font-family: inherit; cursor: pointer; }
    un embed de Google Drive no es solo el video: trae su propia barra
    superior (título/descarga) y necesita más alto absoluto para no
    verse recortado si el contenedor es muy chico. */
-.teacher-video-frame .ratio { aspect-ratio: 16/9; min-height: 280px; }
+.teacher-video-frame .ratio { aspect-ratio: 16/9; min-height: 280px; overflow: hidden; }
 .teacher-video-frame iframe { width: 100%; height: 100%; border: 0; display: block; }
 
 .teacher-avatar-frame { position: relative; width: 100%; height: 260px; flex-shrink: 0; }
