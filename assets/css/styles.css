@@ -107,7 +107,6 @@ button { font-family: inherit; cursor: pointer; }
 .slides {
   position: absolute;
   inset: 0;
-  bottom: var(--chrome-bottom);
 }
 
 .slide {
@@ -146,7 +145,12 @@ button { font-family: inherit; cursor: pointer; }
      lee mejor sin estirarse tanto. */
   max-width: clamp(1160px, 80vw, 1720px);
   margin: 0 auto;
-  padding: clamp(14px, 3.4vh, 40px) clamp(16px, 5vw, 56px);
+  /* El bottom extra es despeje para que el contenido no quede tapado por
+     la barra flotante (.deck-floatnav) — la caja de la diapositiva en sí
+     (.slide) ocupa el 100% real de la pantalla siempre (ver .slides),
+     así el fondo/color de cada diapositiva nunca corta antes de llegar
+     abajo del todo. */
+  padding: clamp(14px, 3.4vh, 40px) clamp(16px, 5vw, 56px) calc(clamp(14px, 3.4vh, 40px) + var(--chrome-bottom));
   display: flex;
   flex-direction: column;
   gap: clamp(14px, 2.6vh, 26px);
