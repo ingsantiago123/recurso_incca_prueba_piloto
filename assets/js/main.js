@@ -219,42 +219,80 @@
 
   /* ---------------------------------------------------------------------
    * 2. Placeholders — SOLO se usan campo por campo cuando ese campo en
-   *    particular no llegó en el JSON. Son deliberadamente genéricos
-   *    ("Nombre del curso") para que sea obvio, al probar, cuándo un dato
-   *    real está llegando y cuándo no — nunca se muestra un curso de
-   *    ejemplo que parezca información real.
+   *    particular no llegó en el JSON. A diferencia de la primera versión
+   *    de este patrón (una etiqueta genérica tipo "Nombre del curso"),
+   *    estos placeholders son EJEMPLOS con el formato/extensión real que
+   *    debería tener cada campo — y varios funcionan además como
+   *    instrucción de qué poner ahí — para que quien arma el JSON (o
+   *    quien prueba el visor sin datos todavía) vea de una cómo se ve
+   *    cada sección llena, no una pantalla vacía. Siguen siendo
+   *    OBVIAMENTE de ejemplo (marcados "(ejemplo)"/"Ejemplo:" a propósito)
+   *    para que nunca se puedan confundir con datos reales de un curso.
    * ------------------------------------------------------------------- */
   const SIN_DATOS = {
-    curso: "Nombre del curso",
-    resumen: "Aquí aparecerá el resumen del curso.",
-    insignias: [],
-    unidades: 0,
-    horas_trabajo: 0,
+    curso: "Nombre del curso (ejemplo: Ingeniería de Sistemas)",
+    resumen: "Ejemplo de resumen: un párrafo breve (2-3 líneas) que cuenta de qué trata el curso, a quién está dirigido y qué lo hace valioso — la idea es que alguien lo lea en 10 segundos y entienda si le sirve.",
+    insignias: [
+      { icono: "fa-clock", texto: "Duración: 8 semanas (ejemplo)" },
+      { icono: "fa-laptop", texto: "100% virtual (ejemplo)" },
+      { icono: "fa-certificate", texto: "Con certificado (ejemplo)", destacada: true }
+    ],
+    unidades: 4,
+    horas_trabajo: 96,
     profesor: {
-      nombre: "Nombre del docente",
-      foto: "",
-      rol: "",
-      bio: [],
-      etiquetas: [],
-      video: ""
+      nombre: "Nombre del docente (ejemplo: María Fernanda Gómez)",
+      foto: "https://i.pravatar.cc/300?img=12",
+      rol: "Cargo/título profesional del docente (ejemplo: Magíster en Educación)",
+      bio: [
+        "Ejemplo de biografía: profesional con trayectoria en el área del curso, docente universitario/a y especialista en el tema.",
+        "Un segundo párrafo puede sumar experiencia relevante, publicaciones o proyectos destacados — no hace falta que sea largo."
+      ],
+      etiquetas: [
+        { icono: "fa-graduation-cap", texto: "Ejemplo: Magíster en..." },
+        { icono: "fa-briefcase", texto: "Ejemplo: 10 años de experiencia" }
+      ],
+      video: "https://www.youtube.com/watch?v=aqz-KE-bpKQ"
     },
-    video: "",
-    video_titulo: "",
-    video_parrafos: [],
+    video: "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
+    video_titulo: "Título del video (ejemplo: Conoce la metodología del curso)",
+    video_parrafos: [
+      "Ejemplo: un párrafo breve presentando el video — de qué trata y qué va a entender el estudiante al verlo.",
+      "Un segundo párrafo puede sumar contexto, como la duración o los temas cubiertos."
+    ],
     video_descarga_url: "",
     bienvenida: {
-      titulo: "Título de bienvenida",
-      parrafos: [],
-      frase_destacada: ""
+      titulo: "¡Bienvenido/a al curso! (ejemplo de título)",
+      parrafos: [
+        "Ejemplo de bienvenida: este espacio es para saludar a tus estudiantes y contarles, en 2-3 párrafos cortos, qué encontrarán en el curso.",
+        "Puede incluir cómo está organizado, qué se espera de su participación, y un cierre motivador antes de empezar."
+      ],
+      frase_destacada: "Una frase inspiradora que resuma el espíritu del curso (ejemplo)."
     },
-    aprenderas: [],
-    tutorias: [],
-    modulos: []
+    aprenderas: [
+      { icono: "fa-star", titulo: "Temática 1 (ejemplo)", detalle: "Acá van los detalles de esta temática: qué conceptos se cubren y qué va a saber hacer el estudiante al dominarla." },
+      { icono: "fa-star", titulo: "Temática 2 (ejemplo)", detalle: "Ejemplo de detalle: describe en un par de líneas el contenido de este bloque temático." },
+      { icono: "fa-star", titulo: "Temática 3 (ejemplo)", detalle: "Podés agregar tantas temáticas como el curso necesite — no hay un número fijo." }
+    ],
+    tutorias: [
+      {
+        titulo: "Encuentro 1 (ejemplo)",
+        fecha_label: "Ejemplo: 10 de septiembre · 6:00 pm – 8:00 pm",
+        inicio: "2026-09-10T18:00:00",
+        fin: "2026-09-10T20:00:00",
+        url_grabacion: "#"
+      }
+    ],
+    modulos: [
+      { nombre: "CONECTA (ejemplo)", url: "#" },
+      { nombre: "INCCA APOYO (ejemplo)", url: "#" },
+      { nombre: "Semana 1 (ejemplo)", url: "#" },
+      { nombre: "Semana 2 (ejemplo)", url: "#" }
+    ]
   };
   // Placeholder por-campo para cada módulo del mosaico (CONECTA, INCCA
   // APOYO, Semana N...) — se aplica ítem a ítem, igual que el resto del
   // patrón, para que un módulo sin url siga viéndose sin romper el panel.
-  const SIN_DATOS_MODULO = { nombre: "Nombre del módulo", url: "#", ilustracion: "", sectionid: null };
+  const SIN_DATOS_MODULO = { nombre: "Nombre del módulo (ejemplo)", url: "#", ilustracion: "", sectionid: null };
 
   /* ---------------------------------------------------------------------
    * 3. Lectura de datos desde window.name (JSON) — con try/catch de rescate

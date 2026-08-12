@@ -18,10 +18,14 @@ curso tenga muchos módulos o actividades. Ver [Cómo embeberlo en
 Moodle](#cómo-embeberlo-en-moodle) más abajo para el patrón exacto.
 
 Solo `curso` es obligatorio. Todo lo demás es opcional y, si falta, se
-completa **campo por campo** con un placeholder obviamente genérico
-("Nombre del docente", "Título de esta sección"...) en vez de romper el
-diseño o mostrar un curso de ejemplo que parezca información real — así,
-al probar, siempre es obvio qué dato es real y cuál sigue pendiente.
+completa **campo por campo** con un placeholder de ejemplo — con el
+formato/extensión real que debería tener ese campo, y muchas veces
+explicando qué poner ahí (ej. "Ejemplo de resumen: un párrafo breve que
+cuenta de qué trata el curso...") — en vez de dejar la sección vacía o
+romper el diseño. Siempre están marcados como ejemplo ("(ejemplo)",
+"Ejemplo:") para que nunca se puedan confundir con datos reales de un
+curso, pero el objetivo es que abrir el visor sin datos todavía se vea
+como una plantilla completa, no una pantalla vacía.
 
 ## Archivos
 
@@ -151,10 +155,10 @@ Portada del recurso: título, resumen, insignias y contadores animados.
 | Campo | Tipo | Dónde se ve | Si falta |
 |---|---|---|---|
 | `curso` | texto | Título grande del hero y `<title>` de la pestaña | Se trata como si **todo** el JSON no hubiera llegado — es el único campo verdaderamente obligatorio |
-| `resumen` | texto | Párrafo debajo del título | Texto genérico ("Aquí aparecerá el resumen del curso.") |
-| `insignias` | `[{icono, texto, destacada}]` | Píldoras junto al título. `icono` es una clase de Font Awesome solid (ej. `fa-brain`); `destacada:true` la pinta en dorado sólido en vez de translúcida | No se muestra ninguna |
-| `unidades` | número | Contador **"Unidades"** del hero — es un número informativo, **independiente** de cuántos objetos traiga `modulos` (ver más abajo) | Queda en `0` |
-| `horas_trabajo` | número | Contador **"Trabajo directo"** (se muestra con sufijo "h") | Queda en `0h` |
+| `resumen` | texto | Párrafo debajo del título | Ejemplo de resumen (formato/extensión real, marcado como ejemplo) |
+| `insignias` | `[{icono, texto, destacada}]` | Píldoras junto al título. `icono` es una clase de Font Awesome solid (ej. `fa-brain`); `destacada:true` la pinta en dorado sólido en vez de translúcida | 3 insignias de ejemplo |
+| `unidades` | número | Contador **"Unidades"** del hero — es un número informativo, **independiente** de cuántos objetos traiga `modulos` (ver más abajo) | `4` (ejemplo) |
+| `horas_trabajo` | número | Contador **"Trabajo directo"** (se muestra con sufijo "h") | `96` (ejemplo) |
 
 Los otros dos contadores del hero ("Tutorías en vivo" y "Módulos") se
 calculan solos, contando `tutorias.length` y `modulos.length` — no son
@@ -176,9 +180,9 @@ campos aparte.
 
 | Campo | Dónde se ve | Si falta |
 |---|---|---|
-| `bienvenida.titulo` | Título de la diapositiva | "¡Bienvenidos al curso!" |
-| `bienvenida.parrafos` | Texto principal (uno o más `<p>`) | Queda vacío |
-| `bienvenida.frase_destacada` | Cita en la tarjeta oscura junto al texto | Si falta, **esa tarjeta entera se oculta** (no queda un espacio vacío) |
+| `bienvenida.titulo` | Título de la diapositiva | Título de ejemplo |
+| `bienvenida.parrafos` | Texto principal (uno o más `<p>`) | 2 párrafos de ejemplo explicando qué poner ahí |
+| `bienvenida.frase_destacada` | Cita en la tarjeta oscura junto al texto | Frase de ejemplo (si el JSON manda explícitamente `""`, **esa tarjeta entera se oculta**, no queda un espacio vacío) |
 
 ---
 
@@ -193,9 +197,11 @@ campos aparte.
 ```
 
 Arreglo de tarjetas expandibles, cualquier cantidad. `icono` es una clase
-de Font Awesome solid. Si el arreglo llega vacío o no llega, se muestra
-un mensaje ("Este recurso todavía no tiene ruta de aprendizaje.") en vez
-de una grilla vacía.
+de Font Awesome solid. Si el campo no llega, se muestran 3 tarjetas de
+ejemplo ("Temática 1/2/3") con el detalle explicando qué poner en cada
+una. Si en cambio el JSON manda explícitamente un arreglo vacío `[]`
+(el curso realmente no tiene ruta de aprendizaje todavía), se muestra un
+mensaje en vez de una grilla vacía — esos son dos casos distintos.
 
 ---
 
@@ -220,12 +226,12 @@ esquina; sin video, el avatar se muestra solo, centrado y grande.
 
 | Campo | Dónde se ve | Si falta |
 |---|---|---|
-| `profesor.nombre` | Nombre en la tarjeta | "Nombre del docente" |
-| `profesor.foto` | Avatar circular/redondeado | Se genera un avatar automático con las iniciales del nombre ([ui-avatars.com](https://ui-avatars.com)); si la URL dada no carga, cae al mismo avatar automático |
-| `profesor.rol` | Línea debajo del nombre | Se oculta la línea entera |
-| `profesor.bio` | Biografía (uno o más `<p>`) | Queda vacía |
-| `profesor.etiquetas` | Chips debajo de la biografía | No se muestra ninguno |
-| `profesor.video` | Video 16:9 protagonista de la tarjeta (YouTube/Vimeo/Drive, se convierte solo a su versión embebible) | No se muestra el bloque de video; el avatar vuelve a su tamaño completo |
+| `profesor.nombre` | Nombre en la tarjeta | Nombre de ejemplo |
+| `profesor.foto` | Avatar circular/redondeado | Foto de ejemplo (servicio [pravatar.cc](https://pravatar.cc)); si la URL dada no carga, cae a un avatar generado con las iniciales del nombre ([ui-avatars.com](https://ui-avatars.com)) |
+| `profesor.rol` | Línea debajo del nombre | Cargo de ejemplo (si el JSON manda explícitamente `""`, se oculta la línea entera) |
+| `profesor.bio` | Biografía (uno o más `<p>`) | 2 párrafos de ejemplo |
+| `profesor.etiquetas` | Chips debajo de la biografía | 2 etiquetas de ejemplo |
+| `profesor.video` | Video 16:9 protagonista de la tarjeta (YouTube/Vimeo/Drive, se convierte solo a su versión embebible) | Video de ejemplo; si el JSON manda explícitamente `""`, no se muestra el bloque y el avatar vuelve a su tamaño completo |
 
 ---
 
@@ -275,8 +281,9 @@ completa con los mismos placeholders que "Docente creador".
 Acordeón de encuentros sincrónicos. `inicio`/`fin` deben ser fechas ISO
 (`YYYY-MM-DDTHH:mm:ss`) — se usan para calcular el ícono de estado ("Es
 hoy" / "En N días" / "Realizada") y para generar el archivo `.ics` real
-que descarga el botón "Agregar al calendario" (sin backend). Si el
-arreglo llega vacío, se muestra un mensaje en vez de un acordeón vacío.
+que descarga el botón "Agregar al calendario" (sin backend). Si el campo
+no llega, se muestra 1 tutoría de ejemplo; si el JSON manda
+explícitamente `[]`, se muestra un mensaje en vez de un acordeón vacío.
 
 ---
 
@@ -297,10 +304,10 @@ descarga de material.
 
 | Campo | Dónde se ve | Si falta |
 |---|---|---|
-| `video` | Reproductor embebido. Acepta enlaces normales de **YouTube**, **Vimeo** o **Google Drive** — se convierten solos a su versión embebible | Se oculta solo el reproductor; título y párrafos siguen visibles |
-| `video_titulo` | Título junto al video | Queda vacío |
-| `video_parrafos` | Texto descriptivo junto al video | Queda vacío |
-| `video_descarga_url` | Botón "Descargar material" junto a "Ir a las unidades" | Botón oculto |
+| `video` | Reproductor embebido. Acepta enlaces normales de **YouTube**, **Vimeo** o **Google Drive** — se convierten solos a su versión embebible | Video de ejemplo (si el JSON manda explícitamente `""`, se oculta solo el reproductor; título y párrafos siguen visibles) |
+| `video_titulo` | Título junto al video | Título de ejemplo |
+| `video_parrafos` | Texto descriptivo junto al video | 2 párrafos de ejemplo |
+| `video_descarga_url` | Botón "Descargar material" junto a "Ir a las unidades" | Botón oculto (este campo no tiene ejemplo — no hay nada instructivo que mostrar en un link de descarga) |
 
 ---
 
@@ -330,7 +337,7 @@ lleguen.
 
 | Campo | Tipo | Qué hace | Si falta |
 |---|---|---|---|
-| `nombre` | texto | Nombre del módulo — se muestra en la chapa (colapsado) y como título (expandido). También se usa para **inferir** el ícono/número del panel, ver abajo | "Nombre del módulo" |
+| `nombre` | texto | Nombre del módulo — se muestra en la chapa (colapsado) y como título (expandido). También se usa para **inferir** el ícono/número del panel, ver abajo | Nombre de ejemplo (si `modulos` no llega, se muestran 4 módulos de ejemplo: CONECTA, INCCA APOYO, Semana 1, Semana 2) |
 | `url` | texto | A dónde navega el botón **"INICIAR MÓDULO"** cuando no hay puente con Moodle (ver abajo) — enlace real (`<a target="_blank">`), no ejecuta nada dentro del visor | `#` (no navega a ningún lado) |
 | `ilustracion` | url de imagen (opcional) | Imagen mostrada en el panel expandido | No se muestra ninguna ilustración (el panel se ve bien igual, solo sin imagen) |
 | `sectionid` | número (opcional) | Id real de la sección en Moodle — habilita el puente con la página padre (ver abajo) | Sin este campo, "INICIAR MÓDULO" siempre navega a `url` en pestaña nueva |
