@@ -56,6 +56,7 @@
               <i class="fa-solid fa-arrow-right" aria-hidden="true"></i> Ir a las unidades
             </button>
             <button class="link-underline" id="heroLearnCue">¿Qué aprenderás? <i class="fa-solid fa-arrow-right-long" aria-hidden="true"></i></button>
+            <button class="link-underline" id="heroTutoriasCue">Conoce tus clases <i class="fa-solid fa-arrow-right-long" aria-hidden="true"></i></button>
           </div>
 
           <div class="stat-row">
@@ -153,14 +154,33 @@
       </div>
     </section>
 
-    <!-- 5. TUTORÍAS -->
+    <!-- 5. TUTORÍAS — ya no hay grabaciones ni link por sesión: un solo
+         link al recurso de Moodle (típicamente mod/googlemeet) + uno o
+         más bloques "día + hora" recurrentes que comparten ese mismo
+         link (ver renderTutorias()/estadoTutorias() en main.js). -->
     <section class="slide on-dark-solid" id="tutorias" role="group" aria-roledescription="diapositiva" aria-label="Tutorías">
       <div class="slide-body">
         <div class="slide-head text-center" style="align-items:center;margin:0 auto">
-          <div class="tag"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> Tutorías</div>
-          <h2 class="heading">Encuentros sincrónicos</h2>
+          <div class="tag"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> Tu horario</div>
+          <h2 class="heading">Conoce tus clases</h2>
+          <p class="sub">Nos vemos cada semana, siempre por el mismo enlace.</p>
         </div>
-        <div class="tutoria-list stagger" id="tutoriaList"></div>
+
+        <div class="meet-card stagger" id="meetCard">
+          <div class="meet-icon-badge" aria-hidden="true"><i class="fa-solid fa-video"></i></div>
+          <div class="meet-schedule-label"><i class="fa-solid fa-calendar-week" aria-hidden="true"></i> Horario semanal</div>
+          <div class="meet-schedule-list" id="meetScheduleList"></div>
+          <div class="meet-next" id="meetNext" hidden></div>
+          <a class="btn btn-gold meet-cta" id="meetCtaBtn" href="#" target="_blank" rel="noopener">
+            <i class="fa-solid fa-video" aria-hidden="true"></i> Ir al aula virtual
+          </a>
+          <p class="meet-caption">Acceso a tu clase en vivo y a las grabaciones — el mismo enlace todas las semanas.</p>
+        </div>
+
+        <div class="activity-empty" id="meetEmpty" hidden>
+          <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
+          Este recurso todavía no tiene tutorías programadas.
+        </div>
       </div>
     </section>
 
@@ -222,7 +242,6 @@
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
 
 <script src="./assets/js/main.js" defer></script>
 </body>

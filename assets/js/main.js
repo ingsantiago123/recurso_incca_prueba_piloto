@@ -55,8 +55,18 @@
  *     "titulo": "...", "parrafos": ["...", "..."], "frase_destacada": "..."
  *   },
  *   "aprenderas": [{ "icono": "fa-xxx", "titulo": "...", "detalle": "..." }],
- *   "tutorias": [{ "titulo": "...", "fecha_label": "...", "inicio": "ISO",
- *                  "fin": "ISO", "url_grabacion": "..." }],
+ *   "tutorias": {
+ *     "url_aula_virtual": "url del recurso de videollamada en Moodle
+ *       (p. ej. mod/googlemeet/view.php?id=NNN) — SIEMPRE el mismo link,
+ *       semana a semana; el recurso de Moodle es el que muestra ahí
+ *       adentro a qué grabación/sesión entrar, el visor no lo sabe ni
+ *       lo gestiona",
+ *     "horario": [{ "dia": "Lunes|Martes|Miércoles|Jueves|Viernes|Sábado|
+ *       Domingo", "inicio": "HH:MM", "fin": "HH:MM" }] — uno o más bloques
+ *       semanales recurrentes (normalmente uno solo, pero puede haber
+ *       varios, p. ej. lunes Y jueves) — todos comparten el mismo
+ *       "url_aula_virtual" de arriba
+ *   },
  *   "modulos": [{ "nombre": "...", "url": "...", "ilustracion": "url (opcional)",
  *                 "sectionid": "número opcional — ver 'Puente con Moodle' abajo" }],
  *   "secciones": "opcional — ver 'Secciones: mostrar/ocultar/reordenar' abajo",
@@ -277,15 +287,12 @@
       { icono: "fa-star", titulo: "Temática 2 (ejemplo)", detalle: "Ejemplo de detalle: describe en un par de líneas el contenido de este bloque temático." },
       { icono: "fa-star", titulo: "Temática 3 (ejemplo)", detalle: "Podés agregar tantas temáticas como el curso necesite — no hay un número fijo." }
     ],
-    tutorias: [
-      {
-        titulo: "Encuentro 1 (ejemplo)",
-        fecha_label: "Ejemplo: 10 de septiembre · 6:00 pm – 8:00 pm",
-        inicio: "2026-09-10T18:00:00",
-        fin: "2026-09-10T20:00:00",
-        url_grabacion: "#"
-      }
-    ],
+    tutorias: {
+      url_aula_virtual: "#",
+      horario: [
+        { dia: "Lunes", inicio: "05:00", fin: "06:00" }
+      ]
+    },
     modulos: [
       { nombre: "CONECTA (ejemplo)", url: "#" },
       { nombre: "INCCA APOYO (ejemplo)", url: "#" },
@@ -310,6 +317,23 @@
     } catch (e) {
       return null;
     }
+  }
+
+  // "tutorias" necesita una regla propia dentro del patrón de placeholders:
+  // no alcanza con "¿vino o no vino el campo?", porque un curso real puede
+  // no tener tutorías programadas todavía (horario explícitamente vacío) —
+  // eso debe verse como "sin tutorías", no como el ejemplo ilustrativo. Si
+  // la clave ni siquiera llegó, sí se usa el ejemplo (mismo criterio que el
+  // resto del patrón).
+  function normalizarTutorias(recibidos) {
+    if (recibidos.tutorias === undefined) return SIN_DATOS.tutorias;
+    const t = (recibidos.tutorias && typeof recibidos.tutorias === "object" && !Array.isArray(recibidos.tutorias))
+      ? recibidos.tutorias
+      : {};
+    const horario = Array.isArray(t.horario)
+      ? t.horario.filter((h) => h && h.dia && h.inicio && h.fin)
+      : [];
+    return { url_aula_virtual: t.url_aula_virtual || "#", horario };
   }
 
   // Completa, CAMPO POR CAMPO, lo que no haya llegado en el JSON con el
@@ -339,7 +363,7 @@
       video_descarga_url: recibidos.video_descarga_url || SIN_DATOS.video_descarga_url,
       bienvenida: Object.assign({}, SIN_DATOS.bienvenida, recibidos.bienvenida || {}),
       aprenderas: Array.isArray(recibidos.aprenderas) ? recibidos.aprenderas : SIN_DATOS.aprenderas,
-      tutorias: Array.isArray(recibidos.tutorias) ? recibidos.tutorias : SIN_DATOS.tutorias,
+      tutorias: normalizarTutorias(recibidos),
       modulos: (Array.isArray(recibidos.modulos) ? recibidos.modulos : SIN_DATOS.modulos).map((m) => ({
         nombre: (m && m.nombre) || SIN_DATOS_MODULO.nombre,
         url: (m && m.url) || SIN_DATOS_MODULO.url,
@@ -369,39 +393,53 @@
   /* ---------------------------------------------------------------------
    * 4. Utilidades
    * ------------------------------------------------------------------- */
-  function icsDate(iso) {
-    return iso.replace(/[-:]/g, "").split(".")[0] + "00";
+  function capitalizar(s) {
+    return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
   }
-
-  function downloadIcs(tutoria) {
-    const uid = `incca-${tutoria.inicio}-${Math.random().toString(36).slice(2, 8)}@unincca`;
-    const lines = [
-      "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//U.INCCA//Visor de recurso//ES",
-      "BEGIN:VEVENT", `UID:${uid}`, `DTSTAMP:${icsDate(new Date().toISOString())}`,
-      `DTSTART:${icsDate(tutoria.inicio)}`, `DTEND:${icsDate(tutoria.fin)}`,
-      `SUMMARY:${tutoria.titulo}`,
-      "DESCRIPTION:Tutoría sincrónica — U.INCCA.",
-      "LOCATION:INCCA Virtual", "END:VEVENT", "END:VCALENDAR"
-    ];
-    const blob = new Blob([lines.join("\r\n")], { type: "text/calendar;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `tutoria-${tutoria.inicio.slice(0, 10)}.ics`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
+  function formatHora12(hhmm) {
+    const partes = String(hhmm || "").split(":");
+    const h = Number(partes[0]);
+    const m = Number(partes[1]) || 0;
+    if (!Number.isFinite(h)) return hhmm || "";
+    const h12 = ((h + 11) % 12) + 1;
+    return `${h12}:${String(m).padStart(2, "0")} ${h < 12 ? "am" : "pm"}`;
   }
-
-  let toastTimer = null;
-  function showToast(message, icon) {
-    const toast = $("#toast");
-    if (!toast) return;
-    toast.innerHTML = `<i class="fa-solid ${icon || "fa-circle-check"}" aria-hidden="true"></i><span>${message}</span>`;
-    toast.classList.add("is-visible");
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toast.classList.remove("is-visible"), 3200);
+  const DIA_INDICE = {
+    domingo: 0, lunes: 1, martes: 2, miercoles: 3, "miércoles": 3,
+    jueves: 4, viernes: 5, sabado: 6, "sábado": 6
+  };
+  // Próxima ocurrencia de UN bloque horario recurrente ("Jueves 18:00-
+  // 20:30") a partir de "ahora": si "ahora" cae dentro de esa franja hoy,
+  // la marca "enVivo"; si ya pasó hoy, la próxima es en 7 días, no hoy.
+  function proximaOcurrencia(bloque, ahora) {
+    const diaIdx = DIA_INDICE[String(bloque.dia || "").toLowerCase().trim()];
+    if (diaIdx === undefined) return null;
+    const [hi, mi] = bloque.inicio.split(":").map(Number);
+    const [hf, mf] = bloque.fin.split(":").map(Number);
+    if (!Number.isFinite(hi) || !Number.isFinite(hf)) return null;
+    let deltaDias = (diaIdx - ahora.getDay() + 7) % 7;
+    const inicioHoy = new Date(ahora); inicioHoy.setHours(hi, mi || 0, 0, 0);
+    const finHoy = new Date(ahora); finHoy.setHours(hf, mf || 0, 0, 0);
+    if (deltaDias === 0) {
+      if (ahora >= inicioHoy && ahora <= finHoy) return { bloque, enVivo: true, esHoy: true, fecha: inicioHoy };
+      if (ahora > finHoy) deltaDias = 7;
+    }
+    const fecha = new Date(ahora);
+    fecha.setDate(fecha.getDate() + deltaDias);
+    fecha.setHours(hi, mi || 0, 0, 0);
+    return { bloque, enVivo: false, esHoy: deltaDias === 0, fecha };
+  }
+  // De todos los bloques semanales, cuál está pasando "ahora" (si hay una
+  // clase en curso) o cuál es el siguiente en llegar — alimenta el aviso
+  // de "en vivo ahora" / "próxima sesión" de la tarjeta de tutorías.
+  function estadoTutorias(horario) {
+    const ahora = new Date();
+    const ocurrencias = horario.map((b) => proximaOcurrencia(b, ahora)).filter(Boolean);
+    if (!ocurrencias.length) return null;
+    const enVivo = ocurrencias.find((o) => o.enVivo);
+    if (enVivo) return enVivo;
+    ocurrencias.sort((a, b) => a.fecha - b.fecha);
+    return ocurrencias[0];
   }
 
   function replayStagger(root) {
@@ -496,10 +534,14 @@
   }
 
   function initHeroCue() {
-    const btn = $("#heroLearnCue");
-    if (!btn) return;
-    const targetIndex = SLIDES.findIndex((s) => s.id === "aprenderas");
-    btn.addEventListener("click", () => deck.goTo(targetIndex));
+    const wire = (id, slideId) => {
+      const btn = $(`#${id}`);
+      if (!btn) return;
+      const targetIndex = SLIDES.findIndex((s) => s.id === slideId);
+      btn.addEventListener("click", () => deck.goTo(targetIndex));
+    };
+    wire("heroLearnCue", "aprenderas");
+    wire("heroTutoriasCue", "tutorias");
   }
 
   function initGotoUnitsButtons() {
@@ -607,7 +649,7 @@
 
     // Contadores del hero
     $("#statModulos").dataset.counter = datos.modulos.length;
-    $("#statTutorias").dataset.counter = datos.tutorias.length;
+    $("#statTutorias").dataset.counter = datos.tutorias.horario.length;
   }
 
   /* ---------------------------------------------------------------------
@@ -637,66 +679,51 @@
   }
 
   /* ---------------------------------------------------------------------
-   * 9. Render — Tutorías (acordeón + descarga .ics)
+   * 9. Render — Tutorías (horario semanal recurrente + acceso al aula)
+   * Ya no hay grabaciones ni link por sesión: el curso entrega UN solo
+   * link (a un recurso de Moodle, típicamente mod/googlemeet) + uno o
+   * más bloques "día de la semana + hora" recurrentes que comparten ese
+   * mismo link — es Moodle quien decide qué mostrar ahí adentro (entrar
+   * en vivo o ver la grabación), el visor no gestiona esa lógica.
    * ------------------------------------------------------------------- */
-  function formatCountdown(startIso) {
-    const diffMs = new Date(startIso) - new Date();
-    if (diffMs <= 0) return { label: "Realizada", icon: "fa-check" };
-    const days = Math.ceil(diffMs / 86400000);
-    if (days <= 1) return { label: "Es hoy", icon: "fa-bolt" };
-    return { label: `En ${days} días`, icon: "fa-hourglass-half" };
-  }
-
   function renderTutorias(tutorias) {
-    const list = $("#tutoriaList");
-    list.innerHTML = tutorias.length ? tutorias.map((t, i) => {
-      const status = formatCountdown(t.inicio);
-      return `
-      <div class="tutoria-item" data-index="${i}">
-        <button class="tutoria-head" aria-expanded="false">
-          <div class="tutoria-head-left">
-            <div class="tutoria-num">${i + 1}</div>
-            <div>
-              <div class="tutoria-title">${t.titulo}</div>
-              <div class="tutoria-date"><i class="fa-regular fa-clock" aria-hidden="true"></i> ${t.fecha_label}</div>
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px">
-            <div class="tutoria-status" title="${status.label}"><i class="fa-solid ${status.icon}" aria-hidden="true"></i></div>
-            <i class="fa-solid fa-chevron-down tutoria-chevron" aria-hidden="true"></i>
-          </div>
-        </button>
-        <div class="tutoria-body">
-          <div class="tutoria-body-inner">
-            <a class="btn btn-primary btn-sm" href="${t.url_grabacion}" target="_blank" rel="noopener"><i class="fa-solid fa-video" aria-hidden="true"></i> Ver grabación</a>
-            <button class="btn btn-outline btn-sm" data-ics-index="${i}"><i class="fa-regular fa-calendar-plus" aria-hidden="true"></i> Agregar al calendario</button>
-          </div>
-        </div>
-      </div>`;
-    }).join("") : `<div class="activity-empty"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i>Este recurso todavía no tiene tutorías programadas.</div>`;
+    const card = $("#meetCard");
+    const empty = $("#meetEmpty");
+    const horario = tutorias.horario || [];
 
-    $$(".tutoria-head", list).forEach((head) => {
-      head.addEventListener("click", () => {
-        const item = head.closest(".tutoria-item");
-        const isOpen = item.classList.contains("is-open");
-        $$(".tutoria-item", list).forEach((other) => {
-          other.classList.remove("is-open");
-          $(".tutoria-head", other).setAttribute("aria-expanded", "false");
-        });
-        if (!isOpen) {
-          item.classList.add("is-open");
-          head.setAttribute("aria-expanded", "true");
-        }
-      });
-    });
+    if (!horario.length) {
+      card.hidden = true;
+      empty.hidden = false;
+      return;
+    }
+    card.hidden = false;
+    empty.hidden = true;
 
-    $$("[data-ics-index]", list).forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        downloadIcs(tutorias[Number(btn.dataset.icsIndex)]);
-        showToast("Evento descargado — ábrelo para agregarlo a tu calendario.", "fa-calendar-check");
-      });
-    });
+    $("#meetScheduleList").innerHTML = horario.map((b) => `
+      <div class="meet-slot">
+        <span class="meet-slot-day"><i class="fa-solid fa-calendar-day" aria-hidden="true"></i> ${capitalizar(b.dia)}</span>
+        <span class="meet-slot-time"><i class="fa-regular fa-clock" aria-hidden="true"></i> ${formatHora12(b.inicio)} – ${formatHora12(b.fin)}</span>
+      </div>
+    `).join("");
+
+    // Aviso dinámico ("en vivo ahora" / "próxima sesión: ..."), calculado
+    // en cada render a partir de la hora actual — no es un campo del JSON.
+    const estado = estadoTutorias(horario);
+    const next = $("#meetNext");
+    if (!estado) {
+      next.hidden = true;
+    } else if (estado.enVivo) {
+      next.hidden = false;
+      next.className = "meet-next meet-next--live";
+      next.innerHTML = `<span class="meet-live-dot" aria-hidden="true"></span> Clase en vivo ahora`;
+    } else {
+      next.hidden = false;
+      next.className = "meet-next";
+      const cuando = estado.esHoy ? "Hoy" : capitalizar(estado.bloque.dia);
+      next.innerHTML = `<i class="fa-regular fa-clock" aria-hidden="true"></i> Próxima sesión: ${cuando} · ${formatHora12(estado.bloque.inicio)}`;
+    }
+
+    $("#meetCtaBtn").href = tutorias.url_aula_virtual || "#";
   }
 
   /* ---------------------------------------------------------------------

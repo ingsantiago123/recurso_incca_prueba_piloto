@@ -99,7 +99,7 @@ Todos los campos son opcionales excepto `curso`:
   "video_descarga_url": "url opcional de descarga del material",
   "bienvenida": { "titulo": "...", "parrafos": ["...", "..."], "frase_destacada": "..." },
   "aprenderas": [{ "icono": "fa-xxx", "titulo": "...", "detalle": "..." }],
-  "tutorias": [{ "titulo": "...", "fecha_label": "...", "inicio": "ISO", "fin": "ISO", "url_grabacion": "..." }],
+  "tutorias": { "url_aula_virtual": "...", "horario": [{ "dia": "Jueves", "inicio": "HH:MM", "fin": "HH:MM" }] },
   "modulos": [{ "nombre": "...", "url": "...", "ilustracion": "url (opcional)", "sectionid": "número (opcional)" }],
   "secciones": "opcional — mostrar/ocultar/reordenar las 8 diapositivas fijas, ver más abajo",
   "diapositivas_extra": "opcional — agregar diapositivas nuevas (iframe o HTML), ver más abajo"
@@ -163,8 +163,8 @@ Portada del recurso: título, resumen, insignias y contadores animados.
 | `horas_trabajo` | número | Contador **"Trabajo directo"** (se muestra con sufijo "h") | `96` (ejemplo) |
 
 Los otros dos contadores del hero ("Tutorías en vivo" y "Módulos") se
-calculan solos, contando `tutorias.length` y `modulos.length` — no son
-campos aparte.
+calculan solos, contando `tutorias.horario.length` y `modulos.length` —
+no son campos aparte.
 
 ---
 
@@ -278,24 +278,37 @@ completa con los mismos placeholders que "Docente creador".
 
 ```json
 {
-  "tutorias": [
-    {
-      "titulo": "Encuentro 1: instalación del curso",
-      "fecha_label": "12 de agosto · 6:00 pm – 8:00 pm",
-      "inicio": "2026-08-12T18:00:00",
-      "fin": "2026-08-12T20:00:00",
-      "url_grabacion": "https://..."
-    }
-  ]
+  "tutorias": {
+    "url_aula_virtual": "https://moodle.unincca.edu.co/mod/googlemeet/view.php?id=767113",
+    "horario": [
+      { "dia": "Jueves", "inicio": "18:00", "fin": "20:30" }
+    ]
+  }
 }
 ```
 
-Acordeón de encuentros sincrónicos. `inicio`/`fin` deben ser fechas ISO
-(`YYYY-MM-DDTHH:mm:ss`) — se usan para calcular el ícono de estado ("Es
-hoy" / "En N días" / "Realizada") y para generar el archivo `.ics` real
-que descarga el botón "Agregar al calendario" (sin backend). Si el campo
-no llega, se muestra 1 tutoría de ejemplo; si el JSON manda
-explícitamente `[]`, se muestra un mensaje en vez de un acordeón vacío.
+Ya no es un acordeón de encuentros con grabación/ICS por sesión — el
+curso entrega **un solo link** (típicamente un recurso `mod/googlemeet`
+de Moodle: adentro de esa página Moodle decide qué mostrar, si entrar en
+vivo o ver la grabación — el visor no gestiona esa lógica, solo enlaza)
+más **uno o más bloques horarios recurrentes** que comparten ese mismo
+link. Lo normal es un solo bloque semanal, pero puede haber varios (p.
+ej. lunes y jueves a horas distintas) — el diseño se adapta solo a
+cualquier cantidad (`flex-wrap`, no hay que tocar nada).
+
+| Campo | Formato | Notas |
+|---|---|---|
+| `url_aula_virtual` | url | El mismo link para todas las semanas/bloques |
+| `horario[].dia` | `"Lunes"`…`"Domingo"` (sin distinguir mayúsculas/tildes) | Día de la semana, recurrente |
+| `horario[].inicio` / `.fin` | `"HH:MM"` 24h | Hora local del curso |
+
+El aviso bajo el horario ("Próxima sesión: Jueves · 6:00 pm" / "Clase en
+vivo ahora") se calcula solo en el navegador a partir de la hora actual
+— no es un campo del JSON. Si `tutorias` no llega, se muestra 1 bloque
+de ejemplo; si el JSON manda explícitamente `horario: []` (el curso
+realmente no tiene tutorías programadas todavía), se muestra un mensaje
+en vez de la tarjeta — esos son dos casos distintos, mismo criterio que
+el resto de los placeholders de esta guía.
 
 ---
 
@@ -477,10 +490,10 @@ los cuadros de "insertar HTML" del propio Moodle):
 
 **Los dos tipos:**
 
-- **`"media"`** — diapositiva normal, con márgenes, igual que "Docente" o
-  "Tutorías": título + descripción arriba, y el iframe/html en un marco
-  contenido con un botón para abrirlo en un **modal de pantalla
-  completa** (más grande, con el mismo título/descripción).
+- **`"media"`** — diapositiva normal, con márgenes, igual que "Docente":
+  título y descripción arriba, y el iframe/html en un marco contenido
+  con un botón para abrirlo en un **modal de pantalla completa** (más
+  grande, con el mismo título/descripción).
 - **`"pagina"`** — a pantalla completa, igual que "Unidades": el iframe/
   html ocupa toda la diapositiva de punta a punta, sin título ni
   descripción. Solo quedan las flechas prev/next (y los puntos de abajo)
