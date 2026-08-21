@@ -888,19 +888,49 @@
   // cualquier otro caso no contemplado — cae de vuelta a abrir "url" en
   // pestaña nueva, el comportamiento de siempre. Nunca debe quedar un click
   // sin efecto.
-  const UNIT_CTA_ACK_TIMEOUT_MS = 500;
+  //
+  // BUG REAL encontrado y corregido (2026-08-21): el mensaje "abrir-modulo"
+  // SÍ llegaba bien a Moodle (confirmado con logs reales de consola: origen
+  // y sectionid correctos), y el mosaico incluso llegaba a abrirse ahí — pero
+  // IGUAL se abría una pestaña nueva en paralelo. Causa: este timeout
+  // (antes 500ms) es MUCHO más corto que el round-trip real del lado de
+  // Moodle -- populateAndExpandSection() dispara su propia llamada AJAX
+  // interna (format_tiles pidiendo el fragmento de la sección, que primero
+  // pasa por filter_visorincca para expandir el marcador [[visorincca_unidad:N]]
+  // a un <iframe> real) antes de que exista algo que observar en el DOM. En
+  // un entorno normal (y más todavía en uno de desarrollo local sin cachés
+  // calientes) ese viaje solo del lado de Moodle ya puede superar 500ms sin
+  // que nada esté realmente roto -- el timeout se cumplía y disparaba
+  // window.open() ANTES de que la confirmación real tuviera chance de
+  // llegar, que sí llega, solo que un poco después. Se sube a 5000ms (con
+  // margen real, sin quedar eterno si el puente de verdad no existe) y se
+  // agregan logs con prefijo "[visorincca]" en cada paso para poder ver en
+  // consola, con datos reales, si esto vuelve a pasar y por qué.
+  const UNIT_CTA_ACK_TIMEOUT_MS = 5000;
   function initUnitCta(a) {
     a.addEventListener("click", (e) => {
       const sectionid = Number(a.dataset.sectionid) || null;
-      if (window.self === window.top || !sectionid) return; // no embebido o sin dato para el puente: link normal
+      if (window.self === window.top || !sectionid) {
+        console.log("[visorincca] initUnitCta: no embebido o sin sectionid, link normal", {
+          embebido: window.self !== window.top,
+          sectionidCrudo: a.dataset.sectionid,
+        });
+        return; // no embebido o sin dato para el puente: link normal
+      }
 
       e.preventDefault();
       let confirmado = false;
+      const inicio = performance.now();
+      console.log("[visorincca] initUnitCta: mandando abrir-modulo", { sectionid });
 
       const alRecibirMensaje = (ev) => {
         const d = ev.data;
         if (d && d.source === "visorincca" && d.type === "modulo-abierto" && d.sectionid === sectionid) {
           confirmado = true;
+          console.log("[visorincca] initUnitCta: confirmacion modulo-abierto recibida", {
+            sectionid,
+            msDesdeElClick: Math.round(performance.now() - inicio),
+          });
           window.removeEventListener("message", alRecibirMensaje);
         }
       };
@@ -909,7 +939,11 @@
 
       setTimeout(() => {
         window.removeEventListener("message", alRecibirMensaje);
-        if (!confirmado) window.open(a.href, "_blank", "noopener");
+        if (!confirmado) {
+          console.warn("[visorincca] initUnitCta: SIN confirmacion tras " + UNIT_CTA_ACK_TIMEOUT_MS
+            + "ms, cae al fallback (pestana nueva)", { sectionid, href: a.href });
+          window.open(a.href, "_blank", "noopener");
+        }
       }, UNIT_CTA_ACK_TIMEOUT_MS);
     });
   }
