@@ -1071,6 +1071,32 @@
   }
 
   /* ---------------------------------------------------------------------
+   * 13. Parallax de los blobs del hero (sigue al puntero, --hero-px/py
+   *     los leen los .hero-blob en CSS). Se omite con prefers-reduced-motion.
+   * ------------------------------------------------------------------- */
+  function initHeroParallax() {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const hero = $("#hero");
+    if (!hero) return;
+    let raf = null;
+    hero.addEventListener("mousemove", (e) => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = null;
+        const rect = hero.getBoundingClientRect();
+        const px = (e.clientX - rect.left) / rect.width - 0.5;
+        const py = (e.clientY - rect.top) / rect.height - 0.5;
+        hero.style.setProperty("--hero-px", px.toFixed(3));
+        hero.style.setProperty("--hero-py", py.toFixed(3));
+      });
+    });
+    hero.addEventListener("mouseleave", () => {
+      hero.style.setProperty("--hero-px", 0);
+      hero.style.setProperty("--hero-py", 0);
+    });
+  }
+
+  /* ---------------------------------------------------------------------
    * Init
    * ------------------------------------------------------------------- */
   document.addEventListener("DOMContentLoaded", () => {
@@ -1094,6 +1120,7 @@
     renderUnitsAccordion(datos.modulos);
     initHeroCue();
     initGotoUnitsButtons();
+    initHeroParallax();
     initMediaModal();
     initKeyboard();
     initSwipe();
