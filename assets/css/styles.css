@@ -134,6 +134,20 @@ button { font-family: inherit; cursor: pointer; }
    en el árbol de accesibilidad aunque ya esté invisible por opacity. */
 .slide[hidden] { display: none; }
 
+/* Mismo problema que arriba, pero genérico: CUALQUIER elemento con un
+   "display" propio en una clase (grid/flex) y que además se oculta con
+   el atributo hidden desde JS (grid.hidden = true/false, patrón usado en
+   todo main.js) empata en especificidad con el [hidden] del navegador —
+   y gana la clase, no el atributo. Bug real encontrado en #learnTextGrid
+   y #learnGrid (ambos "¿Qué aprenderás?" — con .aprenderas seleccionado
+   por temas, el panel VACÍO de texto largo quedaba visible debajo de las
+   tarjetas, rompiendo el diseño) y en #deaImagenFrame. En vez de parchar
+   caso por caso (seguro que hay más y van a seguir apareciendo), esta
+   regla general garantiza que hidden SIEMPRE gane, sin importar qué
+   "display" traiga la clase — es exactamente el comportamiento que HTML
+   espera de hidden. */
+[hidden] { display: none !important; }
+
 .slide-body {
   position: relative;
   width: 100%;
