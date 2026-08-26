@@ -439,16 +439,237 @@ button { font-family: inherit; cursor: pointer; }
 .btn-pill--gold .btn-pill-icon { background: rgba(203,181,78,.22); color: var(--old-gold); }
 .btn-pill--gold:hover { background: rgba(203,181,78,.24); border-color: rgba(203,181,78,.9); transform: translateY(-3px); box-shadow: 0 12px 26px rgba(203,181,78,.3); }
 
-/* ---------- Bienvenida ---------- */
-.welcome-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 34px; align-items: center; }
+/* ---------- Bienvenida ----------
+   align-items:start (no "center"): con textos largos (varios párrafos
+   reales, no solo el ejemplo corto) la columna de texto puede terminar
+   mucho más alta que la tarjeta de cita — con "center" la tarjeta quedaba
+   flotando a mitad de un bloque de texto larguísimo, lejos de donde el
+   ojo entra a la diapositiva. "sticky" además la deja visible arriba
+   mientras el texto larga se desplaza dentro de .slide-body (que es el
+   contenedor real con scroll, ver overflow-y:auto arriba). */
+.welcome-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 34px; align-items: start; }
+/* Sin frase_destacada la .quote-card queda oculta y #welcomeGeo vive
+   fuera del grid (ver más abajo) — .welcome-text es la única celda real,
+   así que ocupa todo el ancho en vez de quedarse en la mitad angosta. */
+#bienvenida.has-geo .welcome-grid { grid-template-columns: 1fr; }
 @media (max-width: 760px) { .welcome-grid { grid-template-columns: 1fr; } }
-.welcome-text p { color: var(--text-muted); font-size: 14.5px; margin: 0 0 10px; }
+.welcome-text p { color: var(--text-muted); font-size: 15.5px; line-height: 1.7; margin: 0 0 12px; }
 .welcome-text p:last-child { margin-bottom: 0; }
-.quote-card { background: var(--oxford-blue); border-radius: var(--radius-lg); padding: 28px 26px; color: var(--white); position: relative; overflow: hidden; }
+.quote-card { background: var(--oxford-blue); border-radius: var(--radius-lg); padding: 28px 26px; color: var(--white); position: sticky; top: 0; overflow: hidden; }
 .quote-card::before { content: "\201C"; position: absolute; top: -30px; left: -6px; font-family: Georgia, serif; font-size: 130px; color: rgba(203,181,78,0.18); line-height: 1; font-weight: 700; }
 .quote-card blockquote { position: relative; font-size: 16.5px; font-style: italic; line-height: 1.5; margin: 14px 0 14px; }
 .quote-card cite { position: relative; display: block; font-style: normal; font-size: 12.5px; color: var(--light-cyan); font-weight: 600; margin-bottom: 10px; }
 .quote-bar { position: relative; height: 3px; width: 48px; background: var(--old-gold); border-radius: 2px; }
+@media (max-width: 760px) { .quote-card { position: static; } }
+
+/* Blobs ambientales sutiles, igual espíritu que Docente/Aprenderás */
+.slide#bienvenida::before {
+  content: ""; position: absolute; top: -8%; left: -4%; width: 26%; height: 46%;
+  border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, rgba(43,139,250,.07), transparent 70%);
+}
+.slide#bienvenida::after {
+  content: ""; position: absolute; bottom: -12%; left: 20%; width: 22%; height: 40%;
+  border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, rgba(203,181,78,.08), transparent 70%);
+}
+
+/* ---------- Bienvenida — variante "texto largo sin frase" ----------
+   Ver visor final/renovado/bienvenida-slide.html: cuando no llega
+   bienvenida.frase_destacada (la .quote-card queda oculta), en vez de dejar
+   la columna derecha vacía se muestra una escena de figuras geométricas
+   flotantes con parallax de mouse. renderHeroYBienvenidaYDocente() en
+   main.js decide cuál de las dos mostrar y agrega/saca .has-geo de
+   #bienvenida (la diapositiva entera, no el grid — ver por qué abajo).
+
+   #welcomeGeo NO vive dentro de .welcome-grid: es hermano de .slide-body
+   (mismo motivo que .hero-bg-layer/.premiere-bg más arriba) y se ancla
+   exactamente igual que el mockup — left:55%/right:0/top:0/bottom:0, la
+   misma proporción que .slide-left/.slide-right (1.1fr/0.9fr = 55%/45%)
+   en visor final/renovado/bienvenida-slide.html — de punta a punta, sin
+   quedar acotado a la altura de una fila de grid.
+
+   position:fixed como en el mockup (y no absolute): en este deck no hay
+   diferencia visual — .slide siempre tiene un transform activo
+   (scale .97/1), y eso ya establece el containing block para fixed, así
+   que en la práctica ancla igual contra .slide.
+
+   Sin fondo ni sombra propios a propósito: el panel es transparente, solo
+   recorta (overflow:hidden) la escena de figuras — todo el volumen visual
+   lo dan las figuras mismas (ver initWelcomeGeo() en main.js), igual que
+   en la animación original que se está portando acá. */
+.welcome-geo {
+  position: fixed;
+  left: 55%; right: 0; top: 0; bottom: 0;
+  z-index: 1;
+  overflow: hidden;
+  perspective: 1000px;
+}
+.welcome-shape-wrapper { position: absolute; transition: transform .1s ease-out; }
+.welcome-shape { position: relative; transform: rotate(45deg); transform-origin: center; border-radius: 2px; opacity: 0; box-shadow: -15px 15px 35px rgba(0,0,0,.75); }
+.welcome-shape.glass {
+  background: linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.02));
+  backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+  border: 1px solid rgba(255,255,255,.1);
+  box-shadow: -10px 10px 20px rgba(0,0,0,.5);
+}
+.welcome-shape.white { background: linear-gradient(135deg, #ffffff, #c8c8c8); }
+.welcome-shape.blue { background: linear-gradient(135deg, #001233, #002570); border-left: 4px solid #d4af37; border-bottom: 4px solid #d4af37; }
+@keyframes incca-shape-pop { from { opacity: 0; transform: scale(.8) rotate(45deg); } to { opacity: 1; transform: scale(1) rotate(45deg); } }
+@keyframes incca-shape-float-a { 0%, 100% { transform: scale(1) rotate(45deg) translate(0,0); } 50% { transform: scale(1.015) rotate(45deg) translate(-6px,-6px); } }
+@keyframes incca-shape-float-b { 0%, 100% { transform: scale(1) rotate(45deg) translate(0,0); } 50% { transform: scale(1.015) rotate(45deg) translate(6px,6px); } }
+
+/* Ancho: se angosta para dejarle todo el ancho libre al panel de la
+   derecha (ver arriba). */
+#bienvenida.has-geo .slide-body { max-width: 55%; margin-left: 0; margin-right: auto; }
+
+/* Scroll: en el mockup .slide-left es un flex-column con overflow:hidden
+   donde SOLO .welcome-text-wrap (flex:1;min-height:0;overflow-y:auto)
+   scrollea — el tag/heading quedan siempre fijos arriba, y el texto tiene
+   su propia scrollbar degradé. La primera versión de este port dejaba
+   scrollear .slide-body entero (el patrón genérico que usa el resto del
+   deck) — eso desalineaba el heading, distinto del mockup. Acá se
+   reproduce el mismo esquema: .slide-body dueño dejade scrollear él mismo
+   y pasa a ser un flex-column fijo; .welcome-grid (la fila con el texto)
+   se estira a flex:1 para ocupar el resto del alto; adentro,
+   .welcome-text-wrap es quien realmente scrollea. */
+#bienvenida.has-geo .slide-body { overflow: hidden; }
+#bienvenida.has-geo .welcome-grid { flex: 1; min-height: 0; align-items: stretch; }
+#bienvenida.has-geo .welcome-text-wrap {
+  min-height: 0;
+  overflow-y: auto; overflow-x: hidden;
+  padding-right: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--dodger-blue) transparent;
+}
+#bienvenida.has-geo .welcome-text-wrap::-webkit-scrollbar { width: 5px; }
+#bienvenida.has-geo .welcome-text-wrap::-webkit-scrollbar-track { background: transparent; }
+#bienvenida.has-geo .welcome-text-wrap::-webkit-scrollbar-thumb { background: linear-gradient(180deg, var(--dodger-blue), var(--royal-blue)); border-radius: 999px; }
+
+@media (max-width: 760px) {
+  /* El panel de 45% de ancho ya no cabe apilado en columna angosta y el
+     texto vuelve a fluir a ancho completo (mismo criterio que
+     .learn-text-grid--full), con el scroll genérico de .slide-body en vez
+     de la cajita interna angosta. En vez de sacar la escena entera
+     (display:none — el criterio hasta ahora), pasa a ser un fondo de
+     diapositiva completa, muy tenue y difuminado — "se ve a través de una
+     tela" — para no perder el trabajo de la animación en mobile: cubre
+     .slide de punta a punta, detrás del texto (z-index más bajo,
+     pointer-events:none para no robarle el toque/scroll). */
+  .welcome-geo {
+    left: 0; right: 0; top: 0; bottom: 0;
+    z-index: 0;
+    opacity: .16;
+    filter: blur(3px);
+    pointer-events: none;
+  }
+  #bienvenida.has-geo .slide-body { max-width: clamp(1160px, 80vw, 1720px); margin-left: auto; overflow-y: auto; overflow-x: hidden; position: relative; z-index: 1; }
+  #bienvenida.has-geo .welcome-grid { flex: none; min-height: auto; }
+  #bienvenida.has-geo .welcome-text-wrap { overflow: visible; padding-right: 0; }
+}
+
+/* ---------- Aprenderás — modo texto largo + imagen opcional ----------
+   Alternativa a .learn-grid (tarjetas) para cursos que describen la ruta
+   de aprendizaje como un solo bloque extenso en vez de temas discretos —
+   ver renderLearn() en main.js, que decide cuál de los dos pintar según
+   si llegó "aprenderas_texto".
+   Rediseño (ver visor final/renovado/diseno-texto-largo.html): blobs
+   ambientales + partículas flotantes detrás de toda la diapositiva, línea
+   central que titila entre texto e imagen, panel de texto con su propio
+   scroll interno (antes: sticky + scroll de toda la diapositiva, mismo
+   patrón que la cita de Bienvenida) sobre fondo degradé con scrollbar a
+   medida, e imagen con animación de flote suave. Los altos fijos del
+   mockup (580px / 420px / 380px, pensados para una página que scrollea
+   libre) se reemplazan por clamp() atado al alto del viewport — el deck
+   real vive en un iframe de alto fijo (900px, ver README) y un valor fijo
+   ahí ya causó overlaps con la barra flotante en Presentación. */
+.slide#aprenderas::before {
+  content: ""; position: absolute; top: -18%; right: -12%; width: 46%; height: 62%;
+  border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, rgba(43,139,250,.15), rgba(43,139,250,0) 70%);
+  animation: incca-float 14s ease-in-out infinite;
+}
+.slide#aprenderas::after {
+  content: ""; position: absolute; bottom: -14%; left: -10%; width: 38%; height: 54%;
+  border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, rgba(101,203,227,.12), rgba(101,203,227,0) 70%);
+  animation: incca-float2 16s ease-in-out infinite;
+}
+.aprenderas-particles { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+.aprenderas-particles .particle { position: absolute; border-radius: 50%; background: var(--dodger-blue); opacity: .3; }
+.aprenderas-particles .particle:nth-child(1) { width: 8px;  height: 8px;  top: 20%; left: 15%; animation: incca-particle-float 12s ease-in-out infinite; }
+.aprenderas-particles .particle:nth-child(2) { width: 6px;  height: 6px;  top: 60%; left: 80%; animation: incca-particle-float 15s ease-in-out infinite 2s; }
+.aprenderas-particles .particle:nth-child(3) { width: 10px; height: 10px; top: 40%; left: 50%; animation: incca-particle-float 18s ease-in-out infinite 4s; }
+.aprenderas-particles .particle:nth-child(4) { width: 7px;  height: 7px;  top: 75%; left: 25%; background: var(--light-cyan);  animation: incca-particle-float 14s ease-in-out infinite 3s; }
+.aprenderas-particles .particle:nth-child(5) { width: 9px;  height: 9px;  top: 10%; left: 70%; background: var(--royal-blue); animation: incca-particle-float 16s ease-in-out infinite 1s; }
+@keyframes incca-particle-float {
+  0%, 100% { transform: translate(0,0) scale(1); opacity: .3; }
+  25%      { transform: translate(30px,-40px) scale(1.2); opacity: .5; }
+  50%      { transform: translate(-20px,-80px) scale(.8); opacity: .2; }
+  75%      { transform: translate(40px,-50px) scale(1.1); opacity: .4; }
+}
+
+/* Barra dorada→degradé bajo el título, solo en esta diapositiva */
+#aprenderas .heading { position: relative; margin-bottom: 4px; }
+#aprenderas .heading::after {
+  content: ""; position: absolute; bottom: -8px; left: 0;
+  width: 60px; height: 3px; border-radius: 2px;
+  background: linear-gradient(90deg, var(--dodger-blue), var(--light-cyan));
+}
+
+.learn-text-grid { position: relative; z-index: 1; display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 32px; align-items: stretch; }
+.learn-text-grid::before {
+  content: ""; position: absolute; top: 8%; left: 50%; width: 3px; height: 84%;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, transparent, var(--dodger-blue) 30%, var(--royal-blue) 70%, transparent);
+  opacity: .25; box-shadow: 0 0 20px rgba(43,139,250,.4);
+  animation: incca-line-glow 4s ease-in-out infinite;
+  pointer-events: none;
+}
+.learn-text-grid.learn-text-grid--full { grid-template-columns: 1fr; max-width: 78ch; margin: 0 auto; }
+.learn-text-grid.learn-text-grid--full::before { display: none; }
+@keyframes incca-line-glow {
+  0%, 100% { opacity: .25; box-shadow: 0 0 20px rgba(43,139,250,.4); }
+  50%      { opacity: .45; box-shadow: 0 0 30px rgba(43,139,250,.6); }
+}
+
+.learn-text-container {
+  height: clamp(280px, 58vh, 580px);
+  overflow-y: auto; overflow-x: hidden;
+  background: linear-gradient(135deg, rgba(43,139,250,.08), rgba(11,52,157,.12));
+  border: 1px solid rgba(43,139,250,.25);
+  border-radius: var(--radius-lg);
+  padding: 26px 28px;
+  box-shadow: 0 16px 40px rgba(43,139,250,.15), inset 0 1px 0 rgba(255,255,255,.2);
+  scrollbar-width: thin;
+  scrollbar-color: var(--dodger-blue) rgba(11,52,157,.15);
+}
+.learn-text-container::-webkit-scrollbar { width: 9px; }
+.learn-text-container::-webkit-scrollbar-track { background: rgba(11,52,157,.15); border-radius: 5px; margin: 6px 0; }
+.learn-text-container::-webkit-scrollbar-thumb { background: linear-gradient(180deg, var(--dodger-blue), var(--royal-blue)); border-radius: 5px; border: 2px solid rgba(255,255,255,.2); }
+.learn-text-container::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, var(--royal-blue), var(--oxford-blue)); }
+
+.learn-text p { color: var(--text-muted); font-size: 15.5px; line-height: 1.75; margin: 0 0 13px; }
+.learn-text p:last-child { margin-bottom: 0; }
+
+.learn-text-image {
+  position: relative;
+  height: clamp(240px, 58vh, 580px);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-strong);
+}
+/* La imagen se sobredimensiona 24px de alto (12px de margen negativo
+   arriba) para que la animación de flote (±10px) nunca deje ver un hueco
+   en el borde inferior del marco recortado. */
+.learn-text-image img { width: 100%; height: calc(100% + 24px); margin-top: -12px; object-fit: cover; display: block; animation: incca-img-float 6s ease-in-out infinite; }
+@keyframes incca-img-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@media (max-width: 920px) {
+  .learn-text-grid { grid-template-columns: 1fr; }
+  .learn-text-grid::before { display: none; }
+  .learn-text-container { height: clamp(200px, 32vh, 340px); padding: 20px; }
+  .learn-text-image { height: clamp(150px, 22vh, 240px); }
+}
 
 /* ---------- Learn cards ---------- */
 .learn-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
@@ -615,6 +836,138 @@ button { font-family: inherit; cursor: pointer; }
   .meet-slot { min-width: 0; width: 100%; }
 }
 
+/* ---------- Presentación del curso ----------
+   Diapositiva propia (antes compartía datos con el DEA, ver dea_* en
+   main.js) pensada como "estreno": título centrado + video grande
+   protagonista, sobre fondo sólido oscuro (on-dark-solid, igual que
+   Tutorías) para que se distinga del DEA (gradiente institucional,
+   video+texto lado a lado) aun siendo las dos diapositivas "de video".
+   Rediseño "premiere" (ver visor final/renovado/presentacion-slide-mejora.html):
+   fondo cinemático en capas (grid + anillos pulsantes + blobs + barrido +
+   viñeta), separador ornamental y marco de video con halo de luz. La capa
+   de fondo es hermana de .slide-body, no hija, por el mismo motivo que
+   .hero-bg-layer más arriba: así cubre toda la diapositiva sin heredar el
+   max-width angosto de la columna de texto ni generar overflow fantasma. */
+.premiere-bg { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+.premiere-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.055) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+/* transform fijo en la regla base (no solo dentro del @keyframes): el
+   mockup original solo lo fijaba en el 0%/100% del keyframe, así que
+   durante el animation-delay (2.5s / 5s) el anillo se pintaba sin
+   transform — pegado a la esquina superior-izquierda — y "saltaba" al
+   centro recién al arrancar su animación. Bug real del diseño original. */
+.premiere-ring { position: absolute; top: 50%; left: 50%; border-radius: 50%; transform: translate(-50%, -50%); }
+.premiere-ring-1 { width: min(760px, 72vw); height: min(760px, 72vw); border: 1px solid rgba(203,181,78,.18); animation: incca-ring-pulse-a 9s ease-in-out infinite; }
+.premiere-ring-2 { width: min(540px, 52vw); height: min(540px, 52vw); border: 1px solid rgba(43,139,250,.14); animation: incca-ring-pulse-b 9s ease-in-out 2.5s infinite; }
+.premiere-ring-3 { width: min(320px, 32vw); height: min(320px, 32vw); border: 1px solid rgba(203,181,78,.12); animation: incca-ring-pulse-a 9s ease-in-out 5s infinite; }
+@keyframes incca-ring-pulse-a {
+  0%, 100% { opacity: .55; transform: translate(-50%, -50%) scale(1); }
+  50%      { opacity: 1;   transform: translate(-50%, -50%) scale(1.025); }
+}
+@keyframes incca-ring-pulse-b {
+  0%, 100% { opacity: .40; transform: translate(-50%, -50%) scale(1); }
+  50%      { opacity: .80; transform: translate(-50%, -50%) scale(1.03); }
+}
+.premiere-blob { position: absolute; border-radius: 50%; pointer-events: none; }
+.premiere-blob--cyan {
+  top: -20%; left: -12%; width: 50%; height: 72%;
+  background: radial-gradient(circle, rgba(43,139,250,.22), rgba(43,139,250,0) 70%);
+  animation: incca-float 14s ease-in-out infinite;
+}
+.premiere-blob--gold {
+  bottom: -20%; right: -10%; width: 44%; height: 66%;
+  background: radial-gradient(circle, rgba(203,181,78,.22), rgba(203,181,78,0) 70%);
+  animation: incca-float2 16s ease-in-out infinite;
+}
+.premiere-sweep {
+  position: absolute; top: -45%; left: -65%; width: 230%; height: 230%;
+  background: linear-gradient(75deg, transparent 42%, rgba(255,255,255,.045) 49%, transparent 57%);
+  animation: incca-sweep 12s ease-in-out infinite;
+}
+.premiere-vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 32%, rgba(4,12,56,.62) 100%); }
+
+.premiere-intro { position: relative; z-index: 1; max-width: 680px; margin: 0 auto; }
+.premiere-intro p { color: var(--platinum); font-size: 14.5px; line-height: 1.6; opacity: .92; margin: 0 0 8px; }
+.premiere-intro p:last-child { margin-bottom: 0; }
+
+/* Separador ornamental entre el título/párrafos y el video */
+.premiere-ornament { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; gap: 14px; max-width: 320px; width: 100%; margin: 0 auto; }
+.premiere-ornament-line { flex: 1; height: 1px; }
+.premiere-ornament-line:first-child { background: linear-gradient(to right, transparent, rgba(203,181,78,.52)); }
+.premiere-ornament-line:last-child { background: linear-gradient(to left, transparent, rgba(203,181,78,.52)); }
+.premiere-ornament-icon {
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 1.5px solid rgba(203,181,78,.48);
+  background: rgba(203,181,78,.09);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+/* Compensación óptica del triángulo FA-play: pesa visualmente a la
+   izquierda porque el vértice apunta a la derecha — +1px la corrige. */
+.premiere-ornament-icon i { font-size: 9px; color: var(--old-gold); transform: translateX(1px); }
+
+/* Stage: halo de luz (detrás) + marco de video (encima).
+   max-width con techo doble (980px Y calc(vh*16/9)): en pantallas anchas
+   pero de poca altura — el caso real de este deck, que vive en un iframe
+   de 900px fijo (ver embebido en el README) — un video a los 980px de
+   ancho completos empuja el resto del contenido (ornamento, botón "Ir a
+   las unidades") fuera del alto disponible y lo deja tapado detrás de la
+   barra flotante inferior. Atar el ancho al alto del viewport (en vez de
+   min-height en .ratio, que rompería la proporción 16:9 estirando el
+   iframe) deja que ancho Y alto se reduzcan juntos, manteniendo el 16:9
+   real. calc() multiplica vh por un número sin unidad (16/9), válido en
+   CSS estándar. */
+.premiere-stage { position: relative; z-index: 1; max-width: min(980px, calc(50vh * 16 / 9)); width: 100%; margin: 0 auto; }
+.premiere-glow {
+  position: absolute; z-index: 0;
+  bottom: -14px; left: 10%; right: 10%; height: 34px;
+  background: var(--dodger-blue);
+  opacity: .35; filter: blur(38px);
+  border-radius: 50%; pointer-events: none;
+}
+.premiere-frame {
+  position: relative; z-index: 1; width: 100%;
+  background: rgba(255,255,255,.07);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(203,181,78,.30);
+  border-top: 3px solid var(--old-gold);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  box-shadow: 0 40px 90px rgba(2,7,26,.5), 0 14px 32px rgba(2,7,26,.4), inset 0 1px 0 rgba(255,255,255,.12);
+}
+/* min-height con piso real (160px) y techo (300px) en vez del clamp(0px,...)
+   del mockup original — ese piso de 0px era decorativo nada más (28vh no
+   baja de 0 salvo un viewport absurdo), así que no evitaba que el video se
+   viera diminuto en viewports bajos. Con piso de 160px, si no entra entero
+   el sobrante lo resuelve el scroll de .slide-body (mismo criterio que ya
+   usa el resto del deck). */
+.premiere-frame .ratio { aspect-ratio: 16/9; min-height: clamp(160px, 28vh, 300px); border-radius: 12px; overflow: hidden; background: #05102e; }
+.premiere-frame iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+@media (max-width: 768px) {
+  .premiere-grid   { background-size: 36px 36px; }
+  .premiere-ring-1 { width: min(480px, 90vw); height: min(480px, 90vw); }
+  .premiere-ring-2 { width: min(320px, 68vw); height: min(320px, 68vw); }
+  .premiere-ring-3 { width: min(180px, 42vw); height: min(180px, 42vw); }
+  .premiere-frame  { padding: 8px; border-radius: var(--radius-sm); }
+  .premiere-glow   { height: 22px; bottom: -8px; }
+}
+@media (max-width: 480px) {
+  .premiere-grid    { background-size: 28px 28px; }
+  .premiere-ring-1  { width: 90vw; height: 90vw; }
+  .premiere-ring-2  { width: 64vw; height: 64vw; }
+  .premiere-ring-3  { width: 38vw; height: 38vw; }
+  .premiere-ornament { max-width: 240px; }
+  .premiere-frame   { padding: 6px; }
+  .premiere-glow    { display: none; } /* blur pesado en mobile → se omite */
+}
+
 /* ---------- DEA ---------- */
 .dea-grid { display: grid; grid-template-columns: 1fr 0.9fr; gap: 26px; align-items: center; }
 @media (max-width: 760px) { .dea-grid { grid-template-columns: 1fr; } }
@@ -623,6 +976,19 @@ button { font-family: inherit; cursor: pointer; }
 .dea-video-frame { background: rgba(0,0,0,0.2); border-radius: var(--radius-md); padding: 10px; border: 1px solid rgba(255,255,255,0.2); }
 .dea-video-frame .ratio { aspect-ratio: 16/9; border-radius: 9px; overflow: hidden; background: #05102e; }
 .dea-video-frame iframe { width: 100%; height: 100%; border: 0; }
+
+/* Modo alternativo "dea_imagen" (ver renderDea() en main.js) — a
+   propósito SIN el marco oscuro/padding de .dea-video-frame: pensada para
+   un PNG con fondo transparente, cualquier tratamiento de caja detrás
+   (fondo, borde) taparía esa transparencia. Solo un drop-shadow (sigue el
+   canal alfa del PNG, no dibuja un rectángulo como box-shadow) para que
+   no quede plana sobre el degradé oscuro de la diapositiva. */
+.dea-imagen-frame { display: flex; align-items: center; justify-content: center; }
+.dea-imagen-frame img {
+  width: 100%; height: auto; max-height: min(60vh, 520px);
+  object-fit: contain; display: block;
+  filter: drop-shadow(0 24px 40px rgba(2,7,26,.45));
+}
 
 /* ---------- Unidades (acordeón de módulos: CONECTA / INCCA APOYO / Semana N) ----------
    Reemplaza al antiguo grid de "actividades". El curso entrega un arreglo
@@ -801,6 +1167,11 @@ button { font-family: inherit; cursor: pointer; }
   .stat-tile-icon { width: 22px; height: 22px; font-size: 10px; }
   .stat-num { font-size: 14px; }
   .stat-label { font-size: 7.5px; }
+  .premiere-ornament { display: none; } /* sacrifica el ornamento en landscape comprimido */
+  .premiere-intro { display: none; } /* ídem los párrafos introductorios: el título alcanza */
+  .premiere-stage { max-width: min(980px, calc(38vh * 16 / 9)); }
+  .premiere-frame { padding: 8px; }
+  .premiere-frame .ratio { min-height: 110px; }
 }
 
 .text-center { text-align: center; }

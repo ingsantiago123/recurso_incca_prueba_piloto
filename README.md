@@ -93,15 +93,21 @@ Todos los campos son opcionales excepto `curso`:
     "video": "url de YouTube/Vimeo/Drive (opcional)"
   },
   "profesor_tutor": "mismo formato que profesor (opcional) — ver sección Docente tutor",
-  "video": "url de YouTube/Vimeo/Drive",
-  "video_titulo": "Título junto al video",
+  "video": "url de YouTube/Vimeo/Drive — Presentación del curso",
+  "video_titulo": "Título junto al video de presentación",
   "video_parrafos": ["párrafo 1", "párrafo 2"],
-  "video_descarga_url": "url opcional de descarga del material",
+  "dea_video": "url de YouTube/Vimeo/Drive (opcional) — DEA, diapositiva distinta",
+  "dea_imagen": "url de imagen (opcional) — modo alternativo a dea_video, gana si llega",
+  "dea_titulo": "Título junto al video/imagen del DEA",
+  "dea_parrafos": ["párrafo 1", "párrafo 2"],
+  "dea_descarga_url": "url opcional de descarga del material del DEA",
   "bienvenida": { "titulo": "...", "parrafos": ["...", "..."], "frase_destacada": "..." },
   "aprenderas": [{ "icono": "fa-xxx", "titulo": "...", "detalle": "..." }],
+  "aprenderas_texto": "opcional — modo alternativo de \"aprenderás\" (texto largo en vez de tarjetas), ver más abajo",
+  "aprenderas_imagen": "url de imagen (opcional, solo con aprenderas_texto)",
   "tutorias": { "url_aula_virtual": "...", "horario": [{ "dia": "Jueves", "inicio": "HH:MM", "fin": "HH:MM" }] },
   "modulos": [{ "nombre": "...", "url": "...", "ilustracion": "url (opcional)", "sectionid": "número (opcional)" }],
-  "secciones": "opcional — mostrar/ocultar/reordenar las 8 diapositivas fijas, ver más abajo",
+  "secciones": "opcional — mostrar/ocultar/reordenar las 9 diapositivas fijas, ver más abajo",
   "diapositivas_extra": "opcional — agregar diapositivas nuevas (iframe o HTML), ver más abajo"
 }
 ```
@@ -118,7 +124,7 @@ página con scroll, y no tiene topbar ni "mapa del curso" — solo el
 contenido) — se navega con las flechas de los costados, los puntos de
 abajo, las flechas del teclado o swipe (táctil).
 
-La lista de diapositivas **no es fija**: por defecto son 7 u 8 (según si
+La lista de diapositivas **no es fija**: por defecto son 8 o 9 (según si
 llega `profesor_tutor`), pero el orden, la visibilidad de cada una y hasta
 diapositivas nuevas por completo se pueden controlar desde el JSON — ver
 ["Personalizar el mazo"](#personalizar-el-mazo-mostrarocultar-reordenar-y-diapositivas-custom)
@@ -127,13 +133,24 @@ más abajo. Esta tabla es el estado **por defecto**, sin ningún override:
 | # | id interno | Diapositiva | ¿Siempre existe? |
 |---|---|---|---|
 | 1 | `hero` | Inicio | Sí |
-| 2 | `bienvenida` | Bienvenida | Sí |
-| 3 | `aprenderas` | Aprenderás | Sí |
-| 4 | `docente` | Docente creador | Sí |
-| 4b | `docente_tutor` | Docente tutor | Solo si llega `profesor_tutor` |
-| 5 | `tutorias` | Tutorías | Sí |
-| 6 | `dea` | DEA / Video | Sí |
-| 7 | `unidades` | Unidades | Sí |
+| 2 | `presentacion` | Presentación del curso | Sí |
+| 3 | `bienvenida` | Bienvenida | Sí |
+| 4 | `aprenderas` | Aprenderás | Sí |
+| 5 | `dea` | DEA | Sí |
+| 6 | `docente` | Docente creador | Sí |
+| 6b | `docente_tutor` | Docente tutor | Solo si llega `profesor_tutor` |
+| 7 | `tutorias` | Tutorías | Sí |
+| 8 | `unidades` | Unidades | Sí |
+
+> **`presentacion` y `dea` son diapositivas independientes**, aunque las
+> dos muestren un video: `presentacion` es el video/título/párrafos de
+> apertura del curso (campos `video`/`video_titulo`/`video_parrafos`);
+> `dea` es el Diseño de Experiencia para el Aprendizaje, con su propio
+> video opcional y su propio texto (campos `dea_video`/`dea_titulo`/
+> `dea_parrafos`/`dea_descarga_url`). Antes de este cambio compartían un
+> solo campo `video` — si tenías un JSON viejo, mové ese contenido a
+> `dea_*` si en realidad era el DEA, o dejalo en `video`/`video_titulo`/
+> `video_parrafos` si era la presentación.
 
 ---
 
@@ -168,7 +185,39 @@ no son campos aparte.
 
 ---
 
-### 2. Bienvenida (`bienvenida`)
+### 2. Presentación del curso (`presentacion`)
+
+Título + video grande, protagonista, centrado — pensado como un
+"estreno" antes de entrar al resto del curso. Párrafos opcionales debajo
+del título, encima del video.
+
+Diseño "premiere": fondo cinemático en capas (grid de puntos + anillos
+concéntricos pulsantes + blobs ambientales + barrido de luz + viñeta),
+separador ornamental con ícono de play entre el título y el video, y
+marco de video con borde superior dorado y halo de luz debajo. Puramente
+visual — no agrega ni cambia campos del JSON.
+
+```json
+{
+  "video": "https://drive.google.com/file/d/XXXXXXXX/preview",
+  "video_titulo": "Presentación del curso",
+  "video_parrafos": ["párrafo 1", "párrafo 2"]
+}
+```
+
+| Campo | Dónde se ve | Si falta |
+|---|---|---|
+| `video` | Reproductor embebido, grande y centrado (máx. 980px). Acepta enlaces normales de **YouTube**, **Vimeo** o **Google Drive** — se convierten solos a su versión embebible | Video de ejemplo |
+| `video_titulo` | Título centrado arriba del video | Título de ejemplo |
+| `video_parrafos` | Texto introductorio centrado, arriba del video | 2 párrafos de ejemplo |
+
+> Esta diapositiva es **distinta** de "DEA" (más abajo) aunque las dos
+> muestren un video — ver la nota en la tabla de diapositivas al inicio
+> de este documento.
+
+---
+
+### 3. Bienvenida (`bienvenida`)
 
 ```json
 {
@@ -186,9 +235,25 @@ no son campos aparte.
 | `bienvenida.parrafos` | Texto principal (uno o más `<p>`) | 2 párrafos de ejemplo explicando qué poner ahí |
 | `bienvenida.frase_destacada` | Cita en la tarjeta oscura junto al texto | Frase de ejemplo (si el JSON manda explícitamente `""`, **esa tarjeta entera se oculta**, no queda un espacio vacío) |
 
+**Sin `frase_destacada` (`""` explícito), la columna derecha no queda
+vacía**: en su lugar se muestra una escena de figuras geométricas
+(cuadros "cristal"/blancos/azules apilados en diagonal) con parallax de
+mouse, pegada al borde derecho de la diapositiva completa (no solo del
+alto del texto). El tag/heading quedan fijos arriba y solo el párrafo
+scrollea, con su propia scrollbar celeste, si el texto no entra entero.
+En pantallas angostas (≤760px) la escena no se apila junto al texto —
+queda como fondo muy tenue y difuminado detrás de todo, para no perderla
+del todo pero sin competir con la lectura. Es 100% automático según
+`frase_destacada`: no hay un campo aparte para activarlo.
+
 ---
 
-### 3. Aprenderás (`aprenderas`)
+### 4. Aprenderás (`aprenderas` / `aprenderas_texto`)
+
+Dos diseños posibles, elegidos automáticamente **según qué campo llegue**
+— no hay un interruptor aparte que prender en el JSON.
+
+**Modo tarjetas (`aprenderas`, el de siempre):**
 
 ```json
 {
@@ -199,15 +264,72 @@ no son campos aparte.
 ```
 
 Arreglo de tarjetas expandibles, cualquier cantidad. `icono` es una clase
-de Font Awesome solid. Si el campo no llega, se muestran 3 tarjetas de
-ejemplo ("Temática 1/2/3") con el detalle explicando qué poner en cada
-una. Si en cambio el JSON manda explícitamente un arreglo vacío `[]`
-(el curso realmente no tiene ruta de aprendizaje todavía), se muestra un
-mensaje en vez de una grilla vacía — esos son dos casos distintos.
+de Font Awesome solid. Si ninguno de los dos campos llega, se muestran 3
+tarjetas de ejemplo ("Temática 1/2/3") con el detalle explicando qué
+poner en cada una. Si en cambio el JSON manda explícitamente un arreglo
+vacío `[]` (el curso realmente no tiene ruta de aprendizaje todavía), se
+muestra un mensaje en vez de una grilla vacía — esos son dos casos
+distintos.
+
+**Modo texto largo + imagen (`aprenderas_texto`):** para cursos que
+describen la ruta de aprendizaje como un párrafo extenso en vez de temas
+discretos. El texto vive en un panel con fondo degradé y scroll propio
+(scrollbar celeste a medida) con una línea central que titila hacia la
+imagen; la imagen tiene una animación de flote suave. Sin imagen, el
+texto pasa a columna centrada de ancho completo.
+
+```json
+{
+  "aprenderas_texto": ["párrafo 1", "párrafo 2", "párrafo 3"],
+  "aprenderas_imagen": "https://.../foto.jpg"
+}
+```
+
+| Campo | Dónde se ve | Si falta |
+|---|---|---|
+| `aprenderas_texto` | Texto principal (uno o más `<p>`) | Si no llega (o llega vacío), se usa el modo tarjetas de arriba en su lugar |
+| `aprenderas_imagen` | Imagen fija al costado del texto | Sin imagen, el texto ocupa todo el ancho (columna centrada, más angosta para que se siga leyendo bien) |
+
+Si el JSON manda **ambos** campos (`aprenderas` y `aprenderas_texto`),
+gana `aprenderas_texto` — la grilla de tarjetas no se pinta.
 
 ---
 
-### 4. Docente creador (`docente`)
+### 5. DEA (`dea`)
+
+Diapositiva propia, **distinta** de "Presentación del curso" (más
+arriba): video **o imagen** (a elección) + texto (típicamente la
+explicación del Diseño de Experiencia para el Aprendizaje) + botón
+opcional de descarga de material. Mismo layout que tenía antes la
+diapositiva de video (texto + media lado a lado), ahora con sus propios
+campos independientes.
+
+```json
+{
+  "dea_video": "https://drive.google.com/file/d/XXXXXXXX/preview",
+  "dea_imagen": "https://.../dea.png",
+  "dea_titulo": "DEA · Diseño de Experiencia para el Aprendizaje",
+  "dea_parrafos": ["párrafo 1", "párrafo 2"],
+  "dea_descarga_url": "https://drive.google.com/file/d/YYYYYYYY/view"
+}
+```
+
+| Campo | Dónde se ve | Si falta |
+|---|---|---|
+| `dea_video` | Reproductor embebido junto al texto. Acepta enlaces normales de **YouTube**, **Vimeo** o **Google Drive** — se convierten solos a su versión embebible | Video de ejemplo (si el JSON manda explícitamente `""`, se oculta solo el reproductor; título y párrafos siguen visibles) |
+| `dea_imagen` | Imagen junto al texto, **en vez de** `dea_video` — sin marco ni fondo detrás, pensada para un PNG con fondo transparente (se ve tal cual, con un drop-shadow sutil, no una caja oscura tapando la transparencia) | Sin este campo, se usa `dea_video` |
+| `dea_titulo` | Título junto al video/imagen | Título de ejemplo |
+| `dea_parrafos` | Texto descriptivo junto al video/imagen | 2 párrafos de ejemplo |
+| `dea_descarga_url` | Botón "Descargar material" junto a "Ir a las unidades" | Botón oculto (este campo no tiene ejemplo — no hay nada instructivo que mostrar en un link de descarga) |
+
+Si el JSON manda **ambos** campos (`dea_video` y `dea_imagen`), gana
+`dea_imagen` — mismo criterio que `aprenderas_texto` sobre `aprenderas`:
+el campo más específico que llegue elige el diseño, nunca se muestran los
+dos a la vez.
+
+---
+
+### 6. Docente creador (`docente`)
 
 El video, si llega, es el elemento protagonista (16:9, columna
 izquierda) y el avatar se reduce a una chapa circular superpuesta en su
@@ -243,11 +365,12 @@ esquina; sin video, el avatar se muestra solo, centrado y grande.
 > perfecto al abrirlo directo en una pestaña (ahí sí hay una sesión de
 > Google activa). Para arreglarlo: en Drive, click derecho al archivo →
 > Compartir → Acceso general → "Cualquier persona con el enlace" →
-> Lector. Aplica igual a `video` (DEA) y `video_descarga_url`.
+> Lector. Aplica igual a `video` (Presentación), `dea_video` y
+> `dea_descarga_url`.
 
 ---
 
-### 4b. Docente tutor (`docente_tutor`) — opcional
+### 6b. Docente tutor (`docente_tutor`) — opcional
 
 **Mismo componente exacto que "Docente creador"**, mismo formato de
 datos, bajo la clave `profesor_tutor`. La diferencia real es que **esta
@@ -274,7 +397,7 @@ completa con los mismos placeholders que "Docente creador".
 
 ---
 
-### 5. Tutorías (`tutorias`)
+### 7. Tutorías (`tutorias`)
 
 ```json
 {
@@ -312,31 +435,7 @@ el resto de los placeholders de esta guía.
 
 ---
 
-### 6. DEA / Video (`dea`)
-
-Video de presentación del curso + texto (útil también para el contenido
-del DEA — Diseño de Experiencia para el Aprendizaje) + botón opcional de
-descarga de material.
-
-```json
-{
-  "video": "https://drive.google.com/file/d/XXXXXXXX/preview",
-  "video_titulo": "DEA · Diseño de Experiencia para el Aprendizaje",
-  "video_parrafos": ["párrafo 1", "párrafo 2"],
-  "video_descarga_url": "https://drive.google.com/file/d/YYYYYYYY/view"
-}
-```
-
-| Campo | Dónde se ve | Si falta |
-|---|---|---|
-| `video` | Reproductor embebido. Acepta enlaces normales de **YouTube**, **Vimeo** o **Google Drive** — se convierten solos a su versión embebible | Video de ejemplo (si el JSON manda explícitamente `""`, se oculta solo el reproductor; título y párrafos siguen visibles) |
-| `video_titulo` | Título junto al video | Título de ejemplo |
-| `video_parrafos` | Texto descriptivo junto al video | 2 párrafos de ejemplo |
-| `video_descarga_url` | Botón "Descargar material" junto a "Ir a las unidades" | Botón oculto (este campo no tiene ejemplo — no hay nada instructivo que mostrar en un link de descarga) |
-
----
-
-### 7. Unidades (`unidades`) — el mosaico real de Moodle
+### 8. Unidades (`unidades`) — el mosaico real de Moodle
 
 La diapositiva más distinta de todas: ocupa la pantalla completa (de
 punta a punta del deck, sin el margen/padding de las demás) con un
@@ -415,13 +514,13 @@ Todo esto es opcional y se administra 100% desde el JSON — no hace falta
 tocar código para ocultar una diapositiva, cambiar su posición o agregar
 una nueva.
 
-### Mostrar, ocultar y reordenar las 8 diapositivas fijas — `secciones`
+### Mostrar, ocultar y reordenar las 9 diapositivas fijas — `secciones`
 
-Por defecto existen las 8 diapositivas de siempre, en este orden: `hero`,
-`bienvenida`, `aprenderas`, `docente`, `docente_tutor`, `tutorias`,
-`dea`, `unidades` (`docente_tutor` además solo aparece si llegó
-`profesor_tutor`, como se explicó arriba). El campo `secciones` deja
-controlar cada una sin tocar nada más:
+Por defecto existen las 9 diapositivas de siempre, en este orden: `hero`,
+`presentacion`, `bienvenida`, `aprenderas`, `dea`, `docente`,
+`docente_tutor`, `tutorias`, `unidades` (`docente_tutor` además solo
+aparece si llegó `profesor_tutor`, como se explicó arriba). El campo
+`secciones` deja controlar cada una sin tocar nada más:
 
 ```json
 {
@@ -438,7 +537,7 @@ Cada clave es el id de una diapositiva fija. Ambos campos son opcionales:
 | Campo | Tipo | Default si falta |
 |---|---|---|
 | `visible` | booleano | `true` para todas, excepto `docente_tutor` (que sigue dependiendo de si llegó `profesor_tutor`, salvo que acá se fuerce explícitamente) |
-| `orden` | número | Su posición en la lista de arriba (0 a 7) |
+| `orden` | número | Su posición en la lista de arriba (0 a 8) |
 
 El ejemplo de arriba deja "Unidades" como primera diapositiva **después
 de la portada**, "Docente creador" justo después de esa, y saca

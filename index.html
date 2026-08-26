@@ -97,15 +97,60 @@
       </div>
     </section>
 
-    <!-- 2. BIENVENIDA -->
+    <!-- 2. PRESENTACIÓN DEL CURSO — video protagonista a pantalla grande +
+         título/párrafos opcionales. Diapositiva DISTINTA del DEA (más
+         abajo): antes ambas compartían un solo campo "video" del JSON, hoy
+         cada una tiene su propio contenido (ver renderDea() en main.js). -->
+    <section class="slide on-dark-solid" id="presentacion" role="group" aria-roledescription="diapositiva" aria-label="Presentación del curso">
+      <div class="premiere-bg" aria-hidden="true">
+        <div class="premiere-grid"></div>
+        <div class="premiere-ring premiere-ring-1"></div>
+        <div class="premiere-ring premiere-ring-2"></div>
+        <div class="premiere-ring premiere-ring-3"></div>
+        <div class="premiere-blob premiere-blob--cyan"></div>
+        <div class="premiere-blob premiere-blob--gold"></div>
+        <div class="premiere-sweep"></div>
+        <div class="premiere-vignette"></div>
+      </div>
+      <div class="slide-body">
+        <div class="slide-head text-center" style="align-items:center;margin:0 auto">
+          <div class="tag"><i class="fa-solid fa-clapperboard" aria-hidden="true"></i> Presentación del curso</div>
+          <h2 class="heading" id="presentacionTitulo">Presentación del curso</h2>
+          <div class="premiere-intro" id="presentacionParrafos"></div>
+        </div>
+        <div class="premiere-ornament" aria-hidden="true">
+          <span class="premiere-ornament-line"></span>
+          <span class="premiere-ornament-icon"><i class="fa-solid fa-play"></i></span>
+          <span class="premiere-ornament-line"></span>
+        </div>
+        <div class="premiere-stage" id="presentacionVideoFrame">
+          <div class="premiere-glow" aria-hidden="true"></div>
+          <div class="premiere-frame">
+            <div class="ratio">
+              <iframe id="presentacionVideo" src="" title="Video de presentación del curso" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+            </div>
+          </div>
+        </div>
+        <div class="dea-btn-row" style="justify-content:center">
+          <button class="btn btn-gold" id="presentacionUnitsCue">
+            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i> Ir a las unidades
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. BIENVENIDA -->
     <section class="slide" id="bienvenida" role="group" aria-roledescription="diapositiva" aria-label="Bienvenida">
+      <div class="welcome-geo" id="welcomeGeo" aria-hidden="true" hidden></div>
       <div class="slide-body">
         <div class="slide-head">
           <div class="tag"><i class="fa-solid fa-hand-holding-heart" aria-hidden="true"></i> Bienvenida</div>
           <h2 class="heading" id="bienvenidaTitulo">¡Bienvenidos al curso!</h2>
         </div>
-        <div class="welcome-grid stagger">
-          <div class="welcome-text" id="bienvenidaParrafos"></div>
+        <div class="welcome-grid stagger" id="welcomeGrid">
+          <div class="welcome-text-wrap">
+            <div class="welcome-text" id="bienvenidaParrafos"></div>
+          </div>
           <div class="quote-card">
             <blockquote id="bienvenidaFrase"></blockquote>
             <div class="quote-bar"></div>
@@ -114,19 +159,71 @@
       </div>
     </section>
 
-    <!-- 3. APRENDERÁS -->
+    <!-- 4. APRENDERÁS — dos diseños posibles según el dato que traiga el
+         JSON (ver renderLearn() en main.js): grilla de tarjetas
+         (#learnGrid, de siempre) o texto largo + imagen opcional
+         (#learnTextGrid, para cursos que describen la ruta como un solo
+         bloque extenso en vez de temas discretos). Nunca los dos a la
+         vez — uno de los dos queda "hidden". -->
     <section class="slide" id="aprenderas" role="group" aria-roledescription="diapositiva" aria-label="Qué aprenderás">
+      <div class="aprenderas-particles" aria-hidden="true">
+        <span class="particle"></span>
+        <span class="particle"></span>
+        <span class="particle"></span>
+        <span class="particle"></span>
+        <span class="particle"></span>
+      </div>
       <div class="slide-body">
         <div class="slide-head">
           <div class="tag"><i class="fa-solid fa-route" aria-hidden="true"></i> Ruta de aprendizaje</div>
           <h2 class="heading">¿Qué aprenderás?</h2>
-          <p class="sub">Toca cada tarjeta para ver el detalle.</p>
+          <p class="sub" id="learnSub">Toca cada tarjeta para ver el detalle.</p>
         </div>
         <div class="learn-grid stagger" id="learnGrid"></div>
+        <div class="learn-text-grid stagger" id="learnTextGrid" hidden>
+          <div class="learn-text-container">
+            <div class="learn-text" id="learnText"></div>
+          </div>
+          <div class="learn-text-image" id="learnTextImageWrap">
+            <img id="learnTextImage" src="" alt="">
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- 4. DOCENTE CREADOR -->
+    <!-- 5. DEA — diapositiva propia, separada de "Presentación del curso"
+         (arriba): antes las dos compartían un solo campo "video" del JSON;
+         hoy cada una tiene su propio video/título/párrafos (ver renderDea()
+         en main.js). El video del DEA es opcional (dea_video). -->
+    <section class="slide on-dark" id="dea" role="group" aria-roledescription="diapositiva" aria-label="Diseño de Experiencia para el Aprendizaje">
+      <div class="slide-body">
+        <div class="dea-grid stagger">
+          <div class="dea-text">
+            <div class="tag"><i class="fa-solid fa-compass" aria-hidden="true"></i> DEA</div>
+            <h2 class="heading" id="deaTitulo" style="margin:10px 0 12px"></h2>
+            <div id="deaParrafos"></div>
+            <div class="dea-btn-row">
+              <button class="btn btn-gold" id="deaUnitsCue">
+                <i class="fa-solid fa-door-open" aria-hidden="true"></i> Ir a las unidades
+              </button>
+              <a class="btn btn-ghost" id="deaDescargaBtn" href="#" target="_blank" rel="noopener" hidden>
+                <i class="fa-solid fa-download" aria-hidden="true"></i> Descargar material
+              </a>
+            </div>
+          </div>
+          <div class="dea-video-frame" id="deaVideoFrame">
+            <div class="ratio">
+              <iframe id="deaVideo" src="" title="Video del DEA" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+            </div>
+          </div>
+          <div class="dea-imagen-frame" id="deaImagenFrame" hidden>
+            <img id="deaImagen" src="" alt="">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. DOCENTE CREADOR -->
     <section class="slide" id="docente" role="group" aria-roledescription="diapositiva" aria-label="Docente creador">
       <div class="slide-body">
         <div class="slide-head">
@@ -153,7 +250,7 @@
       </div>
     </section>
 
-    <!-- 4b. DOCENTE TUTOR — opcional: solo se muestra si el JSON trae
+    <!-- 6b. DOCENTE TUTOR — opcional: solo se muestra si el JSON trae
          "profesor_tutor" (ver construirSlides() en main.js). Mismo
          componente que el docente creador (.teacher-grid), otro rol. -->
     <section class="slide" id="docente_tutor" role="group" aria-roledescription="diapositiva" aria-label="Docente tutor" hidden>
@@ -182,7 +279,7 @@
       </div>
     </section>
 
-    <!-- 5. TUTORÍAS — ya no hay grabaciones ni link por sesión: un solo
+    <!-- 7. TUTORÍAS — ya no hay grabaciones ni link por sesión: un solo
          link al recurso de Moodle (típicamente mod/googlemeet) + uno o
          más bloques "día + hora" recurrentes que comparten ese mismo
          link (ver renderTutorias()/estadoTutorias() en main.js). -->
@@ -212,33 +309,7 @@
       </div>
     </section>
 
-    <!-- 6. DEA -->
-    <section class="slide on-dark" id="dea" role="group" aria-roledescription="diapositiva" aria-label="Diseño de Experiencia para el Aprendizaje">
-      <div class="slide-body">
-        <div class="dea-grid stagger">
-          <div class="dea-text">
-            <div class="tag"><i class="fa-solid fa-compass" aria-hidden="true"></i> Presentación · DEA</div>
-            <h2 class="heading" id="videoTitulo" style="margin:10px 0 12px"></h2>
-            <div id="videoParrafos"></div>
-            <div class="dea-btn-row">
-              <button class="btn btn-gold" id="deaUnitsCue">
-                <i class="fa-solid fa-door-open" aria-hidden="true"></i> Ir a las unidades
-              </button>
-              <a class="btn btn-ghost" id="deaDescargaBtn" href="#" target="_blank" rel="noopener" hidden>
-                <i class="fa-solid fa-download" aria-hidden="true"></i> Descargar material
-              </a>
-            </div>
-          </div>
-          <div class="dea-video-frame" id="deaVideoFrame">
-            <div class="ratio">
-              <iframe id="videoFrame" src="" title="Video de presentación del curso" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 7. UNIDADES — a pantalla completa (de arriba del todo hasta abajo del todo),
+    <!-- 8. UNIDADES — a pantalla completa (de arriba del todo hasta abajo del todo),
          sin el padding/max-width del resto de diapositivas: ver .slide-fullbleed .slide-body.
          Misma clase que usan las diapositivas custom tipo "pagina" (ver main.js). -->
     <section class="slide slide-fullbleed" id="unidades" role="group" aria-roledescription="diapositiva" aria-label="Unidades del curso">

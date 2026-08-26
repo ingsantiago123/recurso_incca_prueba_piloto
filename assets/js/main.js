@@ -47,14 +47,37 @@
  *     clave no llega, la diapositiva "Docente tutor" ni se muestra — no
  *     todo curso tiene ese rol asignado, así que no hay diapositiva
  *     genérica de relleno para él.
- *   "video": "url de YouTube/Vimeo/Drive (presentación del curso / DEA)",
- *   "video_titulo": "Título junto al video",
+ *   "video": "url de YouTube/Vimeo/Drive — Presentación del curso",
+ *   "video_titulo": "Título junto al video de presentación",
  *   "video_parrafos": ["párrafo 1", "párrafo 2"],
- *   "video_descarga_url": "url opcional de descarga del material (p. ej. el DEA)",
+ *   "dea_video": "url de YouTube/Vimeo/Drive (opcional) — DEA, diapositiva
+ *     DISTINTA de 'Presentación del curso': antes ambas compartían un solo
+ *     campo 'video' (una mezclaba las dos cosas); ahora son dos
+ *     diapositivas separadas, cada una con su propio video/texto",
+ *   "dea_imagen": "url de imagen (opcional) — MODO ALTERNATIVO al video del
+ *     DEA: en vez de 'dea_video', una imagen estática (pensada para un PNG
+ *     con fondo transparente — se muestra tal cual, sin marco ni fondo
+ *     oscuro detrás, para que se note la transparencia). Si 'dea_imagen'
+ *     llega, GANA sobre 'dea_video' (se ignora el video) — mismo criterio
+ *     que 'aprenderas_texto' sobre 'aprenderas': el propio JSON, con el
+ *     campo que traiga, elige el diseño.",
+ *   "dea_titulo": "Título junto al video/imagen del DEA",
+ *   "dea_parrafos": ["párrafo 1", "párrafo 2"],
+ *   "dea_descarga_url": "url opcional de descarga del material del DEA",
  *   "bienvenida": {
  *     "titulo": "...", "parrafos": ["...", "..."], "frase_destacada": "..."
  *   },
  *   "aprenderas": [{ "icono": "fa-xxx", "titulo": "...", "detalle": "..." }],
+ *   "aprenderas_texto": ["párrafo 1", "párrafo 2"] — MODO ALTERNATIVO de
+ *     "¿Qué aprenderás?": en vez de la grilla de tarjetas ("aprenderas"),
+ *     un bloque de texto largo (para cursos que describen la ruta de
+ *     aprendizaje como un párrafo extenso en vez de temas discretos) junto
+ *     a una imagen opcional ("aprenderas_imagen"). Si "aprenderas_texto"
+ *     llega con al menos un párrafo, GANA sobre "aprenderas" (se ignora la
+ *     grilla de tarjetas) — el propio JSON, con el campo que traiga, elige
+ *     el diseño; no hay un interruptor aparte que prender.
+ *   "aprenderas_imagen": "url de imagen (opcional, solo con aprenderas_texto)
+ *     — si falta, el bloque de texto ocupa el ancho completo",
  *   "tutorias": {
  *     "url_aula_virtual": "url del recurso de videollamada en Moodle
  *       (p. ej. mod/googlemeet/view.php?id=NNN) — SIEMPRE el mismo link,
@@ -100,10 +123,11 @@
  * comporta exactamente como si el campo no existiera.
  *
  * SECCIONES: mostrar/ocultar/reordenar (opcional, vía "secciones"). Por
- * defecto existen 8 diapositivas fijas, en este orden: hero, bienvenida,
- * aprenderas, docente, docente_tutor, tutorias, dea, unidades ("docente_
- * tutor" además solo aparece si llegó "profesor_tutor", como siempre).
- * "secciones" deja controlar cada una desde el JSON, sin tocar código:
+ * defecto existen 9 diapositivas fijas, en este orden: hero, presentacion,
+ * bienvenida, aprenderas, dea, docente, docente_tutor, tutorias, unidades
+ * ("docente_tutor" además solo aparece si llegó "profesor_tutor", como
+ * siempre). "secciones" deja controlar cada una desde el JSON, sin tocar
+ * código:
  *
  *   "secciones": {
  *     "aprenderas": { "visible": false },
@@ -177,12 +201,13 @@
   // no afecta el contenido ni se puede sobreescribir desde el JSON.
   const SLIDES_FIJAS = [
     { id: "hero", label: "Inicio", icon: "fa-house" },
+    { id: "presentacion", label: "Presentación", icon: "fa-clapperboard" },
     { id: "bienvenida", label: "Bienvenida", icon: "fa-hand-holding-heart" },
     { id: "aprenderas", label: "Aprenderás", icon: "fa-route" },
+    { id: "dea", label: "DEA", icon: "fa-compass" },
     { id: "docente", label: "Docente creador", icon: "fa-chalkboard-user" },
     { id: "docente_tutor", label: "Docente tutor", icon: "fa-user-tie" },
     { id: "tutorias", label: "Tutorías", icon: "fa-calendar-days" },
-    { id: "dea", label: "DEA", icon: "fa-compass" },
     { id: "unidades", label: "Unidades", icon: "fa-layer-group" }
   ];
 
@@ -268,12 +293,18 @@
       video: "https://www.youtube.com/watch?v=aqz-KE-bpKQ"
     },
     video: "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
-    video_titulo: "Título del video (ejemplo: Conoce la metodología del curso)",
+    video_titulo: "Título del video (ejemplo: Presentación del curso)",
     video_parrafos: [
       "Ejemplo: un párrafo breve presentando el video — de qué trata y qué va a entender el estudiante al verlo.",
       "Un segundo párrafo puede sumar contexto, como la duración o los temas cubiertos."
     ],
-    video_descarga_url: "",
+    dea_video: "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
+    dea_titulo: "Título del DEA (ejemplo: DEA · Diseño de Experiencia para el Aprendizaje)",
+    dea_parrafos: [
+      "Ejemplo de párrafo del DEA: explica en qué consiste el Diseño de Experiencia para el Aprendizaje de este curso — el mapa que guía cada paso del recorrido.",
+      "Un segundo párrafo puede sumar qué va a encontrar el estudiante ahí (herramientas, recursos, estrategias)."
+    ],
+    dea_descarga_url: "",
     bienvenida: {
       titulo: "¡Bienvenido/a al curso! (ejemplo de título)",
       parrafos: [
@@ -360,9 +391,19 @@
       video: recibidos.video || SIN_DATOS.video,
       video_titulo: recibidos.video_titulo || SIN_DATOS.video_titulo,
       video_parrafos: Array.isArray(recibidos.video_parrafos) ? recibidos.video_parrafos : SIN_DATOS.video_parrafos,
-      video_descarga_url: recibidos.video_descarga_url || SIN_DATOS.video_descarga_url,
+      dea_video: recibidos.dea_video || SIN_DATOS.dea_video,
+      dea_imagen: recibidos.dea_imagen || "",
+      dea_titulo: recibidos.dea_titulo || SIN_DATOS.dea_titulo,
+      dea_parrafos: Array.isArray(recibidos.dea_parrafos) ? recibidos.dea_parrafos : SIN_DATOS.dea_parrafos,
+      dea_descarga_url: recibidos.dea_descarga_url || SIN_DATOS.dea_descarga_url,
       bienvenida: Object.assign({}, SIN_DATOS.bienvenida, recibidos.bienvenida || {}),
       aprenderas: Array.isArray(recibidos.aprenderas) ? recibidos.aprenderas : SIN_DATOS.aprenderas,
+      // Modo alternativo de "aprenderás" (texto largo + imagen opcional) —
+      // sin placeholder propio a propósito: su ausencia simplemente
+      // significa "usar el modo de tarjetas de siempre" (que sí tiene su
+      // propio placeholder completo, ver "aprenderas" arriba).
+      aprenderas_texto: (Array.isArray(recibidos.aprenderas_texto) && recibidos.aprenderas_texto.length) ? recibidos.aprenderas_texto : null,
+      aprenderas_imagen: recibidos.aprenderas_imagen || "",
       tutorias: normalizarTutorias(recibidos),
       modulos: (Array.isArray(recibidos.modulos) ? recibidos.modulos : SIN_DATOS.modulos).map((m) => ({
         nombre: (m && m.nombre) || SIN_DATOS_MODULO.nombre,
@@ -546,7 +587,7 @@
 
   function initGotoUnitsButtons() {
     const targetIndex = SLIDES.findIndex((s) => s.id === "unidades");
-    ["heroUnitsCue", "deaUnitsCue"].forEach((id) => {
+    ["heroUnitsCue", "presentacionUnitsCue", "deaUnitsCue"].forEach((id) => {
       const btn = $(`#${id}`);
       if (btn) btn.addEventListener("click", () => deck.goTo(targetIndex));
     });
@@ -624,38 +665,73 @@
     renderTeacherCard("teacher", datos.profesor);
     if (datos.profesor_tutor) renderTeacherCard("tutor", datos.profesor_tutor);
 
-    // Bienvenida
+    // Bienvenida — con frase_destacada se muestra la .quote-card de
+    // siempre; sin ella, en vez de dejar la columna derecha vacía se
+    // muestra la escena de figuras geométricas (ver initWelcomeGeo()).
+    const tieneFrase = !!datos.bienvenida.frase_destacada;
     $("#bienvenidaTitulo").textContent = datos.bienvenida.titulo || "¡Bienvenidos al curso!";
     $("#bienvenidaParrafos").innerHTML = (datos.bienvenida.parrafos || []).map((p) => `<p>${p}</p>`).join("");
     $("#bienvenidaFrase").textContent = datos.bienvenida.frase_destacada || "";
-    $(".quote-card").hidden = !datos.bienvenida.frase_destacada;
+    $(".quote-card").hidden = !tieneFrase;
+    $("#welcomeGeo").hidden = tieneFrase;
+    $("#bienvenida").classList.toggle("has-geo", !tieneFrase);
 
-    // Video
-    $("#videoTitulo").textContent = datos.video_titulo || "";
-    $("#videoParrafos").innerHTML = (datos.video_parrafos || []).map((p) => `<p>${p}</p>`).join("");
+    // Presentación del curso (título + video grande, sin el DEA — ver renderDea())
+    $("#presentacionTitulo").textContent = datos.video_titulo || "";
+    $("#presentacionParrafos").innerHTML = (datos.video_parrafos || []).map((p) => `<p>${p}</p>`).join("");
     if (datos.video) {
-      $("#videoFrame").src = toEmbedUrl(datos.video);
-      $("#deaVideoFrame").hidden = false;
+      $("#presentacionVideo").src = toEmbedUrl(datos.video);
+      $("#presentacionVideoFrame").hidden = false;
     } else {
-      $("#deaVideoFrame").hidden = true;
+      $("#presentacionVideoFrame").hidden = true;
     }
-    const descargaBtn = $("#deaDescargaBtn");
-    if (datos.video_descarga_url) {
-      descargaBtn.href = datos.video_descarga_url;
-      descargaBtn.hidden = false;
-    } else {
-      descargaBtn.hidden = true;
-    }
+
+    renderDea(datos);
 
     // Contadores del hero
     $("#statModulos").dataset.counter = datos.modulos.length;
     $("#statTutorias").dataset.counter = datos.tutorias.horario.length;
   }
 
+  // DEA (Diseño de Experiencia para el Aprendizaje) — diapositiva propia,
+  // separada de "Presentación del curso": antes compartían un solo campo
+  // "video" (una diapositiva hacía de las dos cosas a la vez); ahora cada
+  // una tiene su propio video/título/párrafos independientes.
+  function renderDea(datos) {
+    $("#deaTitulo").textContent = datos.dea_titulo || "";
+    $("#deaParrafos").innerHTML = (datos.dea_parrafos || []).map((p) => `<p>${p}</p>`).join("");
+    // "dea_imagen" es el modo alternativo a "dea_video" (misma idea que
+    // aprenderas_texto vs aprenderas): si llega imagen, gana sobre el
+    // video — nunca se muestran los dos a la vez.
+    if (datos.dea_imagen) {
+      $("#deaImagen").src = datos.dea_imagen;
+      $("#deaImagenFrame").hidden = false;
+      $("#deaVideoFrame").hidden = true;
+    } else if (datos.dea_video) {
+      $("#deaVideo").src = toEmbedUrl(datos.dea_video);
+      $("#deaVideoFrame").hidden = false;
+      $("#deaImagenFrame").hidden = true;
+    } else {
+      $("#deaVideoFrame").hidden = true;
+      $("#deaImagenFrame").hidden = true;
+    }
+    const descargaBtn = $("#deaDescargaBtn");
+    if (datos.dea_descarga_url) {
+      descargaBtn.href = datos.dea_descarga_url;
+      descargaBtn.hidden = false;
+    } else {
+      descargaBtn.hidden = true;
+    }
+  }
+
   /* ---------------------------------------------------------------------
    * 8. Render — "¿Qué aprenderás?"
+   * Dos diseños posibles, elegidos por la FORMA del dato (sin un
+   * interruptor aparte en el JSON): "aprenderas_texto" con al menos un
+   * párrafo gana y pinta el modo texto largo + imagen opcional; si no
+   * llegó, se usa siempre el modo de tarjetas de siempre ("aprenderas").
    * ------------------------------------------------------------------- */
-  function renderLearn(aprenderas) {
+  function renderLearnCards(aprenderas) {
     const grid = $("#learnGrid");
     grid.innerHTML = aprenderas.length ? aprenderas.map((item) => `
       <div class="learn-card" tabindex="0" role="button" aria-expanded="false">
@@ -678,6 +754,32 @@
     });
   }
 
+  function renderLearnTexto(parrafos, imagen) {
+    $("#learnText").innerHTML = parrafos.map((p) => `<p>${p}</p>`).join("");
+    const wrap = $("#learnTextImageWrap");
+    const textGrid = $("#learnTextGrid");
+    if (imagen) {
+      $("#learnTextImage").src = imagen;
+      wrap.hidden = false;
+      textGrid.classList.remove("learn-text-grid--full");
+    } else {
+      wrap.hidden = true;
+      textGrid.classList.add("learn-text-grid--full");
+    }
+  }
+
+  function renderLearn(datos) {
+    const modoTexto = Array.isArray(datos.aprenderas_texto) && datos.aprenderas_texto.length > 0;
+    $("#learnGrid").hidden = modoTexto;
+    $("#learnSub").hidden = modoTexto;
+    $("#learnTextGrid").hidden = !modoTexto;
+    if (modoTexto) {
+      renderLearnTexto(datos.aprenderas_texto, datos.aprenderas_imagen);
+    } else {
+      renderLearnCards(datos.aprenderas);
+    }
+  }
+
   /* ---------------------------------------------------------------------
    * 9. Render — Tutorías (horario semanal recurrente + acceso al aula)
    * Ya no hay grabaciones ni link por sesión: el curso entrega UN solo
@@ -686,6 +788,8 @@
    * mismo link — es Moodle quien decide qué mostrar ahí adentro (entrar
    * en vivo o ver la grabación), el visor no gestiona esa lógica.
    * ------------------------------------------------------------------- */
+
+  
   function renderTutorias(tutorias) {
     const card = $("#meetCard");
     const empty = $("#meetEmpty");
@@ -739,6 +843,8 @@
   // degradé completo — para que se note la progresión clara→oscura Y la
   // separación/forma de cada panel a la vez, en vez de una sola mancha
   // continua o colores sueltos sin relación entre sí.
+
+
   const UNIT_GRADIENT_STOPS = [
     { t: 0, rgb: [101, 203, 227] },   // light-cyan
     { t: 0.42, rgb: [43, 139, 250] }, // dodger-blue
@@ -1097,6 +1203,92 @@
   }
 
   /* ---------------------------------------------------------------------
+   * 14. Escena de figuras geométricas de Bienvenida (variante sin frase) —
+   *     port directo de la animación original: right/top/size en "vh"
+   *     (la escena mide top:0/bottom:0 = 100% del alto de la diapositiva,
+   *     igual que el #geo-scene original de 100vh, así que "vh" sigue
+   *     significando lo mismo sin recalcular nada en JS), mismo parallax
+   *     con requestAnimationFrame + lerp sobre todo el documento.
+   * ------------------------------------------------------------------- */
+  const WELCOME_SHAPES = [
+    { type: "glass", size: 55, right: 10,  top: -5,  z: 3,  delay: 0,  depth: .010 },
+    { type: "glass", size: 65, right: 20,  top: 20,  z: 2,  delay: .1, depth: .015 },
+    { type: "glass", size: 55, right: 8,   top: 45,  z: 1,  delay: .2, depth: .012 },
+    { type: "glass", size: 70, right: 25,  top: 70,  z: 2,  delay: .3, depth: .018 },
+    { type: "glass", size: 60, right: 12,  top: 100, z: 1,  delay: .4, depth: .010 },
+    { type: "blue",  size: 35, right: -12, top: -15, z: 20, delay: .2, depth: .042 },
+    { type: "white", size: 45, right: -12, top: 5,   z: 19, delay: .3, depth: .038 },
+    { type: "blue",  size: 38, right: -15, top: 25,  z: 18, delay: .4, depth: .044 },
+    { type: "white", size: 45, right: -10, top: 48,  z: 17, delay: .5, depth: .039 },
+    { type: "blue",  size: 40, right: -18, top: 70,  z: 16, delay: .6, depth: .045 },
+    { type: "white", size: 45, right: -12, top: 92,  z: 15, delay: .7, depth: .037 },
+    { type: "blue",  size: 38, right: -15, top: 115, z: 14, delay: .8, depth: .043 }
+  ];
+  let welcomeGeoWrappers = [];
+
+  function buildWelcomeShapes(scene) {
+    welcomeGeoWrappers = WELCOME_SHAPES.map((d, i) => {
+      const wrapper = document.createElement("div");
+      wrapper.className = "welcome-shape-wrapper";
+      wrapper.style.right = `${d.right}vh`;
+      wrapper.style.top = `${d.top}vh`;
+      // width/height:0 explícitos: sin esto, el wrapper (auto, sin left/
+      // width) se autodimensiona por shrink-to-fit, y ese cálculo SÍ
+      // cuenta el margin-left/margin-top negativos del cuadro de adentro
+      // (quedaría en size/2, no en 0) — el ancla de right/top terminaba
+      // corrida medio tamaño de figura respecto al punto real del mockup.
+      wrapper.style.width = "0";
+      wrapper.style.height = "0";
+      wrapper.style.zIndex = d.z;
+      wrapper.dataset.depth = d.depth;
+
+      const shape = document.createElement("div");
+      shape.className = `welcome-shape ${d.type}`;
+      shape.style.width = `${d.size}vh`;
+      shape.style.height = `${d.size}vh`;
+      shape.style.marginLeft = `-${d.size / 2}vh`;
+      shape.style.marginTop = `-${d.size / 2}vh`;
+      const floatAnim = i % 2 === 0 ? "incca-shape-float-a" : "incca-shape-float-b";
+      shape.style.animation = `incca-shape-pop 1s cubic-bezier(.16,1,.3,1) forwards, ${floatAnim} 7s ease-in-out ${d.delay}s infinite`;
+
+      wrapper.appendChild(shape);
+      scene.appendChild(wrapper);
+      return wrapper;
+    });
+  }
+
+  let welcomeGeoParallaxStarted = false;
+  function initWelcomeGeo() {
+    const scene = $("#welcomeGeo");
+    if (!scene || scene.hidden) return; // hay frase_destacada: se usa la quote-card de siempre
+    if (!scene.childElementCount) buildWelcomeShapes(scene);
+    if (welcomeGeoParallaxStarted) return;
+    welcomeGeoParallaxStarted = true;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    let mouseX = 0, mouseY = 0, targetX = 0, targetY = 0;
+    document.addEventListener("mousemove", (e) => {
+      mouseX = e.clientX - window.innerWidth / 2;
+      mouseY = e.clientY - window.innerHeight / 2;
+    });
+    document.addEventListener("touchmove", (e) => {
+      if (e.touches.length) {
+        mouseX = e.touches[0].clientX - window.innerWidth / 2;
+        mouseY = e.touches[0].clientY - window.innerHeight / 2;
+      }
+    });
+    (function tick() {
+      targetX += (mouseX - targetX) * 0.05;
+      targetY += (mouseY - targetY) * 0.05;
+      welcomeGeoWrappers.forEach((wrapper) => {
+        const depth = parseFloat(wrapper.dataset.depth);
+        wrapper.style.transform = `translate(${(targetX * depth * -0.15).toFixed(2)}px, ${(targetY * depth * -0.15).toFixed(2)}px)`;
+      });
+      requestAnimationFrame(tick);
+    })();
+  }
+
+  /* ---------------------------------------------------------------------
    * Init
    * ------------------------------------------------------------------- */
   document.addEventListener("DOMContentLoaded", () => {
@@ -1115,12 +1307,13 @@
     renderCustomSlides(SLIDES);
     renderHeroYBienvenidaYDocente(datos);
     renderChrome();
-    renderLearn(datos.aprenderas);
+    renderLearn(datos);
     renderTutorias(datos.tutorias);
     renderUnitsAccordion(datos.modulos);
     initHeroCue();
     initGotoUnitsButtons();
     initHeroParallax();
+    initWelcomeGeo();
     initMediaModal();
     initKeyboard();
     initSwipe();
