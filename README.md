@@ -108,7 +108,8 @@ Todos los campos son opcionales excepto `curso`:
   "tutorias": { "url_aula_virtual": "...", "horario": [{ "dia": "Jueves", "inicio": "HH:MM", "fin": "HH:MM" }] },
   "modulos": [{ "nombre": "...", "url": "...", "ilustracion": "url (opcional)", "sectionid": "número (opcional)" }],
   "secciones": "opcional — mostrar/ocultar/reordenar las 9 diapositivas fijas, ver más abajo",
-  "diapositivas_extra": "opcional — agregar diapositivas nuevas (iframe o HTML), ver más abajo"
+  "diapositivas_extra": "opcional — agregar diapositivas nuevas (iframe o HTML), ver más abajo",
+  "recursos": "opcional — actividades del curso fuera de los mosaicos, ver más abajo"
 }
 ```
 
@@ -601,6 +602,67 @@ los cuadros de "insertar HTML" del propio Moodle):
 
 Implementación completa en `construirSlides()`, `renderCustomSlides()` y
 `crearSlideCustom()` (`assets/js/main.js`).
+
+### Actividades del curso — `recursos`
+
+Las **actividades que viven fuera de los mosaicos** de las semanas (en la
+sección principal de Moodle): quizzes, foros, talleres, entregas, exámenes.
+Cada recurso `"actividades"` es su propia diapositiva, con la misma
+numeración de `orden` que `secciones` / `diapositivas_extra` (por defecto
+quedan al final del mazo). El total de actividades alimenta el badge del
+CTA "Ir a actividades" del hero y una píldora en la ficha del curso.
+
+```json
+{
+  "recursos": [
+    {
+      "id": "actividades-semana1",
+      "tipo": "actividades",
+      "titulo": "Actividades de la semana",
+      "visible": true,
+      "orden": 8,
+      "items": [
+        {
+          "nombre": "Evaluación diagnóstica",
+          "tipo": "quiz",
+          "link": "https://moodle.../mod/quiz/view.php?id=500",
+          "descripcion": "Texto plano.\n\nUna línea en blanco separa los párrafos.",
+          "descripcion_html": false
+        },
+        {
+          "nombre": "Entrega de primer corte",
+          "tipo": "entrega",
+          "link": "https://moodle.../mod/assign/view.php?id=503",
+          "descripcion": "<table>...</table>",
+          "descripcion_html": true
+        },
+        { "nombre": "Rúbrica de autoevaluación" }
+      ]
+    }
+  ]
+}
+```
+
+| Campo | Default | Qué hace |
+|---|---|---|
+| `id` | `"recurso-N"` | Se usa para el `id` de la diapositiva (`actividades-<id>`) |
+| `tipo` | — | **Debe ser** `"actividades"` (otros valores se ignoran por ahora) |
+| `titulo` | `"Actividades"` | Encabezado de la diapositiva |
+| `visible` / `orden` | `true` / al final | Igual que `secciones` / `diapositivas_extra` |
+| `items[].nombre` | `""` | Encabezado de la fila. Solo es plegable si `descripcion` no está vacía |
+| `items[].tipo` | inferido del `link` (`mod/quiz`→`quiz`, `mod/forum`→`foro`, `mod/workshop`→`taller`, `mod/assign`→`tarea`), o `tarea` | Uno de `quiz`, `tarea`, `foro`, `taller`, `entrega`, `examen`. Solo color/ícono/etiqueta, no cambia el comportamiento |
+| `items[].link` | `""` → sin botón | Botón redondo "ir a la actividad", siempre visible |
+| `items[].descripcion` | `""` → nombre no plegable | Texto o HTML, según `descripcion_html` |
+| `items[].descripcion_html` | `false` | `false` → al expandir, el texto se muestra inline, escapado, partido en `<p>` por línea en blanco. `true` → el HTML se **renderiza embebido** en un marco propio y acotado (scroll interno, alto máximo) + botón "Ver en pantalla completa" que lo abre en el modal |
+
+**Dos diseños automáticos:** 1 sola actividad → tarjeta protagonista
+(medallón grande, arranca abierta, CTA de píldora). 2+ → "ruta" de filas
+plegables conectadas por una línea de tiempo. `items: []` → mensaje de
+"todavía no tiene actividades" (la diapositiva igual aparece).
+
+Implementación en `normalizarRecursos()`, `construirSlides()`,
+`crearSlideActividades()` / `actividadCard()` y `initActividades()`
+(`assets/js/main.js`).
 
 ---
 

@@ -250,7 +250,22 @@
         orden: Number.isFinite(d.orden) ? d.orden : SLIDES_FIJAS.length + i
       }));
 
-    return fijas.concat(extra)
+    // Cada recurso "actividades" es una diapositiva más — mismo esquema de
+    // "orden" compartido que las fijas y las extra, para poder intercalarla
+    // (por defecto quedan al final del mazo, tras las diapositivas extra).
+    const acts = datos.recursos
+      .filter((r) => r && r.tipo === "actividades")
+      .map((r, i) => ({
+        id: `actividades-${r.id}`,
+        label: r.titulo,
+        icon: "fa-list-check",
+        custom: null,
+        actividades: r,
+        visible: r.visible !== false,
+        orden: Number.isFinite(r.orden) ? r.orden : SLIDES_FIJAS.length + datos.diapositivas_extra.length + i
+      }));
+
+    return fijas.concat(extra).concat(acts)
       .filter((s) => s.visible)
       .sort((a, b) => a.orden - b.orden);
   }
@@ -329,12 +344,123 @@
       { nombre: "INCCA APOYO (ejemplo)", url: "#" },
       { nombre: "Semana 1 (ejemplo)", url: "#" },
       { nombre: "Semana 2 (ejemplo)", url: "#" }
+    ],
+    // "recursos" — actividades del curso que viven FUERA de los mosaicos
+    // (sección principal de Moodle). Cada entrada { tipo:"actividades",
+    // items:[...] } se dibuja como su propia diapositiva. El ejemplo trae
+    // dos: una con varias actividades (diseño de "ruta") y una con una
+    // sola (diseño ampliado). Todo marcado "(ejemplo)".
+    recursos: [
+      {
+        id: "curso",
+        tipo: "actividades",
+        titulo: "Actividades del curso (ejemplo)",
+        orden: 8,
+        items: [
+          {
+            nombre: "Cuestionario diagnóstico (ejemplo)",
+            tipo: "quiz",
+            link: "#",
+            descripcion: "Ejemplo de descripción en texto plano: 10 preguntas de opción múltiple, 20 minutos, 2 intentos.\n\nUna línea en blanco separa los párrafos.",
+            descripcion_html: false
+          },
+          {
+            nombre: "Foro de presentación (ejemplo)",
+            tipo: "foro",
+            link: "#",
+            descripcion: "Ejemplo: preséntate ante el grupo y comenta al menos dos aportes de tus compañeros antes del cierre de la semana.",
+            descripcion_html: false
+          },
+          {
+            nombre: "Entrega con instrucciones en HTML (ejemplo)",
+            tipo: "entrega",
+            link: "#",
+            descripcion: "<p>Ejemplo de descripción en <strong>HTML</strong>: se renderiza embebida en un marco propio, con scroll y alto acotado.</p><ul><li>Formato de entrega: PDF</li><li>Peso en la nota: 20%</li></ul>",
+            descripcion_html: true
+          },
+          {
+            nombre: "Rúbrica de autoevaluación (ejemplo, sin descripción ni enlace)",
+            tipo: "tarea"
+          }
+        ]
+      },
+      {
+        id: "examen",
+        tipo: "actividades",
+        titulo: "Examen final (ejemplo)",
+        orden: 9,
+        items: [
+          {
+            nombre: "Examen integral del curso (ejemplo)",
+            tipo: "examen",
+            link: "#",
+            descripcion: "Ejemplo del diseño de UNA sola actividad: la tarjeta arranca abierta, el número pasa a medallón y aparece el botón grande \"Ir a la actividad\".\n\n25 preguntas, 90 minutos, un único intento.",
+            descripcion_html: false
+          }
+        ]
+      }
     ]
   };
   // Placeholder por-campo para cada módulo del mosaico (CONECTA, INCCA
   // APOYO, Semana N...) — se aplica ítem a ítem, igual que el resto del
   // patrón, para que un módulo sin url siga viéndose sin romper el panel.
   const SIN_DATOS_MODULO = { nombre: "Nombre del módulo (ejemplo)", url: "#", ilustracion: "", sectionid: null };
+
+  /* ---------------------------------------------------------------------
+   * 2b. ACTIVIDADES (datos.recursos) — actividades del curso que viven
+   *     FUERA de los mosaicos. Cada recurso { tipo:"actividades", items }
+   *     es su propia diapositiva (ver construirSlides/crearSlideActividades).
+   *     El "tipo" de cada actividad (quiz/tarea/foro/taller/entrega/examen)
+   *     define color + ícono + etiqueta, nada del comportamiento: si no
+   *     llega o no es válido, se infiere del módulo de Moodle en el link y,
+   *     si tampoco, cae en "tarea".
+   * ------------------------------------------------------------------- */
+  const ACT_TYPES = ["quiz", "tarea", "foro", "taller", "entrega", "examen"];
+  const ACT_TYPE_META = {
+    quiz:    { label: "Quiz",    icon: "fa-circle-question" },
+    tarea:   { label: "Tarea",   icon: "fa-file-pen" },
+    foro:    { label: "Foro",    icon: "fa-comments" },
+    taller:  { label: "Taller",  icon: "fa-screwdriver-wrench" },
+    entrega: { label: "Entrega", icon: "fa-cloud-arrow-up" },
+    examen:  { label: "Examen",  icon: "fa-file-circle-check" }
+  };
+  function inferActType(tipo, link) {
+    if (ACT_TYPES.indexOf(tipo) !== -1) return tipo;
+    const l = String(link || "").toLowerCase();
+    if (l.indexOf("mod/quiz/") !== -1) return "quiz";
+    if (l.indexOf("mod/forum/") !== -1) return "foro";
+    if (l.indexOf("mod/workshop/") !== -1) return "taller";
+    if (l.indexOf("mod/assign/") !== -1) return "tarea";
+    return "tarea";
+  }
+  // Escapa una descripción SOLO cuando el JSON dice explícitamente que es
+  // texto plano (descripcion_html !== true) — así un "<" accidental nunca
+  // se interpreta como marcado.
+  function escaparHtml(str) {
+    return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  // Normaliza cada recurso "actividades" campo a campo. Un recurso sin
+  // tipo "actividades" (u otro tipo que este visor todavía no dibuja) se
+  // descarta en silencio — nunca rompe el mazo.
+  function normalizarRecursos(arr) {
+    return (Array.isArray(arr) ? arr : []).map((r, i) => {
+      if (!r || r.tipo !== "actividades") return null;
+      return {
+        id: (r.id && String(r.id)) || `recurso-${i + 1}`,
+        tipo: "actividades",
+        titulo: r.titulo || "Actividades",
+        visible: r.visible !== false,
+        orden: Number.isFinite(r.orden) ? r.orden : null,
+        items: (Array.isArray(r.items) ? r.items : []).map((it) => ({
+          nombre: (it && it.nombre) || "",
+          link: (it && it.link) || "",
+          descripcion: (it && it.descripcion) || "",
+          descripcionHtml: !!(it && it.descripcion_html),
+          tipoActividad: inferActType(it && it.tipo, it && it.link)
+        }))
+      };
+    }).filter(Boolean);
+  }
 
   /* ---------------------------------------------------------------------
    * 3. Lectura de datos desde window.name (JSON) — con try/catch de rescate
@@ -416,7 +542,11 @@
       // simplemente "vacío" (sin overrides / sin diapositivas extra), no
       // un objeto de ejemplo. Ver construirSlides().
       secciones: (recibidos.secciones && typeof recibidos.secciones === "object") ? recibidos.secciones : {},
-      diapositivas_extra: Array.isArray(recibidos.diapositivas_extra) ? recibidos.diapositivas_extra : []
+      diapositivas_extra: Array.isArray(recibidos.diapositivas_extra) ? recibidos.diapositivas_extra : [],
+      // "recursos" ausente → ejemplo de SIN_DATOS. Un [] explícito (o
+      // cualquier valor que no sea array) → sin actividades, sin
+      // diapositivas de actividades. Mismo criterio que el resto del patrón.
+      recursos: normalizarRecursos(Array.isArray(recibidos.recursos) ? recibidos.recursos : SIN_DATOS.recursos)
     };
   }
 
@@ -1128,8 +1258,117 @@
     slides.forEach((s) => {
       let el = document.getElementById(s.id);
       if (!el && s.custom) el = crearSlideCustom(s.id, s.custom);
+      else if (!el && s.actividades) el = crearSlideActividades(s.id, s.actividades);
       if (el) contenedor.appendChild(el);
     });
+  }
+
+  /* ---------------------------------------------------------------------
+   * 11b. Render — diapositiva de ACTIVIDADES (datos.recursos)
+   * Cada actividad es una "parada" de una ruta vertical (misma familia
+   * visual que "¿Qué aprenderás?"): nodo con el número que, al abrir la
+   * fila, muta al ícono del tipo y se pinta con su color; tarjeta con
+   * barra de acento lateral, etiqueta de tipo y nombre plegable; botón
+   * "ir a la actividad" siempre a la vista.
+   * Al expandir, según diga descripcion_html (NUNCA se adivina):
+   *   - texto plano → párrafos escapados, partidos por línea en blanco.
+   *   - HTML        → se RENDERIZA embebido en un marco propio y acotado
+   *     (scroll interno, alto máximo, degradado de corte solo si el
+   *     contenido se corta) + botón "Ver en pantalla completa" (modal).
+   * Dos diseños por cantidad de ítems: varias = la ruta; una sola =
+   * ".act-list--single" (medallón grande, nombre protagonista, arranca
+   * abierta, CTA de píldora).
+   * ------------------------------------------------------------------- */
+  function actividadCard(r, it, i, single) {
+    const tieneDescripcion = !!it.descripcion;
+    const esHtml = tieneDescripcion && it.descripcionHtml;
+    const num = String(i + 1).padStart(2, "0");
+    const meta = ACT_TYPE_META[it.tipoActividad] || ACT_TYPE_META.tarea;
+    const abierta = single && tieneDescripcion;
+
+    let panelInner = "";
+    if (esHtml) {
+      panelInner = `<div class="act-doc">
+            <div class="act-doc-bar" aria-hidden="true">
+              <span class="act-doc-dot"></span><span class="act-doc-dot"></span><span class="act-doc-dot"></span>
+              <span class="act-doc-name"><i class="fa-solid fa-file-lines"></i> Vista de la actividad</span>
+            </div>
+            <div class="act-doc-view">
+              <div class="act-doc-scroll"><div class="act-doc-html">${it.descripcion}</div></div>
+            </div>
+            <button class="act-preview" type="button" data-resource="${r.id}" data-item="${i}">
+              <i class="fa-solid fa-expand" aria-hidden="true"></i> Ver en pantalla completa
+            </button>
+          </div>`;
+    } else if (tieneDescripcion) {
+      panelInner = `<div class="act-desc">${escaparHtml(it.descripcion).split(/\n{2,}/).map((p) => `<p>${p}</p>`).join("")}</div>`;
+    }
+
+    const nombreBtn = `<button class="act-toggle" type="button" aria-expanded="${abierta ? "true" : "false"}"${tieneDescripcion ? "" : " disabled"}>
+        <span class="act-type"><i class="fa-solid ${meta.icon}" aria-hidden="true"></i> ${meta.label}</span>
+        <span class="act-headline">
+          <span class="act-nombre">${it.nombre}</span>
+          ${tieneDescripcion ? `<i class="fa-solid fa-chevron-down act-caret" aria-hidden="true"></i>` : ""}
+        </span>
+      </button>`;
+
+    const goBtn = it.link
+      ? `<a class="act-go" href="${it.link}" target="_blank" rel="noopener" title="Ir a la actividad" aria-label="Ir a la actividad: ${it.nombre}"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>`
+      : "";
+
+    const ctaPill = (single && it.link)
+      ? `<a class="act-cta" href="${it.link}" target="_blank" rel="noopener">
+          <span>Ir a la actividad</span>
+          <span class="act-cta-arrow" aria-hidden="true"><i class="fa-solid fa-arrow-right"></i></span>
+        </a>`
+      : "";
+
+    return `
+      <div class="act${abierta ? " is-open" : ""}" data-type="${it.tipoActividad}" style="--act-i:${i}">
+        <span class="act-node" aria-hidden="true">
+          <span class="act-node-num">${num}</span>
+          <span class="act-node-icon"><i class="fa-solid ${meta.icon}"></i></span>
+        </span>
+        <div class="act-card">
+          <span class="act-accent" aria-hidden="true"></span>
+          <span class="act-glyph" aria-hidden="true"><i class="fa-solid ${meta.icon}"></i></span>
+          <div class="act-row">
+            ${nombreBtn}${goBtn}
+          </div>
+          ${tieneDescripcion ? `<div class="act-panel"><div class="act-panel-inner">${panelInner}</div></div>` : ""}
+          ${ctaPill}
+        </div>
+      </div>`;
+  }
+
+  function cuerpoActividades(r) {
+    if (!r.items.length) {
+      return `<div class="activity-empty"><i class="fa-solid fa-list-check" aria-hidden="true"></i>Este recurso todavía no tiene actividades.</div>`;
+    }
+    const single = r.items.length === 1;
+    return `<div class="act-list${single ? " act-list--single" : ""}">
+      ${single ? "" : `<span class="act-line" aria-hidden="true"></span>`}
+      ${r.items.map((it, i) => actividadCard(r, it, i, single)).join("")}
+    </div>`;
+  }
+
+  function crearSlideActividades(id, recurso) {
+    const section = document.createElement("section");
+    section.id = id;
+    section.setAttribute("role", "group");
+    section.setAttribute("aria-roledescription", "diapositiva");
+    section.setAttribute("aria-label", recurso.titulo || "Actividades");
+    section.className = "slide";
+    section.innerHTML = `
+      <div class="slide-body">
+        <div class="slide-head">
+          <div class="tag"><i class="fa-solid fa-list-check" aria-hidden="true"></i> Actividades</div>
+          <h2 class="heading">${recurso.titulo || "Actividades"}</h2>
+          <p class="sub">Actividades del curso, fuera de los mosaicos de las semanas.</p>
+        </div>
+        <div class="act-wrap">${cuerpoActividades(recurso)}</div>
+      </div>`;
+    return section;
   }
 
   function openMediaModal(custom) {
@@ -1138,6 +1377,19 @@
     $("#customMediaModalDescripcion").textContent = custom.descripcion || "";
     $("#customMediaModalDescripcion").hidden = !custom.descripcion;
     $("#customMediaModalBody").innerHTML = contenidoEmbebidoCustom(custom);
+    $("#customMediaModalOverlay").classList.add("is-open");
+  }
+
+  // Reusa el mismo modal de pantalla completa que las diapositivas custom,
+  // pero para el HTML de una actividad (descripcion_html: true). El link de
+  // la actividad va como botón flotante dentro del modal para no tener que
+  // cerrarlo y volver a la fila.
+  function openActividadHtmlModal(titulo, html, link) {
+    $("#customMediaModalTitle").textContent = titulo || "";
+    $("#customMediaModalTitle").hidden = !titulo;
+    $("#customMediaModalDescripcion").hidden = true;
+    $("#customMediaModalBody").innerHTML = `<div class="act-modal-html">${html}</div>`
+      + (link ? `<a class="act-modal-go" href="${link}" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i> Ir a la actividad</a>` : "");
     $("#customMediaModalOverlay").classList.add("is-open");
   }
 
@@ -1154,6 +1406,77 @@
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && $("#customMediaModalOverlay").classList.contains("is-open")) closeMediaModal();
     });
+  }
+
+  /* ---------------------------------------------------------------------
+   * 11c. Interacción de las diapositivas de ACTIVIDADES + CTA/stat del hero
+   * ------------------------------------------------------------------- */
+  // El degradado de "hay más" del marco de HTML embebido solo tiene
+  // sentido si el contenido se corta de verdad.
+  function medirDocScroll(view) {
+    const sc = view && $(".act-doc-scroll", view);
+    if (sc) view.classList.toggle("is-scrollable", sc.scrollHeight - sc.clientHeight > 2);
+  }
+
+  function initActividades(datos) {
+    // recursosPorId — para resolver el click de "Ver en pantalla completa"
+    const porId = {};
+    datos.recursos.forEach((r) => { porId[r.id] = r; });
+
+    $$(".act").forEach((el) => {
+      const toggle = $(".act-toggle", el);
+      const view = $(".act-doc-view", el);
+      if (toggle && !toggle.disabled) {
+        toggle.addEventListener("click", () => {
+          const abierto = el.classList.toggle("is-open");
+          toggle.setAttribute("aria-expanded", String(abierto));
+          if (abierto && view) setTimeout(() => medirDocScroll(view), 460);
+        });
+      }
+    });
+
+    $$(".act-preview").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const r = porId[btn.dataset.resource];
+        const item = r && r.items[Number(btn.dataset.item)];
+        if (!item || !item.descripcion) return;
+        openActividadHtmlModal(item.nombre || r.titulo, item.descripcion, item.link);
+      });
+    });
+
+    const views = $$(".act-doc-view");
+    const medirTodo = () => views.forEach(medirDocScroll);
+    medirTodo();
+    if (views.length) {
+      window.addEventListener("resize", medirTodo, { passive: true });
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(medirTodo);
+    }
+  }
+
+  // CTA "Ir a actividades" + tile de la franja de estadísticas del hero —
+  // solo si el curso trae al menos una actividad. El número es el total de
+  // todas las actividades de todos los recursos.
+  function renderActividadesHero(datos) {
+    const total = datos.recursos.reduce((n, r) => n + (r.items ? r.items.length : 0), 0);
+    const primeraId = datos.recursos.length ? `actividades-${datos.recursos[0].id}` : null;
+
+    const tile = $("#statActividades");
+    if (tile) {
+      tile.hidden = total === 0;
+      const num = $("#statActividadesNum", tile) || $(".stat-num", tile);
+      if (num) num.dataset.counter = total;
+    }
+
+    const cue = $("#heroActividadesCue");
+    if (cue) {
+      cue.hidden = !primeraId;
+      const badge = $(".btn-pill-badge", cue);
+      if (badge) { badge.textContent = total > 9 ? "9+" : String(total); badge.hidden = total === 0; }
+      if (primeraId) {
+        const idx = SLIDES.findIndex((s) => s.id === primeraId);
+        if (idx !== -1) cue.addEventListener("click", () => deck.goTo(idx));
+      }
+    }
   }
 
   /* ---------------------------------------------------------------------
@@ -1310,6 +1633,8 @@
     renderLearn(datos);
     renderTutorias(datos.tutorias);
     renderUnitsAccordion(datos.modulos);
+    renderActividadesHero(datos);
+    initActividades(datos);
     initHeroCue();
     initGotoUnitsButtons();
     initHeroParallax();
