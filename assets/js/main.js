@@ -250,9 +250,9 @@
         orden: Number.isFinite(d.orden) ? d.orden : SLIDES_FIJAS.length + i
       }));
 
-    // Cada recurso "actividades" es una diapositiva más — mismo esquema de
-    // "orden" compartido que las fijas y las extra, para poder intercalarla
-    // (por defecto quedan al final del mazo, tras las diapositivas extra).
+    // Cada recurso "actividades" es una diapositiva más. Se ordenan entre
+    // sí por "orden" (default: su posición en el array), pero como bloque
+    // SIEMPRE van justo antes de "Unidades" — ver el splice de abajo.
     const acts = datos.recursos
       .filter((r) => r && r.tipo === "actividades")
       .map((r, i) => ({
@@ -262,12 +262,22 @@
         custom: null,
         actividades: r,
         visible: r.visible !== false,
-        orden: Number.isFinite(r.orden) ? r.orden : SLIDES_FIJAS.length + datos.diapositivas_extra.length + i
+        orden: Number.isFinite(r.orden) ? r.orden : i
       }));
 
-    return fijas.concat(extra).concat(acts)
+    let lista = fijas.concat(extra)
       .filter((s) => s.visible)
       .sort((a, b) => a.orden - b.orden);
+
+    // Las actividades SIEMPRE van antes de "Unidades" (es "pon en práctica
+    // lo aprendido" justo antes de entrar a los mosaicos). Si "unidades"
+    // está oculta, van al final.
+    const actsVisibles = acts.filter((s) => s.visible).sort((a, b) => a.orden - b.orden);
+    if (actsVisibles.length) {
+      const idxUnidades = lista.findIndex((s) => s.id === "unidades");
+      lista.splice(idxUnidades === -1 ? lista.length : idxUnidades, 0, ...actsVisibles);
+    }
+    return lista;
   }
   let SLIDES = [];
 
@@ -497,7 +507,15 @@
   // placeholder correspondiente — así datos parciales muestran lo real
   // que sí llegó y dejan a la vista, sin confundir, lo que todavía falta.
   function obtenerDatos() {
-    const recibidos = leerDatosDesdeWindowName() || {};
+    const recibidosRaw = leerDatosDesdeWindowName();
+    const recibidos = recibidosRaw || {};
+    // "sin ningún dato" = el visor se abrió suelto para previsualizar (no
+    // hay window.name, o vino vacío/corrupto). Solo en ESE caso las
+    // actividades caen al ejemplo de SIN_DATOS. Si el curso mandó datos
+    // reales (aunque sea solo el nombre) pero no la clave "recursos", eso
+    // significa "este curso no tiene actividades sueltas" → no se muestran
+    // (ni diapositiva, ni CTA, ni stat). Mismo criterio que normalizarTutorias.
+    const sinNingunDato = !recibidosRaw || Object.keys(recibidosRaw).length === 0;
     return {
       curso: recibidos.curso || SIN_DATOS.curso,
       resumen: recibidos.resumen || SIN_DATOS.resumen,
@@ -543,10 +561,12 @@
       // un objeto de ejemplo. Ver construirSlides().
       secciones: (recibidos.secciones && typeof recibidos.secciones === "object") ? recibidos.secciones : {},
       diapositivas_extra: Array.isArray(recibidos.diapositivas_extra) ? recibidos.diapositivas_extra : [],
-      // "recursos" ausente → ejemplo de SIN_DATOS. Un [] explícito (o
-      // cualquier valor que no sea array) → sin actividades, sin
-      // diapositivas de actividades. Mismo criterio que el resto del patrón.
-      recursos: normalizarRecursos(Array.isArray(recibidos.recursos) ? recibidos.recursos : SIN_DATOS.recursos)
+      // Ver "sinNingunDato" arriba: el ejemplo solo aplica en preview.
+      // Con datos reales, "recursos" ausente = curso sin actividades sueltas.
+      recursos: normalizarRecursos(
+        Array.isArray(recibidos.recursos) ? recibidos.recursos
+          : (sinNingunDato ? SIN_DATOS.recursos : [])
+      )
     };
   }
 
@@ -1266,77 +1286,69 @@
   /* ---------------------------------------------------------------------
    * 11b. Render — diapositiva de ACTIVIDADES (datos.recursos)
    * Cada actividad es una "parada" de una ruta vertical (misma familia
-   * visual que "¿Qué aprenderás?"): nodo con el número que, al abrir la
-   * fila, muta al ícono del tipo y se pinta con su color; tarjeta con
-   * barra de acento lateral, etiqueta de tipo y nombre plegable; botón
-   * "ir a la actividad" siempre a la vista.
-   * Al expandir, según diga descripcion_html (NUNCA se adivina):
-   *   - texto plano → párrafos escapados, partidos por línea en blanco.
-   *   - HTML        → se RENDERIZA embebido en un marco propio y acotado
-   *     (scroll interno, alto máximo, degradado de corte solo si el
-   *     contenido se corta) + botón "Ver en pantalla completa" (modal).
+   * visual que "¿Qué aprenderás?"): nodo numerado + tarjeta con barra de
+   * acento lateral del color del tipo, etiqueta de tipo y nombre.
+   *
+   * INTERACCIÓN — una sola: si la actividad trae descripción, la fila
+   * abre el **modal de pantalla completa** y la descripción se renderiza
+   * RECIÉN en ese momento (openActividadModal → se limpia al cerrar). NO
+   * hay acordeón inline: ni texto ni HTML se muestran dentro de la fila.
+   *   - descripcion_html: false → en el modal, texto plano en párrafos
+   *     (escapado, partido por línea en blanco).
+   *   - descripcion_html: true  → en el modal, el HTML tal cual.
+   *   - sin descripción → fila estática (solo el botón "ir", si hay link).
+   *
    * Dos diseños por cantidad de ítems: varias = la ruta; una sola =
-   * ".act-list--single" (medallón grande, nombre protagonista, arranca
-   * abierta, CTA de píldora).
+   * ".act-list--single" (medallón grande, nombre protagonista, botones
+   * "Ver la actividad" + "Ir a la actividad").
    * ------------------------------------------------------------------- */
   function actividadCard(r, it, i, single) {
     const tieneDescripcion = !!it.descripcion;
-    const esHtml = tieneDescripcion && it.descripcionHtml;
     const num = String(i + 1).padStart(2, "0");
     const meta = ACT_TYPE_META[it.tipoActividad] || ACT_TYPE_META.tarea;
-    const abierta = single && tieneDescripcion;
+    const dataAttrs = `data-resource="${r.id}" data-item="${i}"`;
 
-    let panelInner = "";
-    if (esHtml) {
-      panelInner = `<div class="act-doc">
-            <div class="act-doc-bar" aria-hidden="true">
-              <span class="act-doc-dot"></span><span class="act-doc-dot"></span><span class="act-doc-dot"></span>
-              <span class="act-doc-name"><i class="fa-solid fa-file-lines"></i> Vista de la actividad</span>
-            </div>
-            <div class="act-doc-view">
-              <div class="act-doc-scroll"><div class="act-doc-html">${it.descripcion}</div></div>
-            </div>
-            <button class="act-preview" type="button" data-resource="${r.id}" data-item="${i}">
-              <i class="fa-solid fa-expand" aria-hidden="true"></i> Ver en pantalla completa
-            </button>
-          </div>`;
-    } else if (tieneDescripcion) {
-      panelInner = `<div class="act-desc">${escaparHtml(it.descripcion).split(/\n{2,}/).map((p) => `<p>${p}</p>`).join("")}</div>`;
-    }
+    const typePill = `<span class="act-type"><i class="fa-solid ${meta.icon}" aria-hidden="true"></i> ${meta.label}</span>`;
 
-    const nombreBtn = `<button class="act-toggle" type="button" aria-expanded="${abierta ? "true" : "false"}"${tieneDescripcion ? "" : " disabled"}>
-        <span class="act-type"><i class="fa-solid ${meta.icon}" aria-hidden="true"></i> ${meta.label}</span>
-        <span class="act-headline">
+    // La zona del nombre:
+    //   - lista (2+) con descripción → botón que abre el modal.
+    //   - lista sin descripción, o modo "una sola" → texto estático
+    //     (en modo single la acción va en los botones grandes de abajo).
+    const nombreBloque = (!single && tieneDescripcion)
+      ? `<button class="act-open" type="button" ${dataAttrs} aria-label="Ver el detalle de: ${it.nombre}">
+          ${typePill}
+          <span class="act-headline">
+            <span class="act-nombre">${it.nombre}</span>
+            <span class="act-open-hint">Ver detalle <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
+          </span>
+        </button>`
+      : `<div class="act-static">
+          ${typePill}
           <span class="act-nombre">${it.nombre}</span>
-          ${tieneDescripcion ? `<i class="fa-solid fa-chevron-down act-caret" aria-hidden="true"></i>` : ""}
-        </span>
-      </button>`;
+        </div>`;
 
     const goBtn = it.link
       ? `<a class="act-go" href="${it.link}" target="_blank" rel="noopener" title="Ir a la actividad" aria-label="Ir a la actividad: ${it.nombre}"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>`
       : "";
 
-    const ctaPill = (single && it.link)
-      ? `<a class="act-cta" href="${it.link}" target="_blank" rel="noopener">
-          <span>Ir a la actividad</span>
-          <span class="act-cta-arrow" aria-hidden="true"><i class="fa-solid fa-arrow-right"></i></span>
-        </a>`
+    // Modo "una sola actividad": botones grandes en vez de la fila compacta.
+    const acciones = single
+      ? `<div class="act-actions">
+          ${tieneDescripcion ? `<button class="act-see" type="button" ${dataAttrs}><i class="fa-solid fa-file-lines" aria-hidden="true"></i> Ver la actividad</button>` : ""}
+          ${it.link ? `<a class="act-cta" href="${it.link}" target="_blank" rel="noopener"><span>Ir a la actividad</span><span class="act-cta-arrow" aria-hidden="true"><i class="fa-solid fa-arrow-right"></i></span></a>` : ""}
+        </div>`
       : "";
 
     return `
-      <div class="act${abierta ? " is-open" : ""}" data-type="${it.tipoActividad}" style="--act-i:${i}">
-        <span class="act-node" aria-hidden="true">
-          <span class="act-node-num">${num}</span>
-          <span class="act-node-icon"><i class="fa-solid ${meta.icon}"></i></span>
-        </span>
+      <div class="act" data-type="${it.tipoActividad}" style="--act-i:${i}">
+        <span class="act-node" aria-hidden="true">${single ? `<i class="fa-solid ${meta.icon}"></i>` : num}</span>
         <div class="act-card">
           <span class="act-accent" aria-hidden="true"></span>
           <span class="act-glyph" aria-hidden="true"><i class="fa-solid ${meta.icon}"></i></span>
           <div class="act-row">
-            ${nombreBtn}${goBtn}
+            ${nombreBloque}${single ? "" : goBtn}
           </div>
-          ${tieneDescripcion ? `<div class="act-panel"><div class="act-panel-inner">${panelInner}</div></div>` : ""}
-          ${ctaPill}
+          ${acciones}
         </div>
       </div>`;
   }
@@ -1380,15 +1392,20 @@
     $("#customMediaModalOverlay").classList.add("is-open");
   }
 
-  // Reusa el mismo modal de pantalla completa que las diapositivas custom,
-  // pero para el HTML de una actividad (descripcion_html: true). El link de
-  // la actividad va como botón flotante dentro del modal para no tener que
-  // cerrarlo y volver a la fila.
-  function openActividadHtmlModal(titulo, html, link) {
+  // Reusa el modal de pantalla completa de las diapositivas custom para
+  // mostrar la descripción de una actividad — texto plano (en párrafos) o
+  // HTML (tal cual). Se arma acá, al abrir; closeMediaModal() lo limpia al
+  // cerrar, así que el contenido solo existe mientras el modal está abierto.
+  // El link de la actividad va como botón flotante dentro del modal.
+  function openActividadModal(titulo, descripcion, esHtml, link) {
+    if (!descripcion) return;
     $("#customMediaModalTitle").textContent = titulo || "";
     $("#customMediaModalTitle").hidden = !titulo;
     $("#customMediaModalDescripcion").hidden = true;
-    $("#customMediaModalBody").innerHTML = `<div class="act-modal-html">${html}</div>`
+    const cuerpo = esHtml
+      ? `<div class="act-modal-html">${descripcion}</div>`
+      : `<div class="act-modal-html act-modal-html--texto">${escaparHtml(descripcion).split(/\n{2,}/).map((p) => `<p>${p}</p>`).join("")}</div>`;
+    $("#customMediaModalBody").innerHTML = cuerpo
       + (link ? `<a class="act-modal-go" href="${link}" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i> Ir a la actividad</a>` : "");
     $("#customMediaModalOverlay").classList.add("is-open");
   }
@@ -1411,46 +1428,21 @@
   /* ---------------------------------------------------------------------
    * 11c. Interacción de las diapositivas de ACTIVIDADES + CTA/stat del hero
    * ------------------------------------------------------------------- */
-  // El degradado de "hay más" del marco de HTML embebido solo tiene
-  // sentido si el contenido se corta de verdad.
-  function medirDocScroll(view) {
-    const sc = view && $(".act-doc-scroll", view);
-    if (sc) view.classList.toggle("is-scrollable", sc.scrollHeight - sc.clientHeight > 2);
-  }
-
   function initActividades(datos) {
-    // recursosPorId — para resolver el click de "Ver en pantalla completa"
     const porId = {};
     datos.recursos.forEach((r) => { porId[r.id] = r; });
 
-    $$(".act").forEach((el) => {
-      const toggle = $(".act-toggle", el);
-      const view = $(".act-doc-view", el);
-      if (toggle && !toggle.disabled) {
-        toggle.addEventListener("click", () => {
-          const abierto = el.classList.toggle("is-open");
-          toggle.setAttribute("aria-expanded", String(abierto));
-          if (abierto && view) setTimeout(() => medirDocScroll(view), 460);
-        });
-      }
-    });
-
-    $$(".act-preview").forEach((btn) => {
+    // Toda actividad con descripción abre su detalle en el modal — sin
+    // acordeón inline. Un mismo handler para la fila (.act-open) y para el
+    // botón grande del modo "una sola" (.act-see).
+    $$(".act-open, .act-see").forEach((btn) => {
       btn.addEventListener("click", () => {
         const r = porId[btn.dataset.resource];
         const item = r && r.items[Number(btn.dataset.item)];
-        if (!item || !item.descripcion) return;
-        openActividadHtmlModal(item.nombre || r.titulo, item.descripcion, item.link);
+        if (!item) return;
+        openActividadModal(item.nombre || r.titulo, item.descripcion, item.descripcionHtml, item.link);
       });
     });
-
-    const views = $$(".act-doc-view");
-    const medirTodo = () => views.forEach(medirDocScroll);
-    medirTodo();
-    if (views.length) {
-      window.addEventListener("resize", medirTodo, { passive: true });
-      if (document.fonts && document.fonts.ready) document.fonts.ready.then(medirTodo);
-    }
   }
 
   // CTA "Ir a actividades" + tile de la franja de estadísticas del hero —

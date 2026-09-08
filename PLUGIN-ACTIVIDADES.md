@@ -35,8 +35,11 @@ plugin ya "consumió" una sección para `modulos` o `diapositivas_extra`, sus
 actividades ya no vuelven a aparecer en `recursos`.
 
 Si no hay actividades sueltas → **no mandes la clave `recursos`** (o mándala
-como `[]`). El hero simplemente no muestra el botón "Ir a actividades" ni la
-píldora de estadística.
+como `[]`). Como el curso sí manda otros datos, el visor entiende "este
+curso no tiene actividades sueltas": no dibuja la diapositiva, ni el botón
+"Ir a actividades" del hero, ni la píldora de estadística. (El ejemplo de
+actividades que se ve al abrir el visor **sin ningún dato** es solo para
+previsualizar el diseño — nunca aparece en un curso real.)
 
 ---
 
@@ -70,7 +73,7 @@ Podés mandar **uno** (todas las actividades juntas en una diapositiva) o
 | `id` | string | No | `"recurso-N"` (N = posición 1-based en el array) | Se usa para el `id` HTML de la diapositiva (`actividades-<id>`) y para anclas/navegación. **Poné un `id` explícito y estable** (ej. `"actividades-sueltas"`, `"examen-final"`) — no dependas del autogenerado. |
 | `titulo` | string | No | `"Actividades"` | Encabezado de la diapositiva. |
 | `visible` | boolean | No | `true` | `false` → la diapositiva no se renderiza, no cuenta en estadísticas y no aparece en la navegación. |
-| `orden` | number | No | Al final del mazo (después de las diapositivas fijas y de las `diapositivas_extra`) | Comparte la **misma numeración** que `secciones` y `diapositivas_extra`. Ej.: `"orden": 8` la coloca donde iría la 9.ª diapositiva. Sirve para intercalar la sección de actividades entre dos diapositivas fijas. |
+| `orden` | number | No | Posición en el array `recursos` | Solo decide el orden **entre los recursos de actividades**. Como **bloque**, las diapositivas de actividades van **siempre justo antes de "Unidades"** (no se pueden mover a otro lado del mazo). |
 
 ---
 
@@ -80,10 +83,10 @@ Cada actividad lleva, **como mucho, 5 datos**:
 
 | Campo | Tipo | Obligatorio | Default | Qué hace |
 |---|---|---|---|---|
-| `nombre` | string | **Sí** | `""` | Encabezado de la fila. Es **plegable (acordeón)** solo si `descripcion` no está vacía; si no, es texto estático. |
+| `nombre` | string | **Sí** | `""` | Encabezado de la fila. Si hay `descripcion`, la fila **abre un modal** con el detalle; si no, es texto estático. |
 | `tipo` | string | No | Se **infiere del `link`** (ver abajo) | Uno de: `quiz`, `tarea`, `foro`, `taller`, `entrega`, `examen`. Define **solo** el color, el ícono y la etiqueta de la tarjeta — **no cambia ningún comportamiento**. Un valor no reconocido cae en `tarea`. |
-| `link` | string (URL) | No | `""` → sin botón | URL a la actividad en Moodle (la `view.php` del mod). Con valor → botón redondo "ir a la actividad", **siempre visible**. Con `descripcion_html: true` se repite como botón dentro del modal de pantalla completa. |
-| `descripcion` | string | No | `""` → nombre no plegable | Texto plano **o** HTML. **Qué es lo decide únicamente `descripcion_html`** — el visor nunca lo adivina mirando el contenido. |
+| `link` | string (URL) | No | `""` → sin botón | URL a la actividad en Moodle (la `view.php` del mod). Con valor → botón "ir a la actividad", **siempre visible**, y se repite como botón flotante dentro del modal. |
+| `descripcion` | string | No | `""` → fila estática | Texto plano **o** HTML. **Qué es lo decide únicamente `descripcion_html`** — el visor nunca lo adivina mirando el contenido. |
 | `descripcion_html` | boolean | No | `false` | Ver §4.2. |
 
 ### 4.1 Inferencia de `tipo` desde el `link`
@@ -106,24 +109,25 @@ para quizzes que son exámenes finales — esos dos no se infieren solos
 
 ### 4.2 `descripcion` + `descripcion_html`
 
-- **`descripcion_html: false`** (o ausente) → al expandir la fila, el texto
-  se muestra **inline**, **escapado** (un `<` accidental nunca se
-  interpreta como etiqueta) y partido en párrafos por **línea en blanco**
-  (`\n\n`). Usalo para descripciones cortas en texto.
+Con `descripcion`, al hacer clic en la actividad se abre el **modal de
+pantalla completa** y la descripción se renderiza **recién en ese
+momento** (se destruye al cerrar). **No hay acordeón inline** — ni el
+texto ni el HTML se muestran dentro de la fila.
 
-- **`descripcion_html: true`** → el HTML se **renderiza embebido** dentro
-  de la fila, en un marco propio y **acotado** (scroll interno, alto
-  máximo), con un degradado de "hay más abajo" que solo aparece si el
-  contenido se corta. Además aparece un botón **"Ver en pantalla
-  completa"** que abre ese mismo HTML en un modal grande.
+- **`descripcion_html: false`** (o ausente) → en el modal, el texto se
+  muestra **escapado** (un `<` accidental nunca se interpreta como
+  etiqueta) y partido en párrafos por **línea en blanco** (`\n\n`).
+
+- **`descripcion_html: true`** → en el modal, el HTML se inyecta **tal
+  cual**.
   - Mandá acá el HTML de la introducción/descripción de la actividad tal
     como lo tiene Moodle (`intro` del mod, ya con `format_text()` aplicado
     si querés).
   - Es contenido **de confianza** (lo arma el plugin/Moodle) — se inyecta
     tal cual, no se sanea.
-  - Tablas muy anchas con anchos fijos, imágenes enormes, `font-size` en
-    `vw`, etc. quedan **contenidos** (con scroll) — no descuadran la
-    sección — pero conviene mandar HTML razonable.
+  - El modal crece con el contenido hasta un tope (`min(86vh, 720px)`) y
+    ahí scrollea; tablas/imágenes se acotan al ancho. Conviene HTML
+    razonable, pero no descuadra nada del visor.
 
 ---
 
@@ -132,13 +136,15 @@ para quizzes que son exámenes finales — esos dos no se infieren solos
 Los dos son válidos. Se dibujan distinto:
 
 - **Varias actividades en el mismo recurso** (`items` con 2+) → se dibujan
-  como una **"ruta": filas plegables conectadas por una línea de tiempo**,
-  cada una con su nodo numerado, su color y su ícono de tipo.
+  como una **"ruta": filas conectadas por una línea de tiempo**, cada una
+  con su nodo numerado, su color y su ícono de tipo. Cada fila con
+  descripción abre el modal.
 
 - **Un recurso con una sola actividad** (`items` con exactamente 1) → se
   dibuja como una **tarjeta protagonista**: medallón grande, nombre
-  grande, arranca **abierta** y con un botón de píldora "Ir a la
-  actividad". Usalo para destacar algo (p. ej. el examen final).
+  grande y dos botones — "Ver la actividad" (abre el modal con la
+  descripción) e "Ir a la actividad". Usalo para destacar algo
+  (p. ej. el examen final).
 
 **Guía práctica:** una sola diapositiva `recursos` con TODAS las
 actividades sueltas es lo normal. Separá en varios recursos solo cuando
@@ -217,12 +223,13 @@ Lo que el plugin debe producir (JSON ya decodificado):
 
 Qué produce:
 
-- **`actividades-sueltas`** (4 ítems → "ruta"): quiz (morado, plegable),
-  foro (naranja, inferido de `mod/forum`, plegable), entrega (dorado,
-  botón "Ver en pantalla completa" → modal con la tabla) y "Rúbrica…" sin
-  link ni descripción → fila estática, sin flecha ni botón.
-- **`examen-final`** (1 ítem → tarjeta protagonista): tarjeta grande roja,
-  arranca abierta, con el botón de píldora.
+- **`actividades-sueltas`** (4 ítems → "ruta"): quiz (morado), foro
+  (naranja, inferido de `mod/forum`), entrega (dorado) — las tres abren
+  su detalle en el modal al hacer clic (el HTML de la tabla se renderiza
+  ahí) — y "Rúbrica…" sin link ni descripción → fila estática.
+- **`examen-final`** (1 ítem → tarjeta protagonista): tarjeta grande roja
+  con los botones "Ver la actividad" e "Ir a la actividad".
+- Va **antes de la diapositiva "Unidades"**.
 - Hero: badge del CTA = **5** (4 + 1). Ficha del curso: píldora "5
   Actividades".
 

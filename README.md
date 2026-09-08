@@ -607,10 +607,16 @@ Implementación completa en `construirSlides()`, `renderCustomSlides()` y
 
 Las **actividades que viven fuera de los mosaicos** de las semanas (en la
 sección principal de Moodle): quizzes, foros, talleres, entregas, exámenes.
-Cada recurso `"actividades"` es su propia diapositiva, con la misma
-numeración de `orden` que `secciones` / `diapositivas_extra` (por defecto
-quedan al final del mazo). El total de actividades alimenta el badge del
-CTA "Ir a actividades" del hero y una píldora en la ficha del curso.
+Cada recurso `"actividades"` es su propia diapositiva. Se ordenan entre sí
+por `orden` pero como bloque **van siempre justo antes de "Unidades"**. El
+total de actividades alimenta el badge del CTA "Ir a actividades" del hero
+y una píldora en la ficha del curso.
+
+**La clave `recursos` NO tiene placeholder de ejemplo con datos reales:**
+si el curso mandó datos (aunque sea solo el nombre) pero no la clave
+`recursos`, eso significa "este curso no tiene actividades sueltas" → no se
+muestra ni la diapositiva ni el CTA. El ejemplo de `SIN_DATOS` solo se ve
+al abrir `index.html` **completamente sin datos** (preview).
 
 ```json
 {
@@ -648,17 +654,18 @@ CTA "Ir a actividades" del hero y una píldora en la ficha del curso.
 | `id` | `"recurso-N"` | Se usa para el `id` de la diapositiva (`actividades-<id>`) |
 | `tipo` | — | **Debe ser** `"actividades"` (otros valores se ignoran por ahora) |
 | `titulo` | `"Actividades"` | Encabezado de la diapositiva |
-| `visible` / `orden` | `true` / al final | Igual que `secciones` / `diapositivas_extra` |
-| `items[].nombre` | `""` | Encabezado de la fila. Solo es plegable si `descripcion` no está vacía |
+| `visible` / `orden` | `true` / según posición | `orden` solo decide el orden **entre recursos de actividades** — como bloque van antes de "Unidades" |
+| `items[].nombre` | `""` | Encabezado de la fila. Con `descripcion` → clic abre el detalle en el modal; sin ella → fila estática |
 | `items[].tipo` | inferido del `link` (`mod/quiz`→`quiz`, `mod/forum`→`foro`, `mod/workshop`→`taller`, `mod/assign`→`tarea`), o `tarea` | Uno de `quiz`, `tarea`, `foro`, `taller`, `entrega`, `examen`. Solo color/ícono/etiqueta, no cambia el comportamiento |
 | `items[].link` | `""` → sin botón | Botón redondo "ir a la actividad", siempre visible |
-| `items[].descripcion` | `""` → nombre no plegable | Texto o HTML, según `descripcion_html` |
-| `items[].descripcion_html` | `false` | `false` → al expandir, el texto se muestra inline, escapado, partido en `<p>` por línea en blanco. `true` → el HTML se **renderiza embebido** en un marco propio y acotado (scroll interno, alto máximo) + botón "Ver en pantalla completa" que lo abre en el modal |
+| `items[].descripcion` | `""` → fila estática | Texto o HTML, según `descripcion_html`. Al hacer clic en la actividad se abre en el **modal de pantalla completa** — se renderiza recién en ese momento, no hay acordeón inline |
+| `items[].descripcion_html` | `false` | `false` → en el modal, texto plano en párrafos (escapado, `\n\n` = párrafo). `true` → en el modal, el HTML tal cual |
 
 **Dos diseños automáticos:** 1 sola actividad → tarjeta protagonista
-(medallón grande, arranca abierta, CTA de píldora). 2+ → "ruta" de filas
-plegables conectadas por una línea de tiempo. `items: []` → mensaje de
-"todavía no tiene actividades" (la diapositiva igual aparece).
+(medallón grande + botones "Ver la actividad" / "Ir a la actividad"). 2+ →
+"ruta" de filas conectadas por una línea de tiempo; cada fila con
+descripción abre el modal. `items: []` → mensaje de "todavía no tiene
+actividades" (la diapositiva igual aparece).
 
 Implementación en `normalizarRecursos()`, `construirSlides()`,
 `crearSlideActividades()` / `actividadCard()` y `initActividades()`
